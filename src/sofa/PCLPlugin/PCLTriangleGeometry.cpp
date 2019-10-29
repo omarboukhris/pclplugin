@@ -4,11 +4,11 @@
 
 namespace sofa {
 
-namespace pcl {
+namespace pointcloud {
 
 int PCLTriangleGeometryClass = core::RegisterObject("PCLTriangleGeometry")
 .add< PCLTriangleGeometry<sofa::defaulttype::Vec3dTypes> >();
 
-} // namespace pcl
+} // namespace pointcloud
 
 } // namespace sofa

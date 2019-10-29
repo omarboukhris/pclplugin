@@ -49,5 +49,5 @@ target_include_directories(${PROJECT_NAME} PUBLIC "$<INSTALL_INTERFACE:include/$
 set_target_properties(${PROJECT_NAME} PROPERTIES DEBUG_POSTFIX "_d")
 set_target_properties(${PROJECT_NAME} PROPERTIES COMPILE_FLAGS "-DPLUGIN_DATA_DIR=\"${CMAKE_CURRENT_SOURCE_DIR}/\"")
 target_link_libraries(${PROJECT_NAME} SofaSimpleFem SofaGeneralSimpleFem SofaBaseTopology SofaBaseMechanics  SofaBaseLinearSolver
-SofaBaseVisual SofaHelper SofaOpenglVisual SofaComponentBase SofaSimulationTree SofaUserInteraction ConstraintGeometry  ${PCL_LIBRARIES})
+SofaBaseVisual SofaHelper SofaOpenglVisual SofaComponentBase SofaSimulationTree SofaUserInteraction ConstraintGeometry SlicingPlugin  ${PCL_LIBRARIES})
 

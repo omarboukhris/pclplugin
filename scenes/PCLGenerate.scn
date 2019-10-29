@@ -3,17 +3,15 @@
 <Node name="root" dt="0.01" gravity="0 0 0" >
     <RequiredPlugin pluginName="pclplugin"/>
 
+
     <VisualStyle displayFlags="showVisualModels hideBehaviorModels hideCollisionModels hideMappings hideForceFields hideWireframe hideForceFields" />
     <FreeMotionAnimationLoop />
 
     <GenericConstraintSolver maxIt="1000" tolerance="0.000000001" printLog="false" />
 
-    <Node name="Topology">
-        <MeshVTKLoader name="VtkLoader" filename="/home/costemarin/Tools/PCL/Examples/build/testTriangulation.vtk"/>
-        <MechanicalObject src="@VtkLoader" name="mo" scale="1000"/>
-        <TriangleSetTopologyContainer name="Container" src="@VtkLoader" />
-        <OglModel color="1.000 1.000 1.000 1" name="visualPLane" />
+    <Node name="PCL">
+        <MechanicalObject name="ms" />
 
+        <PCLTriangleGeometry name="triangleGeometry"/>
     </Node>
-
 </Node>
