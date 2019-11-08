@@ -3,7 +3,6 @@ project(PCLPlugin)
 
 find_package(PCL 1.9 REQUIRED)
 
-
 file(GLOB_RECURSE HEADER_FILES
     "src/*.h"
     "src/*.inl"
@@ -31,23 +30,32 @@ file(GLOB_RECURSE DEPRECATED_FILES
     "deprecated/*.cpp"
 )
 
-
-include_directories("${CMAKE_CURRENT_SOURCE_DIR}/ignored")
-include_directories("${CMAKE_CURRENT_SOURCE_DIR}/deprecated")
-include_directories(${PCL_INCLUDE_DIRS})
+if(COMMAND setupGitInfo)
+	setupGitInfo(PLUGIN_GIT_INFO)
+endif()
 
 set_source_files_properties(${IGNORED_FILES} PROPERTIES HEADER_FILE_ONLY TRUE)
-#set_source_files_properties(${DEPRECATED_FILES} PROPERTIES HEADER_FILE_ONLY TRUE)
+add_library(${PROJECT_NAME} SHARED ${SOURCE_FILES} ${HEADER_FILES} ${SCENES_FILES} ${README_FILES} )
+set(${PROJECT_NAME}_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/src")
 
-add_library(${PROJECT_NAME} SHARED ${SOURCE_FILES} ${HEADER_FILES} ${SCENES_FILES} ${IGNORED_FILES} ${DEPRECATED_FILES}  ${README_FILES} )
-#set_target_properties(${PROJECT_NAME} PROPERTIES COMPILE_FLAGS "-DPLUGIN_DATA_DIR=\"${CMAKE_CURRENT_SOURCE_DIR}/\"")
+target_include_directories(${PROJECT_NAME} PUBLIC "$<BUILD_INTERFACE:${${PROJECT_NAME}_INCLUDE_DIRS}>")
+target_include_directories(${PROJECT_NAME} PUBLIC "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>")
+
+set_target_properties(${PROJECT_NAME} PROPERTIES COMPILE_FLAGS "-DPLUGIN_DATA_DIR=\"${CMAKE_CURRENT_SOURCE_DIR}/\"")
+target_link_libraries(
+	${PROJECT_NAME}
+	SofaSimpleFem SofaGeneralSimpleFem
+	SofaBaseTopology SofaBaseMechanics
+	SofaBaseLinearSolver
+	SofaBaseVisual SofaHelper SofaOpenglVisual
+	SofaComponentBase SofaSimulationTree SofaUserInteraction
+	ConstraintGeometry SlicingPlugin  ${PCL_LIBRARIES}
+)
 #target_link_libraries(${PROJECT_NAME} SofaFramework SofaBase SofaSimulation SofaGeneral ConstraintGeometry NeedleConstraint)
 
-set(${PROJECT_NAME}_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/src)
-target_include_directories(${PROJECT_NAME} PUBLIC "$<BUILD_INTERFACE:${PCLPLUGIN_INCLUDE_DIRS}>")
-target_include_directories(${PROJECT_NAME} PUBLIC "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>")
-set_target_properties(${PROJECT_NAME} PROPERTIES DEBUG_POSTFIX "_d")
-set_target_properties(${PROJECT_NAME} PROPERTIES COMPILE_FLAGS "-DPLUGIN_DATA_DIR=\"${CMAKE_CURRENT_SOURCE_DIR}/\"")
-target_link_libraries(${PROJECT_NAME} SofaSimpleFem SofaGeneralSimpleFem SofaBaseTopology SofaBaseMechanics  SofaBaseLinearSolver
-SofaBaseVisual SofaHelper SofaOpenglVisual SofaComponentBase SofaSimulationTree SofaUserInteraction ConstraintGeometry SlicingPlugin  ${PCL_LIBRARIES})
-
+sofa_generate_package(
+	NAME ${PROJECT_NAME}
+	VERSION 0.1
+	TARGETS ${PROJECT_NAME}
+	INCLUDE_INSTALL_DIR ${${PROJECT_NAME}_INCLUDE_DIRS}
+)
