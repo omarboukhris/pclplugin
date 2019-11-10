@@ -2,11 +2,6 @@
 
 #include "PCLIterativeClosestPoint.h"
 
-#include <sofa/collisionAlgorithm/proximity/TriangleProximity.h>
-#include <sofa/collisionAlgorithm/iterators/DefaultElementIterator.h>
-
-#include <pcl/registration/icp.h>
-#include <pcl/common/impl/io.hpp>
 
 #include <fstream>
 

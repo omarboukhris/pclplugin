@@ -30,7 +30,7 @@
 #include <sofa/core/objectmodel/Data.h>
 #include <sofa/core/objectmodel/DataCallback.h>
 
-#include "../PointCloudData.h"
+#include <sofa/PCLPlugin/PointCloudData.h>
 
 #include <fstream>
 #include <algorithm>
@@ -38,39 +38,39 @@
 #include <string>
 #include <map>
 
+#include<pcl/point_types.h>
+#include<pcl/point_cloud.h>
+
 namespace sofa
 {
 
 namespace pointcloud
 {
-/// /!\ See https://github.com/IntelRealSense/librealsense/blob/master/wrappers/opencv/grabcuts/rs-grabcuts.cpp
-/// for implementation details
 
 using namespace core::objectmodel ;
+
 typedef pcl::PointXYZ PointType ;
 typedef pcl::PointCloud<PointType> PointCloud ;
 
-class PCLStaticFilter : public core::objectmodel::BaseObject {
+class Pcl2Vec : public core::objectmodel::BaseObject {
 public :
-    SOFA_CLASS( PCLStaticFilter, core::objectmodel::BaseObject);
+    SOFA_CLASS( Pcl2Vec, core::objectmodel::BaseObject);
     typedef core::objectmodel::BaseObject Inherited;
 
     Data<PointCloudData> d_in ;
-    Data<PointCloudData>  d_out ;
-    Data<double> d_alpha ;
+    Data<helper::vector<defaulttype::Vector3> >  d_out ;
     Data<bool> d_draw_pcl ;
 
     DataCallback c_in ;
 
-    PCLStaticFilter()
+    Pcl2Vec()
         : Inherited ()
         , d_in (initData(&d_in, "inpcl", "input point cloud"))
-        , d_out(initData(&d_out, "outpcl", "output point cloud"))
-        , d_alpha(initData(&d_alpha, "alpha", "cut parameter"))
+        , d_out(initData(&d_out, "output", "output point cloud"))
         , d_draw_pcl(initData(&d_draw_pcl, "draw_pcl", "True to draw point cloud in viewer"))
     {
-        c_in.addInputs({&d_in, &d_alpha}) ;
-        c_in.addCallback(std::bind(&PCLStaticFilter::filter, this));
+        c_in.addInputs({&d_in}) ;
+        c_in.addCallback(std::bind(&Pcl2Vec::filter, this));
     }
 
     void draw(const core::visual::VisualParams* vparams) {
@@ -78,44 +78,27 @@ public :
             return ;
         }
 
-        for (const auto & point : *(d_out.getValue().getPointCloud())) {
+        for (const auto & point : d_out.getValue()) {
             vparams->drawTool()->drawPoint(
-                defaulttype::Vector3(point.x, point.y, point.z),
+                point,
                 sofa::defaulttype::Vector4 (0, 255, 0, 0)
             );
         }
     }
 
+    // filter with mu +/- sigma*alpha
     void filter () {
-        PointCloud::Ptr in = d_in.getValue().getPointCloud() ;
-        if (in == nullptr) {
-            return ;
-        }
-        PointCloud::Ptr out (new PointCloud) ; out->clear();
-        for (auto const & point : *in) {
-            if (point_in(point)) {
-                out->push_back(point) ;
-            }
-        }
-        d_out.setValue(out);
-    }
+        PointCloud::Ptr in (new PointCloud) ;
+        pcl::copyPointCloud (
+            *(d_in.getValue().getPointCloud()),
+            *in ) ;
 
-    bool point_in (const PointType & v) {
-        double alpha = d_alpha.getValue() ;
-        if (v.x >= alpha || v.x <= -alpha ||
-            v.y >= alpha || v.y <= -alpha ||
-            v.z >= alpha || v.z <= -alpha) {
-            return false ;
+        helper::vector<defaulttype::Vector3> & out = *d_out.beginEdit() ;
+        out.clear() ;
+        for (auto const & point : *in) {
+            out.push_back(defaulttype::Vector3(point.x, point.y, point.z)) ;
         }
-        if ((int)(v.x*10000) == 0 ||
-            (int)(v.y*10000) == 0 ||
-            (int)(v.z*10000) == 0) {
-        // outliers @ zero
-            return false ;
-        }
-        if (v.x == v.y && v.y == v.z )
-            return false ;
-        return true ;
+        d_out.endEdit();
     }
 
 } ;

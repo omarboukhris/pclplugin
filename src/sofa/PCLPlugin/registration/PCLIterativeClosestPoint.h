@@ -1,5 +1,4 @@
-#ifndef PCLIterativeClosestPoint_H
-#define PCLIterativeClosestPoint_H
+#pragma once
 
 #include <sofa/core/objectmodel/BaseObject.h>
 #include <sofa/core/objectmodel/DataCallback.h>
@@ -33,5 +32,3 @@ private :
 } // namespace pointcloud
 
 } // namespace sofa
-
-#endif // PCLIterativeClosestPoint_H

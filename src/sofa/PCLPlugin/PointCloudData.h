@@ -1,8 +1,8 @@
-#ifndef PCLPOINTCLOUDDATA_H
-#define PCLPOINTCLOUDDATA_H
+#pragma once
 
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
+#include <pcl/registration/icp.h>
 
 namespace sofa {
 
@@ -52,4 +52,3 @@ protected:
 
 } // namespace sofa
 
-#endif // PCLPOINTCLOUDDATA_H

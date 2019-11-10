@@ -100,8 +100,8 @@ public :
 
     PCLAlphaFilter()
         : Inherited ()
-        , d_in (initData(&d_in, "input", "input point cloud"))
-        , d_out(initData(&d_out, "output", "output point cloud"))
+        , d_in (initData(&d_in, "inpcl", "input point cloud"))
+        , d_out(initData(&d_out, "outpcl", "output point cloud"))
         , d_alpha(initData(&d_alpha, "alpha", "cut parameter"))
         , d_draw_pcl(initData(&d_draw_pcl, "draw_pcl", "True to draw point cloud in viewer"))
     {
@@ -124,21 +124,24 @@ public :
 
     // filter with mu +/- sigma*alpha
     void filter () {
-        const PointCloud in = *(d_in.getValue().getPointCloud()) ;
-        PointCloud::Ptr & out = *d_out.beginEdit() ;
+        PointCloud::Ptr in = d_in.getValue().getPointCloud() ;
+        if (in == nullptr) {
+            return ;
+        }
+
+        PointCloud::Ptr out (new PointCloud) ; out->clear() ;
         // filter out first outliers
 
-        auto mu = bary (in) ;
-        auto sigma = stdev(in, mu) ;
+        auto mu = bary (*in) ;
+        auto sigma = stdev(*in, mu) ;
 //        std::cout << mu << " " << sigma << std::endl ;
 
-        out->clear() ;
-        for (auto const & point : in) {
+        for (auto const & point : *in) {
             if (point_in_sigma_mu(point, sigma, mu)) {
                 out->push_back(point) ;
             }
         }
-        d_out.endEdit();
+        d_out.setValue(out);
     }
 
     bool point_in_sigma_mu (const PointType & v, const PointType & sigma, const PointType & mu) {
