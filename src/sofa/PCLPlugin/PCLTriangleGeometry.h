@@ -1,11 +1,11 @@
 #ifndef PCLTriangleGeometry_H
 #define PCLTriangleGeometry_H
 
-#include <sofa/SlicingPlugin/PlaneGeometry.h>
 #include <sofa/collisionAlgorithm/BaseGeometry.h>
 #include <sofa/collisionAlgorithm/proximity/TriangleProximity.h>
 
 #include <pcl/surface/gp3.h>
+#include <pcl/PolygonMesh.h>
 
 namespace sofa {
 
@@ -23,10 +23,6 @@ public:
     typedef core::objectmodel::Data< VecCoord > DataVecCoord;
 
     SOFA_CLASS(GEOMETRY, Inherit);
-
-    Data<std::string> d_filename;
-
-    core::objectmodel::SingleLink<GEOMETRY, slicing::PlaneGeometry<DataTypes> , BaseLink::FLAG_STRONGLINK|BaseLink::FLAG_STOREPATH> l_planeGeometry;
 
     PCLTriangleGeometry();
 
@@ -52,15 +48,31 @@ public:
 
     //
 
-    void createTrianglesFromPointCloud();
+    // init
+    void addPointInPointCloud(std::vector<defaulttype::Vector3>);
+
+    void addPointInPointCloud(std::vector<defaulttype::Vector3>, std::vector<defaulttype::Vector3>);
+
+    void computeTriangles();
+
+    helper::vector<Triangle> getTriangles() {
+        return m_trianglesInPlane;
+    }
+
+//    void createTrianglesFromPointCloud();
 
 
 // Attributes
 
-    helper::vector<Triangle> m_trianglesInPlane;
-    helper::vector<defaulttype::Vector3> m_points;
+private:
+    pcl::PointCloud<pcl::PointXYZ>::Ptr m_cloud;
+    pcl::PointCloud<pcl::Normal>::Ptr m_normals;
+    pcl::PointCloud<pcl::PointNormal>::Ptr m_cloudWithNormals;
     pcl::GreedyProjectionTriangulation<pcl::PointNormal> m_gp3;
+    helper::vector<Triangle> m_trianglesInPlane;
+    bool m_needToComputeNormals;
 
+    pcl::PolygonMesh m_triangles;
 };
 
 } // namespace pointcloud

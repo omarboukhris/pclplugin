@@ -49,7 +49,7 @@ target_link_libraries(
 	SofaBaseLinearSolver
 	SofaBaseVisual SofaHelper SofaOpenglVisual
 	SofaComponentBase SofaSimulationTree SofaUserInteraction
-	ConstraintGeometry SlicingPlugin  ${PCL_LIBRARIES}
+	ConstraintGeometry  ${PCL_LIBRARIES}
 )
 #target_link_libraries(${PROJECT_NAME} SofaFramework SofaBase SofaSimulation SofaGeneral ConstraintGeometry NeedleConstraint)
 
@@ -59,3 +59,4 @@ sofa_generate_package(
 	TARGETS ${PROJECT_NAME}
 	INCLUDE_INSTALL_DIR ${${PROJECT_NAME}_INCLUDE_DIRS}
 )
+

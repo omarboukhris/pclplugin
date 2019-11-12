@@ -15,12 +15,11 @@ namespace sofa {
 
 namespace pointcloud {
 template<class DataTypes>
-PCLTriangleGeometry<DataTypes>::PCLTriangleGeometry() : d_filename(initData(&d_filename, std::string("/home/costemarin/Tools/PCL/Sources/test/bun0.pcd"), "filename", "Filename.")) {
+PCLTriangleGeometry<DataTypes>::PCLTriangleGeometry() {
+    m_cloud = boost::shared_ptr<pcl::PointCloud<pcl::PointXYZ> >(new pcl::PointCloud<pcl::PointXYZ>);
+    m_cloud->height = 1;
+    m_needToComputeNormals = true;
 }
-//    , l_planeGeometry(initLink("plane", "link to geometry that cut"))
-//{
-//    l_planeGeometry.setPath("@.");
-//}
 
 template<class DataTypes>
 inline collisionAlgorithm::BaseElementIterator::UPtr PCLTriangleGeometry<DataTypes>::begin(unsigned eid) const {
@@ -29,23 +28,12 @@ inline collisionAlgorithm::BaseElementIterator::UPtr PCLTriangleGeometry<DataTyp
 
 template<class DataTypes>
 void PCLTriangleGeometry<DataTypes>::draw(const core::visual::VisualParams * vparams) {
-    std::vector<defaulttype::Vector3> points;
-    defaulttype::Vec4f colour(0.7, 0.1, 0.5, 1.0);
-
-    for (unsigned i=0; i<m_trianglesInPlane.size(); i++) {
-        for (unsigned j=0; j<m_trianglesInPlane[i].size(); j++) {
-        points.push_back(m_points[m_trianglesInPlane[i][j]]);
-        }
-        vparams->drawTool()->drawTriangles(points, colour);
-        points.clear();
-    }
 }
 
 template<class DataTypes>
 void PCLTriangleGeometry<DataTypes>::init() {
     Inherit::init();
 
-    this->createTrianglesFromPointCloud();
 }
 
 template<class DataTypes>
@@ -124,89 +112,76 @@ defaulttype::BoundingBox PCLTriangleGeometry<DataTypes>::getBBox(const Triangle 
 }
 
 template<class DataTypes>
-void PCLTriangleGeometry<DataTypes>::createTrianglesFromPointCloud() {
-    // Load input file into a PointCloud<T> with an appropriate type
-      pcl::PointCloud<pcl::PointXYZ>::Ptr cloud (new pcl::PointCloud<pcl::PointXYZ>);
+void PCLTriangleGeometry<DataTypes>::addPointInPointCloud(std::vector<defaulttype::Vector3> points) {
+    for (unsigned i=0; i<points.size(); i++) {
+        pcl::PointXYZ currentPoint(points[i][0], points[i][1], points[i][2]);
+        m_cloud->push_back(currentPoint);
+    }
+}
 
-      std::cout << "Filename: " << d_filename.getValue() << std::endl;
+template<class DataTypes>
+void PCLTriangleGeometry<DataTypes>::addPointInPointCloud(std::vector<defaulttype::Vector3> points, std::vector<defaulttype::Vector3> normals) {
+    m_needToComputeNormals = false;
+    unsigned size = points.size();
 
-      pcl::io::loadPCDFile (d_filename.getValue(), *cloud);
-      //* the data should be available in cloud
+    if (points.size() != normals.size()) {
+        std::cerr << "Error: size of point cloud is not the same as normals." << std::endl;
+        size = std::min(points.size(), normals.size());
+    }
 
-      std::cout << "Size of point cloud loaded:" << cloud->points.size() << std::endl;
-
-      // Normal estimation*
-      pcl::NormalEstimation<pcl::PointXYZ, pcl::Normal> n;
-      pcl::PointCloud<pcl::Normal>::Ptr normals (new pcl::PointCloud<pcl::Normal>);
-      pcl::search::KdTree<pcl::PointXYZ>::Ptr tree (new pcl::search::KdTree<pcl::PointXYZ>);
-      tree->setInputCloud (cloud);
-      n.setInputCloud (cloud);
-      n.setSearchMethod (tree);
-      n.setKSearch (20);
-      n.compute (*normals);
-      //* normals should not contain the point normals + surface curvatures
-
-      std::cout << "Size of normals computed: " << normals->points.size() << std::endl;
-
-      // Concatenate the XYZ and normal fields*
-      pcl::PointCloud<pcl::PointNormal>::Ptr cloud_with_normals (new pcl::PointCloud<pcl::PointNormal>);
-      pcl::concatenateFields (*cloud, *normals, *cloud_with_normals);
-      //* cloud_with_normals = cloud + normals
-
-      std::cout << "Size of point cloud including normals: " << cloud_with_normals->points.size() << std::endl;
-
-      // Create search tree*
-      pcl::search::KdTree<pcl::PointNormal>::Ptr tree2 (new pcl::search::KdTree<pcl::PointNormal>);
-      tree2->setInputCloud (cloud_with_normals);
-
-      // Initialize objects
-
-      pcl::PolygonMesh triangles;
-
-      m_gp3.setInputCloud (cloud_with_normals);
-
-      m_gp3.setSearchMethod (tree2);
-      m_gp3.setSearchRadius (0.025);
-      m_gp3.setMu (2.5);
-      m_gp3.setMaximumNearestNeighbors (100);
-      m_gp3.setMaximumSurfaceAngle(M_PI/4); // 45 degrees
-      m_gp3.setMinimumAngle(M_PI/18); // 10 degrees
-      m_gp3.setMaximumAngle(2*M_PI/3); // 120 degrees
-      m_gp3.setNormalConsistency(false);
-
-
-      std::cout << "***" << std::endl;
-      std::cout << "Greedy projection parameters: " << std::endl;
-      std::cout << "Size of point cloud: " << m_gp3.getInputCloud()->points.size() << std::endl;
-      std::cout << "Parameters: " << m_gp3.getMaximumNearestNeighbors() << ", " << m_gp3.getMu() << std::endl;
-      std::cout << "***" << std::endl;
-
-      // Reconstruct
-      m_gp3.reconstruct (triangles.polygons);
-
-      std::cout << triangles.polygons.size() << std::endl;
-
-      std::cout << "End." << std::endl;
-
-      for (unsigned i=0; i<triangles.polygons.size(); i++) {
-//          std::cout << cloud->points[triangles.polygons[i].vertices[0]] << std::endl;
-//          std::cout << cloud->points[triangles.polygons[i].vertices[1]] << std::endl;
-//          std::cout << cloud->points[triangles.polygons[i].vertices[2]] << std::endl;
-
-          Triangle currentTriangle(triangles.polygons[i].vertices[0], triangles.polygons[i].vertices[1], triangles.polygons[i].vertices[2]);
-          m_trianglesInPlane.push_back(currentTriangle);
-      }
-
-      for (unsigned j=0; j<cloud->points.size(); j++) {
-        defaulttype::Vector3 currentPoint(cloud->points[j].x, cloud->points[j].y, cloud->points[j].z);
-        m_points.push_back(currentPoint);
-      }
-//      // Saving the result
-//      pcl::io::saveVTKFile ("/home/costemarin/Bureau/testTriangulation.vtk", triangles);
+    for (unsigned i=0; i<points.size(); i++) {
+        pcl::PointXYZ currentPoint(points[i][0], points[i][1], points[i][2]);
+        m_cloud->push_back(currentPoint);
+    }
 
 }
 
+template<class DataTypes>
+void PCLTriangleGeometry<DataTypes>::computeTriangles() {
+    if (m_cloud->points.size() == 0)
+        return;
+    // Normal estimation if needed
+    if (m_needToComputeNormals == true) {
+        pcl::NormalEstimation<pcl::PointXYZ, pcl::Normal> n;
+        pcl::search::KdTree<pcl::PointXYZ>::Ptr tree (new pcl::search::KdTree<pcl::PointXYZ>);
+        tree->setInputCloud (m_cloud);
+        n.setInputCloud (m_cloud);
+        n.setSearchMethod (tree);
+        n.setKSearch (20);
+        n.compute (*m_normals);
+    }
 
+    // Concatenate fields
+    pcl::concatenateFields (*m_cloud, *m_normals, *m_cloudWithNormals);
+
+    // Create search tree
+    pcl::search::KdTree<pcl::PointNormal>::Ptr tree2 (new pcl::search::KdTree<pcl::PointNormal>);
+    tree2->setInputCloud (m_cloudWithNormals);
+
+    // Set the maximum distance between connected points (maximum edge length)
+    m_gp3.setSearchRadius (1.0);
+
+    // Set typical values for the parameters
+    m_gp3.setMu (10.0);
+    m_gp3.setMaximumNearestNeighbors (100);
+    m_gp3.setMaximumSurfaceAngle(M_PI/4); // 45 degrees
+    m_gp3.setMinimumAngle(0); // 10 degrees
+    m_gp3.setMaximumAngle(2*M_PI/3); // 120 degrees
+    m_gp3.setNormalConsistency(false);
+
+    // Get result
+    m_gp3.setInputCloud (m_cloudWithNormals);
+    m_gp3.setSearchMethod (tree2);
+    m_gp3.reconstruct (m_triangles);
+
+    for (unsigned i=0; i<m_triangles.polygons.size(); i++) {
+        Triangle currentTriangle;
+        for (unsigned j=0; j<3; j++)
+            currentTriangle[j] = m_triangles.polygons[i].vertices[j];
+        m_trianglesInPlane.push_back(currentTriangle);
+    }
+
+}
 
 
 } // namespace pointcloud
