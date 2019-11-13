@@ -10,12 +10,11 @@ namespace sofa {
 namespace pointcloud {
 
 PCLIterativeClosestPoint::PCLIterativeClosestPoint()
-    : d_pcloud (initData(&d_pcloud, "input", "input point cloud"))
-    , source(new PointCloudData::PointCloud)
-    , target(new PointCloudData::PointCloud)
-    , source_is_set(false)
+    : Inherit()
+    , d_source(initData(&d_source, "source", "source point cloud"))
+    , d_target(initData(&d_target, "target", "target point cloud"))
 {
-    c_pcl.addInputs({&d_pcloud});
+    c_pcl.addInputs({&d_source, &d_target});
     c_pcl.addCallback(std::bind(&PCLIterativeClosestPoint::register_pcl, this));
 }
 
@@ -26,45 +25,25 @@ void PCLIterativeClosestPoint::init() {
 }
 
 void PCLIterativeClosestPoint::register_pcl() {
-    if (d_pcloud.getValue().getPointCloud() == nullptr) {
-        std::cout << "\tnullptr" << std::endl ;
+    if (d_source.getValue().getPointCloud() == nullptr) {
+        std::cout << "(PCLIterativeClosestPoint) source is nullptr" << std::endl ;
         return ;
     }
-    if (!source_is_set) {
-        pcl::copyPointCloud(
-            *(d_pcloud.getValue().getPointCloud()),
-            *source
-        ) ;
-        source_is_set = true ;
-        return ;
-    } else {
-        pcl::copyPointCloud(
-            *(d_pcloud.getValue().getPointCloud()),
-            *target
-        ) ;
-    }
-
-    if (source->size() == 0 || target->size() == 0) {
-        pcl::copyPointCloud(*target, *source) ;
+    if (d_target.getValue().getPointCloud() == nullptr) {
+        std::cout << "(PCLIterativeClosestPoint) target is nullptr" << std::endl ;
         return ;
     }
 
     pcl::IterativeClosestPoint<PointCloudData::PointType, PointCloudData::PointType> icp ;
-    icp.setInputSource(source);
-    icp.setInputTarget(target);
+    icp.setInputSource(d_source.getValue().getPointCloud());
+    icp.setInputTarget(d_target.getValue().getPointCloud());
 
     PointCloudData::PointCloud result ;
     icp.align(result);
 
-    std::ofstream myfile;
-    myfile.open ("/home/omar/Data/SergeiExp/rs_exp_0/projection.txt",
-                 std::ios::out | std::ios::app);
-    myfile << this->getTime() << " " << icp.hasConverged() << " score " << icp.getFitnessScore() << std::endl
-              << icp.getFinalTransformation() << std::endl ;
-    myfile.close();
     std::cout << this->getTime() << " " << icp.hasConverged() << " score " << icp.getFitnessScore() << std::endl
               << icp.getFinalTransformation() << std::endl ;
-    pcl::copyPointCloud(*target, *source) ;
+    // there should be a format for output : maybe Mat4x4 or 3x4
 }
 
 } // namespace pointcloud

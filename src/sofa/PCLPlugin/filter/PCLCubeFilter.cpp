@@ -24,7 +24,7 @@
 ******************************************************************************/
 
 
-#include "PCLStaticFilter.h"
+#include "PCLCubeFilter.h"
 #include <sofa/core/ObjectFactory.h>
 
 namespace sofa
@@ -33,10 +33,10 @@ namespace sofa
 namespace pointcloud
 {
 
-SOFA_DECL_CLASS (PCLStaticFilter)
+SOFA_DECL_CLASS (PCLCubeFilter)
 
-int PCLStaticFilterClass = core::RegisterObject ( "filters point cloud outliers" )
-.add<PCLStaticFilter>(true)
+int PCLCubeFilterClass = core::RegisterObject ( "filters point cloud outliers" )
+.add<PCLCubeFilter>(true)
 ;
 
 } // namespace pointcloud

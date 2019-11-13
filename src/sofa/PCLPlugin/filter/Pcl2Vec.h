@@ -103,6 +103,55 @@ public :
 
 } ;
 
+class Vec2Pcl : public core::objectmodel::BaseObject {
+public :
+    SOFA_CLASS( Vec2Pcl, core::objectmodel::BaseObject);
+    typedef core::objectmodel::BaseObject Inherited;
+
+    Data<helper::vector<defaulttype::Vector3> >  d_in ;
+    Data<PointCloudData> d_out ;
+    Data<bool> d_draw_pcl ;
+
+    DataCallback c_in ;
+
+    Vec2Pcl()
+        : Inherited ()
+        , d_in (initData(&d_in, "input", "input point cloud"))
+        , d_out(initData(&d_out, "outpcl", "output point cloud"))
+        , d_draw_pcl(initData(&d_draw_pcl, "draw_pcl", "True to draw point cloud in viewer"))
+    {
+        c_in.addInputs({&d_in}) ;
+        c_in.addCallback(std::bind(&Vec2Pcl::filter, this));
+    }
+
+    void draw(const core::visual::VisualParams* vparams) {
+        if (!d_draw_pcl.getValue()) {
+            return ;
+        }
+
+        for (const auto & point : d_in.getValue()) {
+            vparams->drawTool()->drawPoint(
+                point,
+                sofa::defaulttype::Vector4 (0, 255, 0, 0)
+            );
+        }
+    }
+
+    // filter with mu +/- sigma*alpha
+    void filter () {
+        const auto in = d_in.getValue() ;
+
+        PointCloud::Ptr out (new PointCloud) ;
+        out->clear() ;
+        for (auto const & point : in) {
+            PointCloud::PointType pt (point[0], point[1], point[2]) ;
+            out->push_back(pt) ;
+        }
+        d_out.setValue(out);
+    }
+
+} ;
+
 }
 
 }

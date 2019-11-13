@@ -50,9 +50,9 @@ using namespace core::objectmodel ;
 typedef pcl::PointXYZ PointType ;
 typedef pcl::PointCloud<PointType> PointCloud ;
 
-class PCLStaticFilter : public core::objectmodel::BaseObject {
+class PCLCubeFilter : public core::objectmodel::BaseObject {
 public :
-    SOFA_CLASS( PCLStaticFilter, core::objectmodel::BaseObject);
+    SOFA_CLASS( PCLCubeFilter, core::objectmodel::BaseObject);
     typedef core::objectmodel::BaseObject Inherited;
 
     Data<PointCloudData> d_in ;
@@ -62,7 +62,7 @@ public :
 
     DataCallback c_in ;
 
-    PCLStaticFilter()
+    PCLCubeFilter()
         : Inherited ()
         , d_in (initData(&d_in, "inpcl", "input point cloud"))
         , d_out(initData(&d_out, "outpcl", "output point cloud"))
@@ -70,7 +70,7 @@ public :
         , d_draw_pcl(initData(&d_draw_pcl, "draw_pcl", "True to draw point cloud in viewer"))
     {
         c_in.addInputs({&d_in, &d_alpha}) ;
-        c_in.addCallback(std::bind(&PCLStaticFilter::filter, this));
+        c_in.addCallback(std::bind(&PCLCubeFilter::filter, this));
     }
 
     void draw(const core::visual::VisualParams* vparams) {

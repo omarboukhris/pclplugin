@@ -9,22 +9,24 @@ namespace sofa {
 
 namespace pointcloud {
 
-class PCLIterativeClosestPoint : public core::objectmodel::BaseObject {
+class PCLSuccessiveICP : public core::objectmodel::BaseObject {
 public:
     typedef core::objectmodel::BaseObject Inherit ;
-    SOFA_CLASS(PCLIterativeClosestPoint, Inherit);
+    SOFA_CLASS(PCLSuccessiveICP, Inherit);
 
-    Data<PointCloudData> d_source ;
-    Data<PointCloudData> d_target ;
+    Data<PointCloudData> d_pcloud ;
     core::objectmodel::DataCallback c_pcl ;
 
-    PCLIterativeClosestPoint();
+    PCLSuccessiveICP();
 
     void draw(const core::visual::VisualParams * vparams);
 
     void init() override;
 
     void register_pcl () ;
+private :
+    PointCloudData::PointCloud::Ptr source, target ;
+    bool source_is_set ;
 };
 
 } // namespace pointcloud
