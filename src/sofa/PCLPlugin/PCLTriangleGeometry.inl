@@ -14,10 +14,24 @@
 namespace sofa {
 
 namespace pointcloud {
+
+typedef core::topology::BaseMeshTopology::Triangle Triangle;
+
 template<class DataTypes>
-PCLTriangleGeometry<DataTypes>::PCLTriangleGeometry() {
+PCLTriangleGeometry<DataTypes>::PCLTriangleGeometry() : d_mu(initData(&d_mu, 2.5, "mu", "Adaptation to density."))
+  , d_nearestNeighbors(initData(&d_nearestNeighbors, 100, "numberOfNearestNeighbors", "Number of nearest neighbors."))
+  , d_maxSurfaceAngle(initData(&d_maxSurfaceAngle, M_PI/4, "maxSurfaceAngle", "Maximum surface angle."))
+  , d_minAngle(initData(&d_minAngle, M_PI/18, "minAngle", "Minimum angle allowed."))
+  , d_maxAngle(initData(&d_maxAngle, 2*M_PI/3, "maxAngle", "Maximum angle allowed.")) {
     m_cloud = boost::shared_ptr<pcl::PointCloud<pcl::PointXYZ> >(new pcl::PointCloud<pcl::PointXYZ>);
     m_cloud->height = 1;
+
+    m_normals = boost::shared_ptr<pcl::PointCloud<pcl::Normal> >(new pcl::PointCloud<pcl::Normal>);
+    m_normals->height = 1;
+
+    m_cloudWithNormals = boost::shared_ptr<pcl::PointCloud<pcl::PointNormal> >(new pcl::PointCloud<pcl::PointNormal>);
+    m_cloudWithNormals->height = 1;
+
     m_needToComputeNormals = true;
 }
 
@@ -28,6 +42,35 @@ inline collisionAlgorithm::BaseElementIterator::UPtr PCLTriangleGeometry<DataTyp
 
 template<class DataTypes>
 void PCLTriangleGeometry<DataTypes>::draw(const core::visual::VisualParams * vparams) {
+    Inherit::draw(vparams);
+
+
+    std::vector<defaulttype::Vector3> points;
+    defaulttype::Vec4f colour(0.7, 0.1, 0.5, 1.0);
+    std::vector<defaulttype::Vec4f> colours;
+    colours.push_back(colour);
+
+//    for (unsigned i=0; i<m_triangles.polygons.size(); i++) {
+//        defaulttype::Vector3 currentTriangle;
+//        for (unsigned j=0; j<3; j++) {
+//            currentTriangle[0] = m_cloud->points[m_triangles.polygons[i].vertices[j]].x;
+//            currentTriangle[1] = m_cloud->points[m_triangles.polygons[i].vertices[j]].y;
+//            currentTriangle[2] = m_cloud->points[m_triangles.polygons[i].vertices[j]].z;
+//            points.push_back(currentTriangle);
+//        }
+
+////        std::cout << currentTriangle << std::endl;
+//        vparams->drawTool()->drawTriangles(points, colour);
+//        points.clear();
+//    }
+
+//    for (unsigned i=0; i<m_normals->points.size(); i++) {
+//        defaulttype::Vector3 direction(m_normals->points[i].normal_x, m_normals->points[i].normal_y, m_normals->points[i].normal_z);
+//        defaulttype::Vector3 point(m_cloud->points[i].x, m_cloud->points[i].y, m_cloud->points[i].z);
+//        direction.normalize();
+//        vparams->drawTool()->drawArrow(point, point + 2.0*direction, 0.2, colour);
+//    }
+
 }
 
 template<class DataTypes>
@@ -112,32 +155,54 @@ defaulttype::BoundingBox PCLTriangleGeometry<DataTypes>::getBBox(const Triangle 
 }
 
 template<class DataTypes>
-void PCLTriangleGeometry<DataTypes>::addPointInPointCloud(std::vector<defaulttype::Vector3> points) {
+void PCLTriangleGeometry<DataTypes>::addPointsInPointCloud(std::vector<defaulttype::Vector3> points) {
+    if (this->m_cloud->points.size() != 0)
+        this->m_cloud->clear();
+    if (points.size() == 0)
+        return;
     for (unsigned i=0; i<points.size(); i++) {
         pcl::PointXYZ currentPoint(points[i][0], points[i][1], points[i][2]);
-        m_cloud->push_back(currentPoint);
+        m_cloud->points.push_back(currentPoint);
     }
 }
 
 template<class DataTypes>
-void PCLTriangleGeometry<DataTypes>::addPointInPointCloud(std::vector<defaulttype::Vector3> points, std::vector<defaulttype::Vector3> normals) {
+void PCLTriangleGeometry<DataTypes>::addPointsInPointCloud(std::vector<defaulttype::Vector3> points, std::vector<defaulttype::Vector3> normals) {
+    if (this->m_cloud->points.size() != 0)
+        this->m_cloud->clear(); this->m_normals->clear();
     m_needToComputeNormals = false;
     unsigned size = points.size();
+    if (size == 0)
+        return;
 
     if (points.size() != normals.size()) {
         std::cerr << "Error: size of point cloud is not the same as normals." << std::endl;
-        size = std::min(points.size(), normals.size());
+        return;
     }
 
     for (unsigned i=0; i<points.size(); i++) {
         pcl::PointXYZ currentPoint(points[i][0], points[i][1], points[i][2]);
-        m_cloud->push_back(currentPoint);
+        m_cloud->points.push_back(currentPoint);
+        pcl::Normal currentNormal(normals[i][0], normals[i][1], normals[i][2]);
+        m_normals->points.push_back(currentNormal);
     }
 
 }
 
 template<class DataTypes>
-void PCLTriangleGeometry<DataTypes>::computeTriangles() {
+helper::vector<Triangle> PCLTriangleGeometry<DataTypes>::getTriangles() {
+    helper::vector<Triangle> trianglesInPlane;
+    for (unsigned i=0; i<m_triangles.polygons.size(); i++) {
+        Triangle currentTriangle;
+        for (unsigned j=0; j<3; j++)
+            currentTriangle[j] = m_triangles.polygons[i].vertices[j];
+        trianglesInPlane.push_back(currentTriangle);
+    }
+    return trianglesInPlane;
+}
+
+template<class DataTypes>
+void PCLTriangleGeometry<DataTypes>::computeTriangles(double searchR) {
     if (m_cloud->points.size() == 0)
         return;
     // Normal estimation if needed
@@ -159,30 +224,24 @@ void PCLTriangleGeometry<DataTypes>::computeTriangles() {
     tree2->setInputCloud (m_cloudWithNormals);
 
     // Set the maximum distance between connected points (maximum edge length)
-    m_gp3.setSearchRadius (1.0);
+    m_gp3.setSearchRadius (d_mu.getValue() * searchR);
 
     // Set typical values for the parameters
-    m_gp3.setMu (10.0);
-    m_gp3.setMaximumNearestNeighbors (100);
-    m_gp3.setMaximumSurfaceAngle(M_PI/4); // 45 degrees
-    m_gp3.setMinimumAngle(0); // 10 degrees
-    m_gp3.setMaximumAngle(2*M_PI/3); // 120 degrees
-    m_gp3.setNormalConsistency(false);
+    m_gp3.setMu (d_mu.getValue());
+    m_gp3.setMaximumNearestNeighbors (d_nearestNeighbors.getValue());
+    m_gp3.setMaximumSurfaceAngle(d_maxSurfaceAngle.getValue()); // 45 degrees
+    m_gp3.setMinimumAngle(d_minAngle.getValue()); // 10 degrees
+    m_gp3.setMaximumAngle(d_maxAngle.getValue()); // 120 degrees
+    m_gp3.setNormalConsistency(true);
 
     // Get result
     m_gp3.setInputCloud (m_cloudWithNormals);
     m_gp3.setSearchMethod (tree2);
     m_gp3.reconstruct (m_triangles);
 
-    for (unsigned i=0; i<m_triangles.polygons.size(); i++) {
-        Triangle currentTriangle;
-        for (unsigned j=0; j<3; j++)
-            currentTriangle[j] = m_triangles.polygons[i].vertices[j];
-        m_trianglesInPlane.push_back(currentTriangle);
-    }
-
+//    std::cout << "Number of points: " << m_cloudWithNormals->points.size() << std::endl;
+//    std::cout << "Number of triangles: " << m_triangles.polygons.size() << std::endl;
 }
-
 
 } // namespace pointcloud
 

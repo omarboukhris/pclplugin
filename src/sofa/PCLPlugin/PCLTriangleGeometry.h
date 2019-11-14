@@ -24,6 +24,12 @@ public:
 
     SOFA_CLASS(GEOMETRY, Inherit);
 
+    Data<double> d_mu;
+    Data<int> d_nearestNeighbors;
+    Data<double> d_maxSurfaceAngle;
+    Data<double> d_minAngle;
+    Data<double> d_maxAngle;
+
     PCLTriangleGeometry();
 
     inline collisionAlgorithm::BaseElementIterator::UPtr begin(unsigned eid = 0) const override;
@@ -49,22 +55,19 @@ public:
     //
 
     // init
-    void addPointInPointCloud(std::vector<defaulttype::Vector3>);
+    void addPointsInPointCloud(std::vector<defaulttype::Vector3> points);
 
-    void addPointInPointCloud(std::vector<defaulttype::Vector3>, std::vector<defaulttype::Vector3>);
+    void addPointsInPointCloud(std::vector<defaulttype::Vector3> points, std::vector<defaulttype::Vector3> normals);
 
-    void computeTriangles();
+    void computeTriangles(double searchR);
 
-    helper::vector<Triangle> getTriangles() {
-        return m_trianglesInPlane;
-    }
+    helper::vector<Triangle> getTriangles();
 
-//    void createTrianglesFromPointCloud();
-
+    unsigned getSizeOfPointCloud() {return m_cloudWithNormals->points.size();}
 
 // Attributes
 
-private:
+//private:
     pcl::PointCloud<pcl::PointXYZ>::Ptr m_cloud;
     pcl::PointCloud<pcl::Normal>::Ptr m_normals;
     pcl::PointCloud<pcl::PointNormal>::Ptr m_cloudWithNormals;
