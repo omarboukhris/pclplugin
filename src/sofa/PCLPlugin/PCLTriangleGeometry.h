@@ -3,6 +3,7 @@
 
 #include <sofa/collisionAlgorithm/BaseGeometry.h>
 #include <sofa/collisionAlgorithm/proximity/TriangleProximity.h>
+#include <sofa/collisionAlgorithm/DataDetectionOutput.h>
 
 #include <pcl/surface/gp3.h>
 #include <pcl/PolygonMesh.h>
@@ -29,6 +30,10 @@ public:
     Data<double> d_maxSurfaceAngle;
     Data<double> d_minAngle;
     Data<double> d_maxAngle;
+    Data<double> d_searchRadius;
+    Data<helper::vector<defaulttype::Vector3>> d_points;
+    core::objectmodel::DataCallback c_pointsCallback;
+
 
     PCLTriangleGeometry();
 
@@ -52,22 +57,18 @@ public:
 
     defaulttype::BoundingBox getBBox(const Triangle & triangle) const;
 
-    //
+    // Add points in the point cloud withouth generating normals
+    void addPointsInPointCloud();
 
-    // init
-    void addPointsInPointCloud(std::vector<defaulttype::Vector3> points);
+    // Comput ethe triangles
+    void computeTriangles();
 
-    void addPointsInPointCloud(std::vector<defaulttype::Vector3> points, std::vector<defaulttype::Vector3> normals);
-
-    void computeTriangles(double searchR);
-
-    helper::vector<Triangle> getTriangles();
+    // Function to execute when the points are modified
+    void pointsChanged();
 
     unsigned getSizeOfPointCloud() {return m_cloudWithNormals->points.size();}
 
-// Attributes
-
-//private:
+private:
     pcl::PointCloud<pcl::PointXYZ>::Ptr m_cloud;
     pcl::PointCloud<pcl::Normal>::Ptr m_normals;
     pcl::PointCloud<pcl::PointNormal>::Ptr m_cloudWithNormals;
