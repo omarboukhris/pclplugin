@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.1)
 project(PCLPlugin)
 
-find_package(PCL 1.9 REQUIRED)
+find_package(PCL 1.8 REQUIRED)
 
 file(GLOB_RECURSE HEADER_FILES
     "src/*.h"
@@ -33,9 +33,12 @@ if(COMMAND setupGitInfo)
 	setupGitInfo(PLUGIN_GIT_INFO)
 endif()
 
+include_directories(${PCL_INCLUDE_DIRS})
+add_definitions(${PCL_DEFINITIONS})
+
 set_source_files_properties(${IGNORED_FILES} PROPERTIES HEADER_FILE_ONLY TRUE)
 add_library(${PROJECT_NAME} SHARED ${SOURCE_FILES} ${HEADER_FILES} ${SCENES_FILES} ${README_FILES} )
-set(${PROJECT_NAME}_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/src")
+set(${PROJECT_NAME}_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/src;${PCL_INCLUDE_DIRS}")
 
 target_include_directories(${PROJECT_NAME} PUBLIC "$<BUILD_INTERFACE:${${PROJECT_NAME}_INCLUDE_DIRS}>")
 target_include_directories(${PROJECT_NAME} PUBLIC "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>")
