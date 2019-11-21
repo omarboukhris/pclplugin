@@ -68,6 +68,8 @@ public:
 
     unsigned getSizeOfPointCloud() {return m_cloudWithNormals->points.size();}
 
+    void printDebugInfo();
+
 private:
     pcl::PointCloud<pcl::PointXYZ>::Ptr m_cloud;
     pcl::PointCloud<pcl::Normal>::Ptr m_normals;

@@ -24,7 +24,7 @@ PCLTriangleGeometry<DataTypes>::PCLTriangleGeometry() : d_mu(initData(&d_mu, 2.5
   , d_minAngle(initData(&d_minAngle, M_PI/18, "minAngle", "Minimum angle allowed."))
   , d_maxAngle(initData(&d_maxAngle, 2*M_PI/3, "maxAngle", "Maximum angle allowed."))
   , d_points(initData(&d_points, "planePoints", "Points to triangulate."))
-  , d_searchRadius(initData(&d_searchRadius, "searchRadius", "Search radius around.")) {
+  , d_searchRadius(initData(&d_searchRadius, 1.0, "searchRadius", "Search radius around.")) {
 
     m_cloud = boost::shared_ptr<pcl::PointCloud<pcl::PointXYZ> >(new pcl::PointCloud<pcl::PointXYZ>);
     m_cloud->height = 1;
@@ -69,18 +69,20 @@ void PCLTriangleGeometry<DataTypes>::draw(const core::visual::VisualParams * vpa
         points.clear();
     }
 
-    for (unsigned i=0; i<m_normals->points.size(); i++) {
-        defaulttype::Vector3 direction(m_normals->points[i].normal_x, m_normals->points[i].normal_y, m_normals->points[i].normal_z);
-        defaulttype::Vector3 point(m_cloud->points[i].x, m_cloud->points[i].y, m_cloud->points[i].z);
-        direction.normalize();
-        vparams->drawTool()->drawArrow(point, point + 2.0*direction, 0.2, colour);
-    }
+//    for (unsigned i=0; i<m_normals->points.size(); i++) {
+//        defaulttype::Vector3 direction(m_normals->points[i].normal_x, m_normals->points[i].normal_y, m_normals->points[i].normal_z);
+//        defaulttype::Vector3 point(m_cloud->points[i].x, m_cloud->points[i].y, m_cloud->points[i].z);
+//        direction.normalize();
+//        vparams->drawTool()->drawArrow(point, point + 2.0*direction, 0.2, colour);
+//    }
 
 }
 
 template<class DataTypes>
 void PCLTriangleGeometry<DataTypes>::init() {
     Inherit::init();
+
+    m_cloud->clear();
 
 }
 
@@ -161,11 +163,11 @@ defaulttype::BoundingBox PCLTriangleGeometry<DataTypes>::getBBox(const Triangle 
 
 template<class DataTypes>
 void PCLTriangleGeometry<DataTypes>::addPointsInPointCloud() {
-    m_cloud->points.clear();
+    unsigned currentSize = m_cloud->points.size();
     helper::vector<defaulttype::Vector3> points = d_points.getValue();
     if (points.size() == 0)
         return;
-    for (unsigned i=0; i<points.size(); i++) {
+    for (unsigned i=currentSize; i<points.size(); i++) {
         pcl::PointXYZ currentPoint(points[i][0], points[i][1], points[i][2]);
         m_cloud->points.push_back(currentPoint);
     }
@@ -208,13 +210,24 @@ void PCLTriangleGeometry<DataTypes>::computeTriangles() {
     m_gp3.setInputCloud (m_cloudWithNormals);
     m_gp3.setSearchMethod (tree2);
     m_gp3.reconstruct (m_triangles);
+
+    this->printDebugInfo();
+
 }
 
 template<class DataTypes>
 void PCLTriangleGeometry<DataTypes>::pointsChanged() {
+    this->addPointsInPointCloud();
     this->computeTriangles();
+}
+
+template<class DataTypes>
+void PCLTriangleGeometry<DataTypes>::printDebugInfo() {
+    std::cout << "Number of points in the point cloud: " << m_cloud->points.size() << std::endl;
+    std::cout << "Number of triangles created: " << m_triangles.polygons.size() << std::endl;
 
 }
+
 } // namespace pointcloud
 
 } //end namespace sofa
