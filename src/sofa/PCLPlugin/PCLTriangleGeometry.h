@@ -13,11 +13,11 @@ namespace sofa {
 namespace pointcloud {
 
 template<class DataTypes>
-class PCLTriangleGeometry : public collisionAlgorithm::TBaseGeometry<DataTypes> {
+class PCLTriangleGeometry : public core::objectmodel::BaseObject {
 public:
     typedef DataTypes TDataTypes;
     typedef PCLTriangleGeometry<DataTypes> GEOMETRY;
-    typedef collisionAlgorithm::TBaseGeometry<DataTypes> Inherit;
+    typedef core::objectmodel::BaseObject Inherit;
     typedef sofa::core::topology::BaseMeshTopology::Edge Edge;
     typedef core::topology::BaseMeshTopology::Triangle Triangle;
     typedef typename DataTypes::VecCoord VecCoord;
@@ -35,31 +35,18 @@ public:
     Data<int> d_treeSearch;
     Data<bool> d_drawTriangles;
     Data<bool> d_drawNormals;
+    Data<bool> d_drawTrianglesWire;
+    Data<helper::vector<Triangle>> d_trianglesInPlane;
 
     core::objectmodel::DataCallback c_pointsCallback;
 
 
     PCLTriangleGeometry();
 
-    inline collisionAlgorithm::BaseElementIterator::UPtr begin(unsigned eid = 0) const override;
-
     void draw(const core::visual::VisualParams * vparams);
 
     void init() override;
 
-    void prepareDetection() override;
-
-    inline const sofa::core::topology::BaseMeshTopology::Triangle getTriangle(unsigned eid) const;
-
-    inline defaulttype::Vector3 getNormal(const collisionAlgorithm::TriangleProximity & data) const;
-
-    inline collisionAlgorithm::TriangleProximity project(unsigned eid, const Triangle & triangle, const defaulttype::Vector3 & P) const;
-
-    inline defaulttype::Vector3 getPosition(const collisionAlgorithm::TriangleProximity & data, core::VecCoordId v = core::VecCoordId::position()) const;
-
-    collisionAlgorithm::TriangleProximity center(unsigned eid,const Triangle & triangle) const;
-
-    defaulttype::BoundingBox getBBox(const Triangle & triangle) const;
 
     // Add points in the point cloud withouth generating normals
     void addPointsInPointCloud();
@@ -71,6 +58,8 @@ public:
     void pointsChanged();
 
     unsigned getSizeOfPointCloud() {return m_cloudWithNormals->points.size();}
+
+    void modifyTriangles();
 
     void printDebugInfo();
 
@@ -84,6 +73,7 @@ private:
     pcl::PointCloud<pcl::PointXYZ>::Ptr m_cloudSmoothed;
 
     pcl::PolygonMesh m_triangles;
+    unsigned m_prevSize;
 };
 
 } // namespace pointcloud
