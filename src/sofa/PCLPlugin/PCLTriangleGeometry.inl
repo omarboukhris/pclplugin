@@ -9,6 +9,7 @@
 #include <pcl/kdtree/kdtree_flann.h>
 #include <pcl/features/normal_3d.h>
 #include <pcl/io/vtk_io.h>
+#include <pcl/surface/mls.h>
 
 
 namespace sofa {
@@ -21,13 +22,19 @@ template<class DataTypes>
 PCLTriangleGeometry<DataTypes>::PCLTriangleGeometry() : d_mu(initData(&d_mu, 2.5, "mu", "Adaptation to density."))
   , d_nearestNeighbors(initData(&d_nearestNeighbors, 100, "numberOfNearestNeighbors", "Number of nearest neighbors."))
   , d_maxSurfaceAngle(initData(&d_maxSurfaceAngle, M_PI/4, "maxSurfaceAngle", "Maximum surface angle."))
-  , d_minAngle(initData(&d_minAngle, M_PI/18, "minAngle", "Minimum angle allowed."))
-  , d_maxAngle(initData(&d_maxAngle, 2*M_PI/3, "maxAngle", "Maximum angle allowed."))
+  , d_minAngle(initData(&d_minAngle, M_PI/18.0, "minAngle", "Minimum angle allowed."))
+  , d_maxAngle(initData(&d_maxAngle, 2.0*M_PI/3.0, "maxAngle", "Maximum angle allowed."))
   , d_points(initData(&d_points, "planePoints", "Points to triangulate."))
-  , d_searchRadius(initData(&d_searchRadius, 1.0, "searchRadius", "Search radius around.")) {
+  , d_searchRadius(initData(&d_searchRadius, 1.0, "searchRadius", "Search radius around."))
+  , d_treeSearch(initData(&d_treeSearch, 50, "treeSearch", "Search for tree to estimate normals."))
+  , d_drawTriangles(initData(&d_drawTriangles, false, "drawTriangles", "DrawTriangles."))
+  , d_drawNormals(initData(&d_drawNormals, false, "drawNormals", "Draw normals.")){
 
     m_cloud = boost::shared_ptr<pcl::PointCloud<pcl::PointXYZ> >(new pcl::PointCloud<pcl::PointXYZ>);
     m_cloud->height = 1;
+
+    m_cloudSmoothed = boost::shared_ptr<pcl::PointCloud<pcl::PointXYZ> >(new pcl::PointCloud<pcl::PointXYZ>);
+    m_cloudSmoothed->height = 1;
 
     m_normals = boost::shared_ptr<pcl::PointCloud<pcl::Normal> >(new pcl::PointCloud<pcl::Normal>);
     m_normals->height = 1;
@@ -57,24 +64,28 @@ void PCLTriangleGeometry<DataTypes>::draw(const core::visual::VisualParams * vpa
     std::vector<defaulttype::Vec4f> colours;
     colours.push_back(colour);
 
-    for (unsigned i=0; i<m_triangles.polygons.size(); i++) {
-        defaulttype::Vector3 currentTriangle;
-        for (unsigned j=0; j<3; j++) {
-            currentTriangle[0] = m_cloud->points[m_triangles.polygons[i].vertices[j]].x;
-            currentTriangle[1] = m_cloud->points[m_triangles.polygons[i].vertices[j]].y;
-            currentTriangle[2] = m_cloud->points[m_triangles.polygons[i].vertices[j]].z;
-            points.push_back(currentTriangle);
+    if (d_drawTriangles.getValue() == true) {
+        for (unsigned i=0; i<m_triangles.polygons.size(); i++) {
+            defaulttype::Vector3 currentTriangle;
+            for (unsigned j=0; j<3; j++) {
+                currentTriangle[0] = m_cloud->points[m_triangles.polygons[i].vertices[j]].x;
+                currentTriangle[1] = m_cloud->points[m_triangles.polygons[i].vertices[j]].y;
+                currentTriangle[2] = m_cloud->points[m_triangles.polygons[i].vertices[j]].z;
+                points.push_back(currentTriangle);
+            }
+            vparams->drawTool()->drawTriangles(points, colour);
+            points.clear();
         }
-        vparams->drawTool()->drawTriangles(points, colour);
-        points.clear();
     }
 
-//    for (unsigned i=0; i<m_normals->points.size(); i++) {
-//        defaulttype::Vector3 direction(m_normals->points[i].normal_x, m_normals->points[i].normal_y, m_normals->points[i].normal_z);
-//        defaulttype::Vector3 point(m_cloud->points[i].x, m_cloud->points[i].y, m_cloud->points[i].z);
-//        direction.normalize();
-//        vparams->drawTool()->drawArrow(point, point + 2.0*direction, 0.2, colour);
-//    }
+    if (d_drawNormals.getValue() == true) {
+        for (unsigned i=0; i<m_normals->points.size(); i++) {
+            defaulttype::Vector3 direction(m_normals->points[i].normal_x, m_normals->points[i].normal_y, m_normals->points[i].normal_z);
+            defaulttype::Vector3 point(m_cloud->points[i].x, m_cloud->points[i].y, m_cloud->points[i].z);
+            direction.normalize();
+            vparams->drawTool()->drawArrow(point, point + 2.0*direction, 0.02, colour);
+        }
+    }
 
 }
 
@@ -169,7 +180,7 @@ void PCLTriangleGeometry<DataTypes>::addPointsInPointCloud() {
         return;
     for (unsigned i=currentSize; i<points.size(); i++) {
         pcl::PointXYZ currentPoint(points[i][0], points[i][1], points[i][2]);
-        m_cloud->points.push_back(currentPoint);
+        m_cloud->push_back(currentPoint);
     }
 }
 
@@ -177,6 +188,22 @@ template<class DataTypes>
 void PCLTriangleGeometry<DataTypes>::computeTriangles() {
     if (m_cloud->points.size() == 0)
         return;
+
+    // MLS
+    pcl::MovingLeastSquares<pcl::PointXYZ, pcl::PointXYZ> mls;
+    mls.setInputCloud(m_cloud);
+    mls.setSearchRadius(d_searchRadius.getValue());
+    mls.setPolynomialOrder (2);
+    mls.setUpsamplingMethod (pcl::MovingLeastSquares<pcl::PointXYZ, pcl::PointXYZ>::SAMPLE_LOCAL_PLANE);
+    mls.setUpsamplingRadius (0.05);
+    mls.setUpsamplingStepSize (0.03);
+
+    std::cout << "begin of smooth" << std::endl;
+
+    mls.process (*m_cloudSmoothed);
+
+    std::cout << "out of smooth" << std::endl;
+
     // Normal estimation if needed
     if (m_needToComputeNormals == true) {
         pcl::NormalEstimation<pcl::PointXYZ, pcl::Normal> n;
@@ -184,7 +211,8 @@ void PCLTriangleGeometry<DataTypes>::computeTriangles() {
         tree->setInputCloud (m_cloud);
         n.setInputCloud (m_cloud);
         n.setSearchMethod (tree);
-        n.setKSearch (20);
+        n.setKSearch (d_treeSearch.getValue());
+//        n.setRadiusSearch (d_searchRadius.getValue());
         n.compute (*m_normals);
     }
 
@@ -223,7 +251,7 @@ void PCLTriangleGeometry<DataTypes>::pointsChanged() {
 
 template<class DataTypes>
 void PCLTriangleGeometry<DataTypes>::printDebugInfo() {
-    std::cout << "Number of points in the point cloud: " << m_cloud->points.size() << std::endl;
+    std::cout << "Number of points in the point cloud: " << m_cloud->width << ", " << m_cloud->height << std::endl;
     std::cout << "Number of triangles created: " << m_triangles.polygons.size() << std::endl;
 
 }

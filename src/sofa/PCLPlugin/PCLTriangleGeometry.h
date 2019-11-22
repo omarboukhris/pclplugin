@@ -32,6 +32,10 @@ public:
     Data<double> d_maxAngle;
     Data<double> d_searchRadius;
     Data<helper::vector<defaulttype::Vector3>> d_points;
+    Data<int> d_treeSearch;
+    Data<bool> d_drawTriangles;
+    Data<bool> d_drawNormals;
+
     core::objectmodel::DataCallback c_pointsCallback;
 
 
@@ -77,6 +81,7 @@ private:
     pcl::GreedyProjectionTriangulation<pcl::PointNormal> m_gp3;
     helper::vector<Triangle> m_trianglesInPlane;
     bool m_needToComputeNormals;
+    pcl::PointCloud<pcl::PointXYZ>::Ptr m_cloudSmoothed;
 
     pcl::PolygonMesh m_triangles;
 };
