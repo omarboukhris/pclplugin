@@ -3,6 +3,7 @@
 #include "PCLTriangleGeometry.h"
 
 #include <sofa/collisionAlgorithm/proximity/TriangleProximity.h>
+#include <sofa/collisionAlgorithm/geometry/TriangleGeometry.h>
 #include <sofa/collisionAlgorithm/iterators/DefaultElementIterator.h>
 
 #include <pcl/io/pcd_io.h>
@@ -209,6 +210,112 @@ void PCLTriangleGeometry<DataTypes>::printDebugInfo() {
     std::cout << "Number of triangles created: " << m_triangles.polygons.size() << std::endl;
 
 }
+
+//------------------------------Geometry methods------------------------------------//
+using namespace sofa::collisionAlgorithm;
+
+template<class DataTypes>
+inline sofa::collisionAlgorithm::BaseElementIterator::UPtr  PCLTriangleGeometry<DataTypes>::begin(unsigned eid ) const
+{
+    return sofa::collisionAlgorithm::DefaultElementIterator<sofa::collisionAlgorithm::TriangleProximity>::create(this, m_trianglesInPlane , eid);
+}
+
+template<class DataTypes>
+void PCLTriangleGeometry<DataTypes>::prepareDetectionCallBack()
+{
+    const VecTriangles& triangles = m_trianglesInPlane;
+    helper::vector<defaulttype::Vector3> normals = d_normals.getValue();
+
+    const pcl::PointCloud<pcl::PointXYZ>::Ptr pos = m_cloud;
+
+    m_triangle_info.resize(triangles.size());
+    m_triangle_normals.resize(triangles.size());
+
+    for (size_t t=0 ; t<triangles.size() ; t++)
+    {
+        const Triangle& tri = triangles[t];
+
+        //Compute Bezier Positions
+        const defaulttype::Vector3 p0(pos->points[tri[0]].x,pos->points[tri[0]].y,pos->points[tri[0]].z);
+        const defaulttype::Vector3 p1(pos->points[tri[1]].x,pos->points[tri[1]].y,pos->points[tri[1]].z);
+        const defaulttype::Vector3 p2(pos->points[tri[2]].x,pos->points[tri[2]].y,pos->points[tri[2]].z);
+
+        const defaulttype::Vector3 meanNormPoint = (1.0/3.0) * (normals[tri[0]] + normals[tri[1]] + normals[tri[2]]);
+
+        typename TriangleGeometry<DataTypes>::TriangleInfo & tinfo = m_triangle_info[t];
+        tinfo.v0 = p1 - p0;
+        tinfo.v1 = p2 - p0;
+
+        tinfo.d00 = dot(tinfo.v0,tinfo.v0);
+        tinfo.d01 = dot(tinfo.v0,tinfo.v1);
+        tinfo.d11 = dot(tinfo.v1,tinfo.v1);
+
+        tinfo.invDenom = 1.0 / (tinfo.d00 * tinfo.d11 - tinfo.d01 * tinfo.d01);
+
+        tinfo.ax1 = tinfo.v0;
+        m_triangle_normals[t] = tinfo.v0.cross(tinfo.v1);
+        m_triangle_normals[t] = (dot(m_triangle_normals[t],meanNormPoint)>0) ? m_triangle_normals[t] : -m_triangle_normals[t];
+        tinfo.ax2 = tinfo.v0.cross(m_triangle_normals[t]);
+
+        tinfo.ax1.normalize();
+        m_triangle_normals[t].normalize();
+        tinfo.ax2.normalize();
+    }
+}
+
+template<class DataTypes>
+inline const sofa::core::topology::BaseMeshTopology::Triangle PCLTriangleGeometry<DataTypes>::getTriangle(unsigned eid) const {
+    return m_trianglesInPlane[eid];
+}
+
+template<class DataTypes>
+inline defaulttype::Vector3 PCLTriangleGeometry<DataTypes>::getNormal(const TriangleProximity & data) const {
+    return m_triangle_normals[data.m_eid];
+}
+
+////Bezier triangle are computed according to :
+////http://www.gamasutra.com/view/feature/131389/b%C3%A9zier_triangles_and_npatches.php?print=1
+template<class DataTypes>
+inline defaulttype::Vector3 PCLTriangleGeometry<DataTypes>::getPosition(const TriangleProximity & data, core::VecCoordId v ) const {
+    const pcl::PointCloud<pcl::PointXYZ>::Ptr pos = m_cloud;
+
+    return defaulttype::Vector3(pos->points[data.m_p0].x,pos->points[data.m_p0].y,pos->points[data.m_p0].z) * data.m_f0 +
+           defaulttype::Vector3(pos->points[data.m_p1].x,pos->points[data.m_p1].y,pos->points[data.m_p1].z) * data.m_f1 +
+           defaulttype::Vector3(pos->points[data.m_p2].x,pos->points[data.m_p2].y,pos->points[data.m_p2].z) * data.m_f2;
+}
+
+template<class DataTypes>
+TriangleProximity PCLTriangleGeometry<DataTypes>::center(unsigned eid,const Triangle & triangle) const {
+    return TriangleProximity(eid, triangle[0], triangle[1], triangle[2], 0.3333, 0.3333, 0.3333);
+}
+
+template<class DataTypes>
+defaulttype::BoundingBox PCLTriangleGeometry<DataTypes>::getBBox(const Triangle & triangle) const {
+    const pcl::PointCloud<pcl::PointXYZ>::Ptr pos = m_cloud;
+
+    defaulttype::BoundingBox bbox;
+    bbox.include(defaulttype::Vector3(pos->points[triangle[0]].x,pos->points[triangle[0]].y,pos->points[triangle[0]].z));
+    bbox.include(defaulttype::Vector3(pos->points[triangle[1]].x,pos->points[triangle[1]].y,pos->points[triangle[1]].z));
+    bbox.include(defaulttype::Vector3(pos->points[triangle[2]].x,pos->points[triangle[2]].y,pos->points[triangle[2]].z));
+    return bbox;
+}
+
+//Barycentric coordinates are computed according to
+//http://gamedev.stackexchange.com/questions/23743/whats-the-most-efficient-way-to-find-barycentric-coordinates
+template<class DataTypes>
+inline TriangleProximity PCLTriangleGeometry<DataTypes>::project(unsigned eid, const Triangle & triangle, const defaulttype::Vector3 & P) const {
+    const pcl::PointCloud<pcl::PointXYZ>::Ptr pos = m_cloud;
+
+    const typename TriangleGeometry<DataTypes>::TriangleInfo & tinfo = m_triangle_info[eid];
+
+    defaulttype::Vector3 P0(pos->points[triangle[0]].x,pos->points[triangle[0]].y,pos->points[triangle[0]].z);
+    defaulttype::Vector3 P1(pos->points[triangle[1]].x,pos->points[triangle[1]].y,pos->points[triangle[1]].z);
+    defaulttype::Vector3 P2(pos->points[triangle[2]].x,pos->points[triangle[2]].y,pos->points[triangle[2]].z);
+
+    return TriangleGeometry<DataTypes>::projectOnTriangle(eid,triangle,tinfo,P,P0,P1,P2);
+
+}
+
 
 } // namespace pointcloud
 

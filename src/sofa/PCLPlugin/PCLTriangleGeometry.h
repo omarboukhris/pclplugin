@@ -2,7 +2,9 @@
 #define PCLTriangleGeometry_H
 
 #include <sofa/collisionAlgorithm/BaseGeometry.h>
+#include <sofa/collisionAlgorithm/iterators/DefaultElementIterator.h>
 #include <sofa/collisionAlgorithm/proximity/TriangleProximity.h>
+#include <sofa/collisionAlgorithm/geometry/TriangleGeometry.h>
 #include <sofa/collisionAlgorithm/DataDetectionOutput.h>
 
 #include <pcl/surface/gp3.h>
@@ -13,7 +15,7 @@ namespace sofa {
 namespace pointcloud {
 
 template<class DataTypes>
-class PCLTriangleGeometry : public core::objectmodel::BaseObject {
+class PCLTriangleGeometry : public sofa::collisionAlgorithm::TBaseGeometry<DataTypes> {
 public:
     typedef DataTypes TDataTypes;
     typedef PCLTriangleGeometry<DataTypes> GEOMETRY;
@@ -22,6 +24,9 @@ public:
     typedef core::topology::BaseMeshTopology::Triangle Triangle;
     typedef typename DataTypes::VecCoord VecCoord;
     typedef core::objectmodel::Data< VecCoord > DataVecCoord;
+
+    typedef size_t TriangleID;
+    typedef helper::vector<Triangle> VecTriangles;
 
     SOFA_CLASS(GEOMETRY, Inherit);
 
@@ -64,12 +69,30 @@ public:
 
     void printDebugInfo();
 
+    /**********Geometry Part**********/
+    inline sofa::collisionAlgorithm::BaseElementIterator::UPtr  begin(unsigned eid = 0) const override;
+    virtual void prepareDetection() override {}
+    void prepareDetectionCallBack();
+    inline const Triangle getTriangle(unsigned eid) const;
+    inline defaulttype::Vector3 getNormal(const sofa::collisionAlgorithm::TriangleProximity & data) const;
+    inline defaulttype::Vector3 getPosition(const sofa::collisionAlgorithm::TriangleProximity & data, core::VecCoordId v = core::VecCoordId::position()) const;
+    sofa::collisionAlgorithm::TriangleProximity center(unsigned eid,const Triangle & triangle) const;
+    defaulttype::BoundingBox getBBox(const Triangle & triangle) const;
+    inline sofa::collisionAlgorithm::TriangleProximity project(unsigned eid, const Triangle & triangle, const defaulttype::Vector3 & P) const;
+
+protected:
+
+    std::vector<typename sofa::collisionAlgorithm::TriangleGeometry<DataTypes>::TriangleInfo> m_triangle_info;
+
+
+
 private:
     pcl::PointCloud<pcl::PointXYZ>::Ptr m_cloud;
     pcl::PointCloud<pcl::Normal>::Ptr m_normals;
     pcl::PointCloud<pcl::PointNormal>::Ptr m_cloudWithNormals;
     pcl::GreedyProjectionTriangulation<pcl::PointNormal> m_gp3;
     helper::vector<Triangle> m_trianglesInPlane;
+    helper::vector<defaulttype::Vector3> m_triangle_normals;
     bool m_needToComputeNormals;
     pcl::PointCloud<pcl::PointXYZ>::Ptr m_cloudSmoothed;
 
