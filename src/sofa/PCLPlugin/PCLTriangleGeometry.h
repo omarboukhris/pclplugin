@@ -36,6 +36,7 @@ public:
     Data<bool> d_drawTriangles;
     Data<bool> d_drawNormals;
     Data<bool> d_drawTrianglesWire;
+    Data<helper::vector<defaulttype::Vector3>> d_normals;
     Data<helper::vector<Triangle>> d_trianglesInPlane;
 
     core::objectmodel::DataCallback c_pointsCallback;

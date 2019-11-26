@@ -30,7 +30,8 @@ PCLTriangleGeometry<DataTypes>::PCLTriangleGeometry() : d_mu(initData(&d_mu, 2.5
   , d_drawTriangles(initData(&d_drawTriangles, false, "drawTriangle", "DrawTriangles."))
   , d_drawNormals(initData(&d_drawNormals, false, "drawNormals", "Draw normals."))
   , d_drawTrianglesWire(initData(&d_drawTrianglesWire, false, "drawWireTriangle", "Draw wiretriangles."))
-  , d_trianglesInPlane(initData(&d_trianglesInPlane, "triangles", "Triangles computed.")) {
+  , d_trianglesInPlane(initData(&d_trianglesInPlane, "triangles", "Triangles computed."))
+  , d_normals(initData(&d_normals, "normals", "Normals computed.")){
 
     m_cloud = boost::shared_ptr<pcl::PointCloud<pcl::PointXYZ> >(new pcl::PointCloud<pcl::PointXYZ>);
     m_cloud->height = 1;
@@ -63,26 +64,14 @@ void PCLTriangleGeometry<DataTypes>::draw(const core::visual::VisualParams * vpa
     std::vector<defaulttype::Vec4f> colours;
     colours.push_back(colour);
 
-//    if (d_drawTriangles.getValue() == true) {
-//        for (unsigned i=0; i<m_triangles.polygons.size(); i++) {
-//            defaulttype::Vector3 currentTriangle;
-//            for (unsigned j=0; j<3; j++) {
-//                currentTriangle[0] = m_cloud->points[m_triangles.polygons[i].vertices[j]].x;
-//                currentTriangle[1] = m_cloud->points[m_triangles.polygons[i].vertices[j]].y;
-//                currentTriangle[2] = m_cloud->points[m_triangles.polygons[i].vertices[j]].z;
-//                points.push_back(currentTriangle);
-//            }
-//            vparams->drawTool()->drawTriangles(points, colour);
-//            points.clear();
-//        }
-//    }
     if (d_drawTriangles.getValue() == true) {
-        for (unsigned i=0; i<m_trianglesInPlane.size(); i++) {
+        helper::vector<Triangle> triangles = d_trianglesInPlane.getValue();
+        for (unsigned i=0; i<triangles.size(); i++) {
             defaulttype::Vector3 currentTriangle;
             for (unsigned j=0; j<3; j++) {
-                currentTriangle[0] = m_cloud->points[m_trianglesInPlane[i][j]].x;
-                currentTriangle[1] = m_cloud->points[m_trianglesInPlane[i][j]].y;
-                currentTriangle[2] = m_cloud->points[m_trianglesInPlane[i][j]].z;
+                currentTriangle[0] = m_cloud->points[triangles[i][j]].x;
+                currentTriangle[1] = m_cloud->points[triangles[i][j]].y;
+                currentTriangle[2] = m_cloud->points[triangles[i][j]].z;
                 points.push_back(currentTriangle);
             }
             vparams->drawTool()->drawTriangles(points, colour);
@@ -91,19 +80,22 @@ void PCLTriangleGeometry<DataTypes>::draw(const core::visual::VisualParams * vpa
     }
 
     if (d_drawTrianglesWire.getValue()) {
-        for (unsigned i=0; i<m_triangles.polygons.size(); i++) {
-                    defaulttype::Vector3 currentTriangle;
-                    std::vector<defaulttype::Vector3> vecPos;
-                    for (unsigned j=0; j<3; j++) {
-                        currentTriangle[0] = m_cloud->points[m_triangles.polygons[i].vertices[j]].x;
-                        currentTriangle[1] = m_cloud->points[m_triangles.polygons[i].vertices[j]].y;
-                        currentTriangle[2] = m_cloud->points[m_triangles.polygons[i].vertices[j]].z;
-                        vecPos.push_back(currentTriangle);
-                    }
-                    vparams->drawTool()->drawLine(vecPos[0], vecPos[1], colour);
-                    vparams->drawTool()->drawLine(vecPos[0], vecPos[2], colour);
-                    vparams->drawTool()->drawLine(vecPos[2], vecPos[1], colour);
-                }
+        helper::vector<Triangle> triangles = d_trianglesInPlane.getValue();
+        for (unsigned i=0; i<triangles.size(); i++) {
+            defaulttype::Vector3 currentTriangle;
+            std::vector<defaulttype::Vector3> vecPos;
+            for (unsigned j=0; j<3; j++) {
+                currentTriangle[0] = m_cloud->points[triangles[i][j]].x;
+                currentTriangle[1] = m_cloud->points[triangles[i][j]].y;
+                currentTriangle[2] = m_cloud->points[triangles[i][j]].z;
+                vecPos.push_back(currentTriangle);
+            }
+            vparams->drawTool()->drawLine(vecPos[0], vecPos[1], colour);
+            vparams->drawTool()->drawLine(vecPos[0], vecPos[2], colour);
+            vparams->drawTool()->drawLine(vecPos[2], vecPos[1], colour);
+            vecPos.clear();
+
+        }
     }
 
     if (d_drawNormals.getValue() == true) {
@@ -157,13 +149,12 @@ void PCLTriangleGeometry<DataTypes>::computeTriangles() {
     // Concatenate fields
     pcl::concatenateFields (*m_cloud, *m_normals, *m_cloudWithNormals);
 
-    std::cout << m_cloudWithNormals->size() << std::endl;
     // Create search tree
     pcl::search::KdTree<pcl::PointNormal>::Ptr tree2 (new pcl::search::KdTree<pcl::PointNormal>);
     tree2->setInputCloud (m_cloudWithNormals);
 
     // Set the maximum distance between connected points (maximum edge length)
-    m_gp3.setSearchRadius (d_mu.getValue() * d_searchRadius.getValue());
+    m_gp3.setSearchRadius (d_searchRadius.getValue());
 
     // Set typical values for the parameters
     m_gp3.setMu (d_mu.getValue());
@@ -171,7 +162,7 @@ void PCLTriangleGeometry<DataTypes>::computeTriangles() {
     m_gp3.setMaximumSurfaceAngle(d_maxSurfaceAngle.getValue()); // 45 degrees
     m_gp3.setMinimumAngle(d_minAngle.getValue()); // 10 degrees
     m_gp3.setMaximumAngle(d_maxAngle.getValue()); // 120 degrees
-    m_gp3.setNormalConsistency(false);
+    m_gp3.setNormalConsistency(true);
 
     m_prevSize = m_triangles.polygons.size();
 
@@ -179,9 +170,7 @@ void PCLTriangleGeometry<DataTypes>::computeTriangles() {
     m_gp3.setInputCloud (m_cloudWithNormals);
     m_gp3.setSearchMethod (tree2);
     m_gp3.reconstruct (m_triangles);
-
-
-    this->printDebugInfo();
+//    this->printDebugInfo();
 
 }
 
@@ -194,15 +183,24 @@ void PCLTriangleGeometry<DataTypes>::pointsChanged() {
 
 template<class DataTypes>
 void PCLTriangleGeometry<DataTypes>::modifyTriangles() {
-    m_trianglesInPlane.clear();
+    helper::vector<Triangle>* triangles = d_trianglesInPlane.beginEdit();
+    triangles->clear();
     for (unsigned i=0; i<m_triangles.polygons.size(); i++) {
         Triangle currentTriangle;
         currentTriangle[0] = m_triangles.polygons[i].vertices[0];
         currentTriangle[1] = m_triangles.polygons[i].vertices[1];
         currentTriangle[2] = m_triangles.polygons[i].vertices[2];
-        m_trianglesInPlane.push_back(currentTriangle);
+        triangles->push_back(currentTriangle);
     }
+    d_trianglesInPlane.endEdit();
 
+    helper::vector<defaulttype::Vector3>* normals = d_normals.beginEdit();
+    normals->clear();
+    for (unsigned i=0; i<m_normals->points.size(); i++) {
+        defaulttype::Vector3 cN(m_normals->points[i].normal_x, m_normals->points[i].normal_y, m_normals->points[i].normal_z);
+        normals->push_back(cN);
+    }
+    d_normals.endEdit();
 }
 
 template<class DataTypes>
