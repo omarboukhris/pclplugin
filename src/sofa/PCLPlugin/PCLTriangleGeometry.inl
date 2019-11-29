@@ -122,11 +122,11 @@ void PCLTriangleGeometry<DataTypes>::init() {
 
 template<class DataTypes>
 void PCLTriangleGeometry<DataTypes>::addPointsInPointCloud() {
-    unsigned currentSize = m_cloud->points.size();
+    m_cloud->clear();
     helper::vector<defaulttype::Vector3> points = d_points.getValue();
     if (points.size() == 0)
         return;
-    for (unsigned i=currentSize; i<points.size(); i++) {
+    for (unsigned i=0; i<points.size(); i++) {
         pcl::PointXYZ currentPoint(points[i][0], points[i][1], points[i][2]);
         m_cloud->push_back(currentPoint);
     }
