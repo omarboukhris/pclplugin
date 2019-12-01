@@ -86,7 +86,6 @@ void PCLLeastSquare<DataTypes>::callBackUpdate() {
 
     pcl::PolygonMesh output;
 
-
 //    pcl::MarchingCubesHoppe<pcl::PointNormal> marchingcube;
 //    marchingcube.setInputCloud (mls_points);
 ////    marchingcube.setIsoLevel( 0.0 );
@@ -125,9 +124,6 @@ void PCLLeastSquare<DataTypes>::callBackUpdate() {
     m_gp3.reconstruct (output);
 
 
-
-
-
     helper::vector<defaulttype::Vector3>* points = d_outputPoints.beginEdit();
     helper::vector<Triangle>* triangles = d_outputTriangles.beginEdit();
 
@@ -137,13 +133,14 @@ void PCLLeastSquare<DataTypes>::callBackUpdate() {
     pcl::PointCloud<pcl::PointXYZ> point_cloud;
     pcl::fromPCLPointCloud2( output.cloud, point_cloud);
 
+    m_triangle_around_vertex.resize(point_cloud.size());
+
     for (unsigned i=0; i<point_cloud.size(); i++) {
         pcl::PointXYZ P = point_cloud[i];
         points->push_back(defaulttype::Vector3(P.x,P.y,P.z));
-    }
 
-    helper::vector<helper::vector<unsigned>> triangle_around_vertex;
-    triangle_around_vertex.resize(points->size());
+        m_triangle_around_vertex[i].clear();
+    }
 
     for (unsigned i=0; i<output.polygons.size(); i++) {
         Triangle currentTriangle;
@@ -151,19 +148,18 @@ void PCLLeastSquare<DataTypes>::callBackUpdate() {
         currentTriangle[1] = output.polygons[i].vertices[1];
         currentTriangle[2] = output.polygons[i].vertices[2];
 
-        triangle_around_vertex[currentTriangle[0]].push_back(i);
-        triangle_around_vertex[currentTriangle[1]].push_back(i);
-        triangle_around_vertex[currentTriangle[2]].push_back(i);
+        m_triangle_around_vertex[currentTriangle[0]].push_back(i);
+        m_triangle_around_vertex[currentTriangle[1]].push_back(i);
+        m_triangle_around_vertex[currentTriangle[2]].push_back(i);
 
         triangles->push_back(currentTriangle);
     }
 
-    helper::vector<bool> visited;
-    visited.resize(points->size(),false);
+    m_visited.clear();
+    m_visited.resize(points->size(),false);
 
     for (unsigned i=0; i<points->size(); i++) {
-
-        recomputeNormals(i,defaulttype::Vector3(0,0,0),*points,*triangles,visited,triangle_around_vertex);
+        recomputeNormals(i,defaulttype::Vector3(0,0,0),*points,*triangles);
     }
 
     d_outputPoints.endEdit();
@@ -171,11 +167,11 @@ void PCLLeastSquare<DataTypes>::callBackUpdate() {
 }
 
 template<class DataTypes>
-void PCLLeastSquare<DataTypes>::recomputeNormals(unsigned pid, const defaulttype::Vector3 & N, const helper::vector<defaulttype::Vector3> & points, helper::vector<Triangle> & triangles, helper::vector<bool> & visited, const helper::vector<helper::vector<unsigned>> & triangle_around_vertex) {
-    if (visited[pid]) return;
-    visited[pid] = true;
+void PCLLeastSquare<DataTypes>::recomputeNormals(unsigned pid, const defaulttype::Vector3 & N, const helper::vector<defaulttype::Vector3> & points, helper::vector<Triangle> & triangles) {
+    if (m_visited[pid]) return;
+    m_visited[pid] = true;
 
-    auto tav = triangle_around_vertex[pid];
+    auto tav = m_triangle_around_vertex[pid];
     for (unsigned i=0;i<tav.size();i++) {
         Triangle & tri = triangles[tav[i]];
         defaulttype::Vector3 P0 = points[tri[0]];
@@ -191,9 +187,9 @@ void PCLLeastSquare<DataTypes>::recomputeNormals(unsigned pid, const defaulttype
             TN*=-1;
         }
 
-        recomputeNormals(tri[0],TN,points,triangles,visited,triangle_around_vertex);
-        recomputeNormals(tri[1],TN,points,triangles,visited,triangle_around_vertex);
-        recomputeNormals(tri[2],TN,points,triangles,visited,triangle_around_vertex);
+        recomputeNormals(tri[0],TN,points,triangles);
+        recomputeNormals(tri[1],TN,points,triangles);
+        recomputeNormals(tri[2],TN,points,triangles);
     }
 }
 
