@@ -89,14 +89,16 @@ void PCLLeastSquare<DataTypes>::callBackUpdate() {
 
 //    pcl::MarchingCubesHoppe<pcl::PointNormal> marchingcube;
 //    marchingcube.setInputCloud (mls_points);
-//    marchingcube.setIsoLevel( d_normalSearch.getValue() );
-//    marchingcube.setGridResolution( d_poissonDepth.getValue(), d_poissonDepth.getValue(), d_poissonDepth.getValue());
-//    marchingcube.setPercentageExtendGrid( d_scale.getValue() );
+////    marchingcube.setIsoLevel( 0.0 );
+//    marchingcube.setGridResolution( 8,8,8);
+////    marchingcube.setPercentageExtendGrid( d_scale.getValue() );
 ////    marchingcube.setOffSurfaceDisplacement(d_normalSearch.getValue());
 //    marchingcube.reconstruct(output);
 
+
+
 //    pcl::Poisson<pcl::PointNormal> poisson;
-//    poisson.setDepth (d_poissonDepth.getValue());
+//    poisson.setDepth (4);
 ////    poisson.setPointWeight(d_scale.getValue());
 ////    poisson.setSolverDivide (8);
 ////    poisson.setIsoDivide (8);
@@ -111,14 +113,13 @@ void PCLLeastSquare<DataTypes>::callBackUpdate() {
     pcl::GreedyProjectionTriangulation<pcl::PointNormal> m_gp3;
     // Set the maximum distance between connected points (maximum edge length)
     m_gp3.setSearchRadius (d_radiusLS.getValue());
-
     // Set typical values for the parameters
     m_gp3.setMu (d_scale.getValue());
 //    m_gp3.setMaximumNearestNeighbors (d_nearestNeighbors.getValue());
 //    m_gp3.setMaximumSurfaceAngle(d_maxSurfaceAngle.getValue()); // 45 degrees
 //    m_gp3.setMinimumAngle(d_minAngle.getValue()); // 10 degrees
 //    m_gp3.setMaximumAngle(d_maxAngle.getValue()); // 120 degrees
-//    m_gp3.setNormalConsistency(true);
+    m_gp3.setNormalConsistency(true);
 //    m_gp3.setSearchMethod (tree2);
     m_gp3.setInputCloud (mls_points);
     m_gp3.reconstruct (output);
@@ -141,15 +142,59 @@ void PCLLeastSquare<DataTypes>::callBackUpdate() {
         points->push_back(defaulttype::Vector3(P.x,P.y,P.z));
     }
 
+    helper::vector<helper::vector<unsigned>> triangle_around_vertex;
+    triangle_around_vertex.resize(points->size());
+
     for (unsigned i=0; i<output.polygons.size(); i++) {
         Triangle currentTriangle;
         currentTriangle[0] = output.polygons[i].vertices[0];
         currentTriangle[1] = output.polygons[i].vertices[1];
         currentTriangle[2] = output.polygons[i].vertices[2];
+
+        triangle_around_vertex[currentTriangle[0]].push_back(i);
+        triangle_around_vertex[currentTriangle[1]].push_back(i);
+        triangle_around_vertex[currentTriangle[2]].push_back(i);
+
         triangles->push_back(currentTriangle);
     }
+
+    helper::vector<bool> visited;
+    visited.resize(points->size(),false);
+
+    for (unsigned i=0; i<points->size(); i++) {
+
+        recomputeNormals(i,defaulttype::Vector3(0,0,0),*points,*triangles,visited,triangle_around_vertex);
+    }
+
     d_outputPoints.endEdit();
     d_outputTriangles.endEdit();
+}
+
+template<class DataTypes>
+void PCLLeastSquare<DataTypes>::recomputeNormals(unsigned pid, const defaulttype::Vector3 & N, const helper::vector<defaulttype::Vector3> & points, helper::vector<Triangle> & triangles, helper::vector<bool> & visited, const helper::vector<helper::vector<unsigned>> & triangle_around_vertex) {
+    if (visited[pid]) return;
+    visited[pid] = true;
+
+    auto tav = triangle_around_vertex[pid];
+    for (unsigned i=0;i<tav.size();i++) {
+        Triangle & tri = triangles[tav[i]];
+        defaulttype::Vector3 P0 = points[tri[0]];
+        defaulttype::Vector3 P1 = points[tri[1]];
+        defaulttype::Vector3 P2 = points[tri[2]];
+
+        defaulttype::Vector3 TN = cross(P1-P0,P2-P0);
+
+        if (dot(TN,N)<0) {
+            unsigned tmp = tri[1];
+            tri[1] = tri[2];
+            tri[2] = tmp;
+            TN*=-1;
+        }
+
+        recomputeNormals(tri[0],TN,points,triangles,visited,triangle_around_vertex);
+        recomputeNormals(tri[1],TN,points,triangles,visited,triangle_around_vertex);
+        recomputeNormals(tri[2],TN,points,triangles,visited,triangle_around_vertex);
+    }
 }
 
 

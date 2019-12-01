@@ -49,6 +49,8 @@ public:
     void draw(const core::visual::VisualParams * vparams);
 
     void callBackUpdate();
+
+    void recomputeNormals(unsigned pid, const defaulttype::Vector3 & N, const helper::vector<defaulttype::Vector3> & points, helper::vector<Triangle> & triangles, helper::vector<bool> & visited, const helper::vector<helper::vector<unsigned>> & triangle_around_vertex);
 };
 
 } // namespace pointcloud
