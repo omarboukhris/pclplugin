@@ -205,7 +205,6 @@ void PCLLeastSquare<DataTypes>::draw(const core::visual::VisualParams * vparams)
 
     const helper::vector<defaulttype::Vector3> & inpoints = d_inputPoints.getValue();
 
-
     for (unsigned i=0; i<inpoints.size(); i++) {
         vparams->drawTool()->drawSphere(inpoints[i] + d_drawShift.getValue(),d_drawRadius.getValue(),defaulttype::Vec4f(0,1,0,1));
     }
