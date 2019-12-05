@@ -203,11 +203,11 @@ void PCLLeastSquare<DataTypes>::draw(const core::visual::VisualParams * vparams)
     const helper::vector<Triangle> & triangles = d_outputTriangles.getValue();
     const helper::vector<defaulttype::Vector3> & outpoints = d_outputPoints.getValue();
 
-    const helper::vector<defaulttype::Vector3> & inpoints = d_inputPoints.getValue();
+//    const helper::vector<defaulttype::Vector3> & inpoints = d_inputPoints.getValue();
 
-    for (unsigned i=0; i<inpoints.size(); i++) {
-        vparams->drawTool()->drawSphere(inpoints[i] + d_drawShift.getValue(),d_drawRadius.getValue(),defaulttype::Vec4f(0,1,0,1));
-    }
+//    for (unsigned i=0; i<inpoints.size(); i++) {
+//        vparams->drawTool()->drawSphere(inpoints[i] + d_drawShift.getValue(),d_drawRadius.getValue(),defaulttype::Vec4f(0,1,0,1));
+//    }
 
 //    for (unsigned i=0; i<outpoints.size(); i++) {
 //        vparams->drawTool()->drawSphere(outpoints[i],d_drawRadius.getValue(),defaulttype::Vec4f(1,0,0,1));
@@ -224,6 +224,8 @@ void PCLLeastSquare<DataTypes>::draw(const core::visual::VisualParams * vparams)
         vparams->drawTool()->drawLine(P0,P1, defaulttype::Vec4f(1,0,0,1));
         vparams->drawTool()->drawLine(P0,P2, defaulttype::Vec4f(1,0,0,1));
         vparams->drawTool()->drawLine(P1,P2, defaulttype::Vec4f(1,0,0,1));
+
+        vparams->drawTool()->drawTriangle(P0,P1,P2,cross(P1-P0,P2-P0),defaulttype::Vec4f(0.6,0.1,0,0.8));
     }
 }
 
