@@ -38,6 +38,8 @@ public:
 //    Data<double> d_upsampling;
 //    Data<double> d_samplingStep;
 //    Data<int> d_poissonDepth;
+    Data<unsigned> d_order;
+
     Data<double> d_scale;
 
     Data<double> d_drawRadius;

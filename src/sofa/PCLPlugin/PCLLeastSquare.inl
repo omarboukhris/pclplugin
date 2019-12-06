@@ -28,6 +28,7 @@ PCLLeastSquare<DataTypes>::PCLLeastSquare()
 , d_outputPoints(initData(&d_outputPoints, "outputPoints", "Maximum surface angle."))
 , d_outputTriangles(initData(&d_outputTriangles, "outputTriangles", "Minimum angle allowed."))
 , d_radiusLS(initData(&d_radiusLS, 1.0, "radiusLS", "Set the sphere radius that is to be used for determining the k-nearest neighbors used for fitting."))
+, d_order(initData(&d_order, (unsigned) 2, "order", "Order of MS"))
 //, d_normalSearch(initData(&d_normalSearch, 1.0, "normalSearch", "Set the number of k nearest neighbors to use for the feature estimation."))
 //, d_poissonDepth(initData(&d_poissonDepth, 4, "poissonDepth", "Maximum angle allowed."))
 //, d_upsampling(initData(&d_upsampling, 0.01, "d_upsampling", "Maximum angle allowed."))
@@ -70,7 +71,7 @@ void PCLLeastSquare<DataTypes>::callBackUpdate() {
     mls.setInputCloud (cloud);
     mls.setPolynomialFit (true);
     mls.setComputeNormals (true);
-    mls.setPolynomialOrder (2);
+    mls.setPolynomialOrder (d_order.getValue());
     mls.setSearchMethod (tree);
     mls.setSearchRadius (d_radiusLS.getValue());
 
