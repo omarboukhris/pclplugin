@@ -33,9 +33,7 @@ PCLLeastSquare<DataTypes>::PCLLeastSquare()
 //, d_upsampling(initData(&d_upsampling, 0.01, "d_upsampling", "Maximum angle allowed."))
 //, d_samplingStep(initData(&d_samplingStep, 0.01, "samplingStep", "Maximum angle allowed."))
 , d_scale(initData(&d_scale, 5.0, "scale", "Maximum angle allowed."))
-, d_drawRadius(initData(&d_drawRadius, 0.0, "drawRadius", "Maximum angle allowed."))
-, d_drawShift(initData(&d_drawShift, defaulttype::Vec3d(0,50,0), "drawShift", "Draw shift."))
-{
+, d_drawRadius(initData(&d_drawRadius, 0.0, "drawRadius", "Maximum angle allowed.")) {
     this->f_listening.setValue(true);
     c_callback.addInputs({&d_inputPoints,
                           &d_radiusLS,
@@ -217,9 +215,9 @@ void PCLLeastSquare<DataTypes>::draw(const core::visual::VisualParams * vparams)
 
     for (unsigned i=0; i<triangles.size(); i++) {
         Triangle tri = triangles[i];
-        defaulttype::Vector3 P0 = outpoints[tri[0]] + d_drawShift.getValue();
-        defaulttype::Vector3 P1 = outpoints[tri[1]] + d_drawShift.getValue();
-        defaulttype::Vector3 P2 = outpoints[tri[2]] + d_drawShift.getValue();
+        defaulttype::Vector3 P0 = outpoints[tri[0]];
+        defaulttype::Vector3 P1 = outpoints[tri[1]];
+        defaulttype::Vector3 P2 = outpoints[tri[2]];
 
         vparams->drawTool()->drawLine(P0,P1, defaulttype::Vec4f(1,0,0,1));
         vparams->drawTool()->drawLine(P0,P2, defaulttype::Vec4f(1,0,0,1));

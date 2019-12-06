@@ -41,7 +41,6 @@ public:
     Data<double> d_scale;
 
     Data<double> d_drawRadius;
-    Data<defaulttype::Vec3d> d_drawShift;
 
     core::objectmodel::DataCallback c_callback;
 
