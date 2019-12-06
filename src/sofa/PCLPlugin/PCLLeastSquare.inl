@@ -15,6 +15,7 @@
 #include <pcl/surface/marching_cubes.h>
 #include <pcl/surface/marching_cubes_hoppe.h>
 #include <pcl/surface/marching_cubes_rbf.h>
+#include <pcl/keypoints/uniform_sampling.h>
 
 namespace sofa {
 
@@ -31,16 +32,17 @@ PCLLeastSquare<DataTypes>::PCLLeastSquare()
 , d_order(initData(&d_order, (unsigned) 2, "order", "Order of MS"))
 //, d_normalSearch(initData(&d_normalSearch, 1.0, "normalSearch", "Set the number of k nearest neighbors to use for the feature estimation."))
 //, d_poissonDepth(initData(&d_poissonDepth, 4, "poissonDepth", "Maximum angle allowed."))
-//, d_upsampling(initData(&d_upsampling, 0.01, "d_upsampling", "Maximum angle allowed."))
-//, d_samplingStep(initData(&d_samplingStep, 0.01, "samplingStep", "Maximum angle allowed."))
-, d_scale(initData(&d_scale, 5.0, "scale", "Maximum angle allowed."))
+, d_upsampling(initData(&d_upsampling, 0.4, "d_upsampling", "Maximum angle allowed."))
+//, d_samplingStep(initData(&d_samplingStep, 0.1, "samplingStep", "Maximum angle allowed."))
+, d_mu(initData(&d_mu, 4.0, "mu", "Maximum angle allowed."))
 , d_drawRadius(initData(&d_drawRadius, 0.0, "drawRadius", "Maximum angle allowed.")) {
     this->f_listening.setValue(true);
     c_callback.addInputs({&d_inputPoints,
                           &d_radiusLS,
-//                          &d_upsampling,
+                          &d_order,
+                          &d_upsampling,
 //                          &d_samplingStep,
-                          &d_scale
+                          &d_mu
                          });
     c_callback.addCallback(std::bind(&PCLLeastSquare::callBackUpdate,this));
 }
@@ -61,6 +63,26 @@ void PCLLeastSquare<DataTypes>::callBackUpdate() {
         cloud->push_back(currentPoint);
     }
 
+
+    // Uniform sampling object.
+    pcl::UniformSampling<pcl::PointXYZ> filterSampling;
+    filterSampling.setInputCloud(cloud);
+    // We set the size of every voxel to be 1x1x1cm
+    // (only one point per every cubic centimeter will survive).
+    filterSampling.setRadiusSearch(d_upsampling.getValue());
+    // We need an additional object to store the indices of surviving points.
+//    pcl::PointCloud<int> keypointIndices;
+//    filter.compute(keypointIndices);
+
+    pcl::PointCloud<pcl::PointXYZ>::Ptr filteredCloud(new pcl::PointCloud<pcl::PointXYZ>);
+//    pcl::copyPointCloud(*cloud, keypointIndices.points, *filteredCloud);
+    filterSampling.filter(*filteredCloud);
+
+
+
+
+
+
     // Create a KD-Tree
     pcl::search::KdTree<pcl::PointXYZ>::Ptr tree (new pcl::search::KdTree<pcl::PointXYZ>);
 
@@ -68,14 +90,14 @@ void PCLLeastSquare<DataTypes>::callBackUpdate() {
     pcl::MovingLeastSquares<pcl::PointXYZ, pcl::PointNormal> mls;
     pcl::PointCloud<pcl::PointNormal>::Ptr mls_points (new pcl::PointCloud<pcl::PointNormal> ());
 
-    mls.setInputCloud (cloud);
+    mls.setInputCloud (filteredCloud);
     mls.setPolynomialFit (true);
     mls.setComputeNormals (true);
     mls.setPolynomialOrder (d_order.getValue());
     mls.setSearchMethod (tree);
     mls.setSearchRadius (d_radiusLS.getValue());
 
-//    mls.setUpsamplingMethod(pcl::MovingLeastSquares<pcl::PointXYZ, pcl::PointNormal>::RANDOM_UNIFORM_DENSITY);
+//    mls.setUpsamplingMethod(pcl::MovingLeastSquares<pcl::PointXYZ, pcl::PointNormal>::SAMPLE_LOCAL_PLANE);
 //    mls.setUpsamplingRadius (d_upsampling.getValue());
 //    mls.setUpsamplingStepSize(d_samplingStep.getValue());
 //    mls.setPointDensity(d_upsampling.getValue());
@@ -114,7 +136,7 @@ void PCLLeastSquare<DataTypes>::callBackUpdate() {
     // Set the maximum distance between connected points (maximum edge length)
     m_gp3.setSearchRadius (d_radiusLS.getValue());
     // Set typical values for the parameters
-    m_gp3.setMu (d_scale.getValue());
+    m_gp3.setMu (d_mu.getValue());
 //    m_gp3.setMaximumNearestNeighbors (d_nearestNeighbors.getValue());
 //    m_gp3.setMaximumSurfaceAngle(d_maxSurfaceAngle.getValue()); // 45 degrees
 //    m_gp3.setMinimumAngle(d_minAngle.getValue()); // 10 degrees
@@ -202,11 +224,11 @@ void PCLLeastSquare<DataTypes>::draw(const core::visual::VisualParams * vparams)
     const helper::vector<Triangle> & triangles = d_outputTriangles.getValue();
     const helper::vector<defaulttype::Vector3> & outpoints = d_outputPoints.getValue();
 
-//    const helper::vector<defaulttype::Vector3> & inpoints = d_inputPoints.getValue();
+    const helper::vector<defaulttype::Vector3> & inpoints = d_inputPoints.getValue();
 
-//    for (unsigned i=0; i<inpoints.size(); i++) {
-//        vparams->drawTool()->drawSphere(inpoints[i] + d_drawShift.getValue(),d_drawRadius.getValue(),defaulttype::Vec4f(0,1,0,1));
-//    }
+    for (unsigned i=0; i<inpoints.size(); i++) {
+        vparams->drawTool()->drawSphere(inpoints[i],d_drawRadius.getValue(),defaulttype::Vec4f(0,1,0,1));
+    }
 
 //    for (unsigned i=0; i<outpoints.size(); i++) {
 //        vparams->drawTool()->drawSphere(outpoints[i],d_drawRadius.getValue(),defaulttype::Vec4f(1,0,0,1));

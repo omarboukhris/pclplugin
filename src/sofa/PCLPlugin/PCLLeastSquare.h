@@ -35,12 +35,12 @@ public:
     Data<helper::vector<Triangle>> d_outputTriangles;
 
     Data<double> d_radiusLS;
-//    Data<double> d_upsampling;
+    Data<double> d_upsampling;
 //    Data<double> d_samplingStep;
 //    Data<int> d_poissonDepth;
     Data<unsigned> d_order;
 
-    Data<double> d_scale;
+    Data<double> d_mu;
 
     Data<double> d_drawRadius;
 
