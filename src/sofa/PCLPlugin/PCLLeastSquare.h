@@ -36,11 +36,14 @@ public:
 
     Data<double> d_radiusLS;
     Data<double> d_upsampling;
-//    Data<double> d_samplingStep;
+    Data<double> d_samplingStep;
+    Data<double> d_uniformSampling;
+
 //    Data<int> d_poissonDepth;
     Data<unsigned> d_order;
 
     Data<double> d_mu;
+    Data<double> d_triRadius;
 
     Data<double> d_drawRadius;
 
