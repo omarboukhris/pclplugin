@@ -59,8 +59,6 @@ public:
     void callBackUpdate();
 
 private:
-
-    helper::vector<defaulttype::Vector3> m_resampled;
     helper::vector<bool> m_visited;
     helper::vector<helper::vector<unsigned>> m_triangle_around_vertex;
 
