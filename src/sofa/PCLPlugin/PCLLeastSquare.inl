@@ -15,7 +15,9 @@
 #include <pcl/surface/marching_cubes.h>
 #include <pcl/surface/marching_cubes_hoppe.h>
 #include <pcl/surface/marching_cubes_rbf.h>
-#include <pcl/keypoints/uniform_sampling.h>
+#include <pcl/filters/uniform_sampling.h>
+
+#include <sofa/helper/AdvancedTimer.h>
 
 namespace sofa {
 
@@ -35,6 +37,7 @@ PCLLeastSquare<DataTypes>::PCLLeastSquare()
 , d_uniformSampling(initData(&d_uniformSampling, 0.01, "uniformSampling", "Maximum angle allowed."))
 , d_mu(initData(&d_mu, 4.0, "mu", "Maximum angle allowed."))
 , d_triRadius(initData(&d_triRadius, 5.0, "triRadius", "Maximum angle allowed."))
+, d_recomputeNormals(initData(&d_recomputeNormals, false, "recomputeNormals", "Maximum angle allowed."))
 , d_drawRadius(initData(&d_drawRadius, 0.0, "drawRadius", "Maximum angle allowed.")) {
     this->f_listening.setValue(true);
     c_callback.addInputs({&d_inputPoints,
@@ -59,14 +62,13 @@ void PCLLeastSquare<DataTypes>::callBackUpdate() {
 
     if (input.empty()) return;
 
+    sofa::helper::AdvancedTimer::stepBegin("PCL");
+
     pcl::PointCloud<pcl::PointXYZ>::Ptr cloud (new pcl::PointCloud<pcl::PointXYZ> ());
     for (unsigned i=0; i<input.size(); i++) {
         pcl::PointXYZ currentPoint(input[i][0], input[i][1], input[i][2]);
         cloud->push_back(currentPoint);
     }
-
-
-
 
 
     // Create a KD-Tree
@@ -90,8 +92,10 @@ void PCLLeastSquare<DataTypes>::callBackUpdate() {
 
     mls.process (*mls_points);
 
-    if (mls_points->empty()) return;
-
+    if (mls_points->empty()) {
+        sofa::helper::AdvancedTimer::stepEnd("PCL");
+        return;
+    }
 
 
 
@@ -157,34 +161,51 @@ void PCLLeastSquare<DataTypes>::callBackUpdate() {
     pcl::PointCloud<pcl::PointXYZ> point_cloud;
     pcl::fromPCLPointCloud2( output.cloud, point_cloud);
 
-    m_triangle_around_vertex.resize(point_cloud.size());
+    if (d_recomputeNormals.getValue()) {
+        m_triangle_around_vertex.resize(point_cloud.size());
 
-    for (unsigned i=0; i<point_cloud.size(); i++) {
-        pcl::PointXYZ P = point_cloud[i];
-        points->push_back(defaulttype::Vector3(P.x,P.y,P.z));
+        for (unsigned i=0; i<point_cloud.size(); i++) {
+            pcl::PointXYZ P = point_cloud[i];
+            points->push_back(defaulttype::Vector3(P.x,P.y,P.z));
 
-        m_triangle_around_vertex[i].clear();
+            m_triangle_around_vertex[i].clear();
+        }
+
+        for (unsigned i=0; i<output.polygons.size(); i++) {
+            Triangle currentTriangle;
+            currentTriangle[0] = output.polygons[i].vertices[0];
+            currentTriangle[1] = output.polygons[i].vertices[1];
+            currentTriangle[2] = output.polygons[i].vertices[2];
+
+            m_triangle_around_vertex[currentTriangle[0]].push_back(i);
+            m_triangle_around_vertex[currentTriangle[1]].push_back(i);
+            m_triangle_around_vertex[currentTriangle[2]].push_back(i);
+
+            triangles->push_back(currentTriangle);
+        }
+
+        m_visited.clear();
+        m_visited.resize(points->size(),false);
+
+        for (unsigned i=0; i<points->size(); i++) {
+            recomputeNormals(i,defaulttype::Vector3(0,0,0),*points,*triangles);
+        }
+    } else {
+        for (unsigned i=0; i<point_cloud.size(); i++) {
+            pcl::PointXYZ P = point_cloud[i];
+            points->push_back(defaulttype::Vector3(P.x,P.y,P.z));
+        }
+
+        for (unsigned i=0; i<output.polygons.size(); i++) {
+            Triangle currentTriangle;
+            currentTriangle[0] = output.polygons[i].vertices[0];
+            currentTriangle[1] = output.polygons[i].vertices[1];
+            currentTriangle[2] = output.polygons[i].vertices[2];
+            triangles->push_back(currentTriangle);
+        }
     }
 
-    for (unsigned i=0; i<output.polygons.size(); i++) {
-        Triangle currentTriangle;
-        currentTriangle[0] = output.polygons[i].vertices[0];
-        currentTriangle[1] = output.polygons[i].vertices[1];
-        currentTriangle[2] = output.polygons[i].vertices[2];
-
-        m_triangle_around_vertex[currentTriangle[0]].push_back(i);
-        m_triangle_around_vertex[currentTriangle[1]].push_back(i);
-        m_triangle_around_vertex[currentTriangle[2]].push_back(i);
-
-        triangles->push_back(currentTriangle);
-    }
-
-    m_visited.clear();
-    m_visited.resize(points->size(),false);
-
-    for (unsigned i=0; i<points->size(); i++) {
-        recomputeNormals(i,defaulttype::Vector3(0,0,0),*points,*triangles);
-    }
+    sofa::helper::AdvancedTimer::stepEnd("PCL");
 
     d_outputPoints.endEdit();
     d_outputTriangles.endEdit();

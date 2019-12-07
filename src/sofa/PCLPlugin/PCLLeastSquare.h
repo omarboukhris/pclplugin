@@ -47,6 +47,8 @@ public:
 
     Data<double> d_drawRadius;
 
+    Data<bool> d_recomputeNormals;
+
     core::objectmodel::DataCallback c_callback;
 
     PCLLeastSquare();
@@ -56,6 +58,7 @@ public:
     void callBackUpdate();
 
 private:
+
 
     helper::vector<bool> m_visited;
     helper::vector<helper::vector<unsigned>> m_triangle_around_vertex;
