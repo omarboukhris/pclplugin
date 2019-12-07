@@ -35,11 +35,12 @@ public:
     Data<helper::vector<Triangle>> d_outputTriangles;
 
     Data<double> d_radiusLS;
-    Data<double> d_upsampling;
+    Data<double> d_upsamplingRadius;
     Data<double> d_samplingStep;
     Data<double> d_uniformSampling;
 
-//    Data<int> d_poissonDepth;
+    //    Data<int> d_poissonDepth;
+
     Data<unsigned> d_order;
 
     Data<double> d_mu;
@@ -59,7 +60,7 @@ public:
 
 private:
 
-
+    helper::vector<defaulttype::Vector3> m_resampled;
     helper::vector<bool> m_visited;
     helper::vector<helper::vector<unsigned>> m_triangle_around_vertex;
 

@@ -32,9 +32,9 @@ PCLLeastSquare<DataTypes>::PCLLeastSquare()
 , d_outputTriangles(initData(&d_outputTriangles, "outputTriangles", "Minimum angle allowed."))
 , d_radiusLS(initData(&d_radiusLS, 1.0, "radiusLS", "Set the sphere radius that is to be used for determining the k-nearest neighbors used for fitting."))
 , d_order(initData(&d_order, (unsigned) 2, "polynomialOrder", "Order of MS"))
-, d_upsampling(initData(&d_upsampling, 1.0, "upsampling", "Maximum angle allowed."))
-, d_samplingStep(initData(&d_samplingStep, 1.0, "samplingStep", "Maximum angle allowed."))
-, d_uniformSampling(initData(&d_uniformSampling, 0.01, "uniformSampling", "Maximum angle allowed."))
+, d_upsamplingRadius(initData(&d_upsamplingRadius, 0.0, "upsamplingRadius", "Maximum angle allowed."))
+, d_samplingStep(initData(&d_samplingStep, 0.0, "samplingStep", "Maximum angle allowed."))
+, d_uniformSampling(initData(&d_uniformSampling, 0.0, "uniformSampling", "Maximum angle allowed."))
 , d_mu(initData(&d_mu, 4.0, "mu", "Maximum angle allowed."))
 , d_triRadius(initData(&d_triRadius, 5.0, "triRadius", "Maximum angle allowed."))
 , d_recomputeNormals(initData(&d_recomputeNormals, false, "recomputeNormals", "Maximum angle allowed."))
@@ -43,7 +43,7 @@ PCLLeastSquare<DataTypes>::PCLLeastSquare()
     c_callback.addInputs({&d_inputPoints,
                           &d_radiusLS,
                           &d_order,
-                          &d_upsampling,
+                          &d_upsamplingRadius,
                           &d_samplingStep,
                           &d_uniformSampling,
                           &d_mu,
@@ -85,9 +85,14 @@ void PCLLeastSquare<DataTypes>::callBackUpdate() {
     mls.setSearchMethod (tree);
     mls.setSearchRadius (d_radiusLS.getValue());
 
-    mls.setUpsamplingMethod(pcl::MovingLeastSquares<pcl::PointXYZ, pcl::PointNormal>::SAMPLE_LOCAL_PLANE);
-    mls.setUpsamplingRadius (d_upsampling.getValue());
-    mls.setUpsamplingStepSize(d_samplingStep.getValue());
+    if (d_upsamplingRadius.getValue() != 0) {
+        mls.setUpsamplingRadius (d_upsamplingRadius.getValue());
+        if (d_samplingStep.getValue() != 0) {
+            mls.setUpsamplingStepSize(d_samplingStep.getValue());
+            mls.setUpsamplingMethod(pcl::MovingLeastSquares<pcl::PointXYZ, pcl::PointNormal>::SAMPLE_LOCAL_PLANE);
+        }
+    }
+
 //    mls.setPointDensity(d_pointDensity.getValue());
 
     mls.process (*mls_points);
@@ -96,17 +101,6 @@ void PCLLeastSquare<DataTypes>::callBackUpdate() {
         sofa::helper::AdvancedTimer::stepEnd("PCL");
         return;
     }
-
-
-
-    // Uniform sampling object.
-    pcl::UniformSampling<pcl::PointNormal> filterSampling;
-    filterSampling.setInputCloud(mls_points);
-    filterSampling.setRadiusSearch(d_uniformSampling.getValue());
-
-    pcl::PointCloud<pcl::PointNormal>::Ptr filteredCloud(new pcl::PointCloud<pcl::PointNormal>);
-    filterSampling.filter(*filteredCloud);
-
 
 
     pcl::PolygonMesh output;
@@ -122,7 +116,23 @@ void PCLLeastSquare<DataTypes>::callBackUpdate() {
 //    m_gp3.setMaximumAngle(d_maxAngle.getValue()); // 120 degrees
     m_gp3.setNormalConsistency(true);
 //    m_gp3.setSearchMethod (tree2);
-    m_gp3.setInputCloud (filteredCloud);
+
+
+    if (d_uniformSampling.getValue() != 0) {
+        // Uniform sampling object.
+        pcl::UniformSampling<pcl::PointNormal> filterSampling;
+        filterSampling.setInputCloud(mls_points);
+        filterSampling.setRadiusSearch(d_uniformSampling.getValue());
+
+        pcl::PointCloud<pcl::PointNormal>::Ptr filteredCloud(new pcl::PointCloud<pcl::PointNormal>);
+        filterSampling.filter(*filteredCloud);
+
+        m_gp3.setInputCloud (filteredCloud);
+    } else {
+        m_gp3.setInputCloud (mls_points);
+    }
+
+
     m_gp3.reconstruct (output);
 
 
