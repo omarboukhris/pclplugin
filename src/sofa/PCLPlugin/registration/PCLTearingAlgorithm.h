@@ -58,7 +58,7 @@ public:
     Data<collisionAlgorithm::DetectionOutput>   d_outTrajectory;
     Data<double>                                d_distMin;
     Data<double>                                d_scaleForce;
-    Data<double>                                d_threshold;
+    Data<double>                                d_thresholdForce;
     Data<double>                                d_drawRadius;
 
     Data<double> d_radiusLS;
@@ -125,7 +125,11 @@ public:
         }
 
         virtual defaulttype::Vector3 getNormal() const {
-//            return m_proximity->getNormal();
+            defaulttype::Vector3 P1 = m_proximity1->getPosition();
+            defaulttype::Vector3 P2 = m_proximity2->getPosition();
+            defaulttype::Vector3 P3 = m_proximity3->getPosition();
+
+            return cross (P2-P1,P3-P1).normalized();
         }
 
         void buildJacobianConstraint(core::MultiMatrixDerivId cId, const helper::vector<defaulttype::Vector3> & dir, double fact, unsigned constraintId) const {
@@ -135,7 +139,9 @@ public:
         }
 
         void storeLambda(const core::ConstraintParams* cParams, core::MultiVecDerivId res, unsigned cid_global, unsigned cid_local, const sofa::defaulttype::BaseVector* lambda) const {
-//            m_proximity->storeLambda(cParams,res,cid_global,cid_local,lambda);
+            m_proximity1->storeLambda(cParams,res,cid_global,cid_local,lambda);
+            m_proximity2->storeLambda(cParams,res,cid_global,cid_local,lambda);
+            m_proximity3->storeLambda(cParams,res,cid_global,cid_local,lambda);
 //            m_function(cParams,m_forceId,cid_global,cid_local,lambda);
         }
 
@@ -159,16 +165,16 @@ public:
         , l_tetraGeom(initLink("tetra","link to tetra data"))
         , d_input(initData(&d_input,"input","link to tetra data"))
         , d_triangle(initData(&d_triangle, "triangle", "Positions of the points."))
-        , d_planOutput(initData(&d_planOutput, "planOutput", "Input for plan constraint"))
+        , d_planOutput(initData(&d_planOutput, "outPlane", "Input for plan constraint"))
         , d_borderOutput(initData(&d_borderOutput, "borderOutput", "Input for border constraint"))
         , d_outTrajectory(initData(&d_outTrajectory, "outTrajectory", "Output for trajectoryconstraint"))
         , d_distMin(initData(&d_distMin,0.5,"distMin","Dist min to consider a point on a triangle"))
         , d_scaleForce(initData(&d_scaleForce,0.01,"scaleForce","Dist min to consider a point on a triangle"))
-        , d_threshold(initData(&d_threshold,350.0,"threshold","Dist min to consider a point on a triangle"))
-        , d_radiusLS(initData(&d_radiusLS, 10.0, "radiusLS", "Set the sphere radius that is to be used for determining the k-nearest neighbors used for fitting."))
+        , d_thresholdForce(initData(&d_thresholdForce,350.0,"thresholdForce","Dist min to consider a point on a triangle"))
+        , d_radiusLS(initData(&d_radiusLS, 20.0, "radiusLS", "Set the sphere radius that is to be used for determining the k-nearest neighbors used for fitting."))
         , d_order(initData(&d_order, (unsigned) 2, "polynomialOrder", "Order of MS"))
         , d_mu(initData(&d_mu, 6.0, "mu", "Maximum angle allowed."))
-        , d_triRadius(initData(&d_triRadius, 10.0, "triRadius", "Maximum angle allowed."))
+        , d_triRadius(initData(&d_triRadius, 4.0, "triRadius", "Maximum angle allowed."))
         , d_drawRadius(initData(&d_drawRadius,0.2,"drawRadius","Dist min to consider a point on a triangle"))
     {
         c_callback.addInputs({&d_radiusLS,
@@ -202,30 +208,30 @@ public:
 
             double fact_u,fact_v,fact_w;
 
-            int tid = getClosestPointOnTriangle(P,fact_u,fact_v,fact_w);
+            int tid = getClosestProjectedTriangle(P,fact_u,fact_v,fact_w);
 
             if (tid == -1) {
                 collisionAlgorithm::BaseProximity::SPtr wrapper = collisionAlgorithm::BaseProximity::SPtr(new ProximityWrapper(trajectoryInput[i].first,check_func,i));
                 outTrajectory.add(wrapper, trajectoryInput[i].second);
             } else {
-                const Triangle& tri = triangles[tid];
+//                const Triangle& tri = triangles[tid];
 
-                //Compute Bezier Positions
-                defaulttype::Vector3 P0 = m_pointProx[tri[0]]->getPosition();
-                defaulttype::Vector3 P1 = m_pointProx[tri[1]]->getPosition();
-                defaulttype::Vector3 P2 = m_pointProx[tri[2]]->getPosition();
+//                //Compute Bezier Positions
+//                defaulttype::Vector3 P0 = m_pointProx[tri[0]]->getPosition();
+//                defaulttype::Vector3 P1 = m_pointProx[tri[1]]->getPosition();
+//                defaulttype::Vector3 P2 = m_pointProx[tri[2]]->getPosition();
 
-                defaulttype::Vector3 Q = fact_u * P0 + fact_v*P1 + fact_w * P2;
+//                defaulttype::Vector3 Q = fact_u * P0 + fact_v*P1 + fact_w * P2;
 
-                if ((P-Q).norm() < std::numeric_limits<double>::epsilon()) {
+//                if ((P-Q).norm() < std::numeric_limits<double>::epsilon()) {
                     unsigned eid = trajectoryInput[i].second->getElementId();
                     auto edge = l_needle->l_topology->getEdge(eid);
                     needleConstraint[edge[0]] = true;
                     needleConstraint[edge[1]] = true;
-                } else {
-                    collisionAlgorithm::BaseProximity::SPtr wrapper = collisionAlgorithm::BaseProximity::SPtr(new ProximityWrapper(trajectoryInput[i].first,check_func,i));
-                    outTrajectory.add(wrapper, trajectoryInput[i].second);
-                }
+//                } else {
+//                    collisionAlgorithm::BaseProximity::SPtr wrapper = collisionAlgorithm::BaseProximity::SPtr(new ProximityWrapper(trajectoryInput[i].first,check_func,i));
+//                    outTrajectory.add(wrapper, trajectoryInput[i].second);
+//                }
             }
         }
 
@@ -242,7 +248,7 @@ public:
             auto needleProx = collisionAlgorithm::createProximity(l_needle.get(), collisionAlgorithm::PointProximity(i));
             double fact_u,fact_v,fact_w;
 
-            int tid = getClosestPointOnTriangle(needleProx->getPosition(),fact_u,fact_v,fact_w);
+            int tid = getClosestProjectedTriangle(needleProx->getPosition(),fact_u,fact_v,fact_w);
 
             if (tid == -1) continue;
 
@@ -259,38 +265,47 @@ public:
         sofa::helper::AdvancedTimer::stepEnd("PCLTearingAlgorithm");
     }
 
-    void addProx(collisionAlgorithm::BaseProximity::SPtr prox) {
+    bool addProx(collisionAlgorithm::BaseProximity::SPtr prox) {
         defaulttype::Vector3 P = prox->getPosition(core::VecId::restPosition());
 
         for (unsigned i=0;i<m_pointProx.size();i++) {
-            if ((P-m_pointProx[i]->getPosition(core::VecId::restPosition())).norm() < d_distMin.getValue()) return;
+            if ((P-m_pointProx[i]->getPosition(core::VecId::restPosition())).norm() < d_distMin.getValue()) return false;
         }
 
         m_pointProx.push_back(prox);
+        return true;
     }
 
     void handleEvent(sofa::core::objectmodel::Event *event) {
         collisionAlgorithm::BaseClosestProximityAlgorithm::handleEvent(event);
 
         if (dynamic_cast<sofa::simulation::AnimateEndEvent*>(event)) {
+            bool needUpdate = false;
             for (unsigned i=0;i<d_input.getValue().size();i++) {
                 collisionAlgorithm::BaseProximity::SPtr prox = d_input.getValue()[i].first;
 
-                addProx(prox);
+                needUpdate = addProx(prox);
 
-                if (m_forces[i].norm() < d_threshold.getValue()) continue;
+                if (m_forces[i].norm() < d_thresholdForce.getValue()) continue;
 
-                defaulttype::Vector3 ruptureForce = m_forces[i].normalized() * d_threshold.getValue();
+                defaulttype::Vector3 ruptureForce = m_forces[i].normalized() * d_thresholdForce.getValue();
 
-                collisionAlgorithm::BaseProximity::SPtr overlay = collisionAlgorithm::FixedProximity::create(prox->getPosition() + (m_forces[i] - ruptureForce) * d_scaleForce.getValue());
+                //Add the point proportional to the force
+                //if commented --> only add one point ad the threshold
+//                ruptureForce = m_forces[i] - ruptureForce;
+
+                collisionAlgorithm::BaseProximity::SPtr overlay = collisionAlgorithm::FixedProximity::create(prox->getPosition() + ruptureForce * d_scaleForce.getValue());
 
                 collisionAlgorithm::BaseProximity::SPtr detection = collisionAlgorithm::BaseClosestProximityAlgorithm::findClosestProximity(overlay,l_tetraGeom.get());
 
-                addProx(detection);
+                needUpdate = addProx(detection);
             }
 
-            createTriangles();
-            computeTrianglesInfo();
+            if (needUpdate) {
+                createTriangles();
+
+                computeTrianglesInfo();
+            }
         }
     }
 
@@ -313,7 +328,57 @@ public:
         }
     }
 
-    int getClosestPointOnTriangle(const defaulttype::Vector3 & P,double & min_u,double & min_v,double & min_w) {
+    //return != -1 if and only if you can project inside a triangle
+    int getClosestProjectedTriangle(const defaulttype::Vector3 & P,double & min_u,double & min_v,double & min_w) {
+        //Find closest triangle and projected point
+        double minDist = std::numeric_limits<double>::max();
+        int closestTriangle = -1;
+        defaulttype::Vector3 Q;
+
+        const helper::vector<core::topology::BaseMeshTopology::Triangle> & triangles = d_triangle.getValue();
+
+        for(int tid=0; tid<triangles.size(); tid++) {
+            Triangle tri = triangles[tid];
+            defaulttype::Vector3 P0 = m_pointProx[tri[0]]->getPosition();
+            defaulttype::Vector3 P1 = m_pointProx[tri[1]]->getPosition();
+            defaulttype::Vector3 P2 = m_pointProx[tri[2]]->getPosition();
+
+            double fact_u,fact_v,fact_w;
+            defaulttype::Vector3 x1x2 = P - P0;
+
+            //corrdinate on the plane
+            double c0 = dot(x1x2,m_triangleInfo[tid].ax1);
+            double c1 = dot(x1x2,m_triangleInfo[tid].ax2);
+            defaulttype::Vector3 proj_P = P0 + m_triangleInfo[tid].ax1 * c0 + m_triangleInfo[tid].ax2 * c1;
+
+            sofa::collisionAlgorithm::computeBaryCoords(proj_P, m_triangleInfo[tid], P0, fact_u,fact_v,fact_w);
+
+            if (fact_u<0) continue;
+            if (fact_v<0) continue;
+            if (fact_w<0) continue;
+            if (fact_u>1) continue;
+            if (fact_v>1) continue;
+            if (fact_w>1) continue;
+
+            defaulttype::Vec3d projectedP = P0 * fact_u + P1 * fact_v + P2 * fact_w;
+
+            double dist = (projectedP - P).norm();
+            if(dist<minDist) {
+                closestTriangle = tid;
+                Q = projectedP;
+//                N = m_normals[tid];
+                minDist = dist;
+                min_u = fact_u;
+                min_v = fact_v;
+                min_w = fact_w;
+            }
+        }
+
+        return closestTriangle;
+    }
+
+    //return the closes triangle (always != -1)
+    int getClosestTriangle(const defaulttype::Vector3 & P,double & min_u,double & min_v,double & min_w) {
         //Find closest triangle and projected point
         double minDist = std::numeric_limits<double>::max();
         int closestTriangle = -1;
@@ -349,7 +414,7 @@ public:
         return closestTriangle;
     }
 
-    virtual void createTriangles() {
+    void createTriangles() {
         sofa::helper::AdvancedTimer::stepBegin("PCL");
 
         if (m_pointProx.empty()) return;
@@ -396,15 +461,48 @@ public:
 
         triangles.clear();
 
+        m_edges.clear();
+        m_edges.resize(m_pointProx.size());
+
+        m_boundary.clear();
+        m_boundary.resize(m_pointProx.size());
+
         for (unsigned i=0; i<output.polygons.size(); i++) {
             Triangle currentTriangle;
             currentTriangle[0] = output.polygons[i].vertices[0];
             currentTriangle[1] = output.polygons[i].vertices[1];
             currentTriangle[2] = output.polygons[i].vertices[2];
+
+            if (currentTriangle[0] == currentTriangle[1]) continue;
+            if (currentTriangle[0] == currentTriangle[2]) continue;
+            if (currentTriangle[1] == currentTriangle[2]) continue;
+
             triangles.push_back(currentTriangle);
+
+            addEdge(currentTriangle[0],currentTriangle[1]);
+            addEdge(currentTriangle[0],currentTriangle[2]);
+            addEdge(currentTriangle[1],currentTriangle[2]);
         }
 
         d_triangle.endEdit();
+    }
+
+    void addEdge(unsigned p1,unsigned p2) {
+        if (p2 < p1) {
+            addEdge(p2,p1);
+            return;
+        }
+
+        for (unsigned i=0;i<m_edges[p1].size();i++) {
+            if (m_edges[p1][i] == p2) {
+                m_boundary[p1][i] = false; // the edge is added by another triangle --> it's not on the boundary
+                return;
+            }
+        }
+
+        // this is the first time we meet this edges it's on the boundary
+        m_edges[p1].push_back(p2);
+        m_boundary[p1].push_back(true);
     }
 
     virtual void draw(const core::visual::VisualParams* vparams) {
@@ -431,11 +529,24 @@ public:
             defaulttype::Vector3 P1 = m_pointProx[tri[1]]->getPosition();
             defaulttype::Vector3 P2 = m_pointProx[tri[2]]->getPosition();
 
-            vparams->drawTool()->drawLine(P0,P1, defaulttype::Vec4f(1,0,0,1));
-            vparams->drawTool()->drawLine(P0,P2, defaulttype::Vec4f(1,0,0,1));
-            vparams->drawTool()->drawLine(P1,P2, defaulttype::Vec4f(1,0,0,1));
+//            vparams->drawTool()->drawLine(P0,P1, defaulttype::Vec4f(1,0,0,1));
+//            vparams->drawTool()->drawLine(P0,P2, defaulttype::Vec4f(1,0,0,1));
+//            vparams->drawTool()->drawLine(P1,P2, defaulttype::Vec4f(1,0,0,1));
 
-            vparams->drawTool()->drawTriangle(P0,P1,P2,cross(P1-P0,P2-P0),defaulttype::Vec4f(0.6,0.1,0,0.8));
+            vparams->drawTool()->drawTriangle(P0,P1,P2,cross(P1-P0,P2-P0),defaulttype::Vec4f(0.6,0.1,0,0.5));
+        }
+
+
+        for (unsigned i=0; i<m_boundary.size(); i++) {
+            for(unsigned j=0;j<m_boundary[i].size();j++) {
+                if (!m_boundary[i][j]) continue;
+
+                unsigned p2 = m_edges[i][j];
+                defaulttype::Vector3 P0 = m_pointProx[i]->getPosition();
+                defaulttype::Vector3 P1 = m_pointProx[p2]->getPosition();
+
+                vparams->drawTool()->drawLine(P0,P1, defaulttype::Vec4f(1,1,0,1));
+            }
         }
 
 
@@ -469,6 +580,8 @@ private:
     helper::vector<sofa::defaulttype::Vector3> m_normals;
     std::vector<defaulttype::Vector3> m_forces;
     std::vector<collisionAlgorithm::BaseProximity::SPtr> m_pointProx;
+    helper::vector<helper::vector<unsigned>> m_edges;
+    helper::vector<helper::vector<bool>> m_boundary;
 };
 
 } // namespace needleConstraint
