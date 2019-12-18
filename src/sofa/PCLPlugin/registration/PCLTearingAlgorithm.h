@@ -119,7 +119,9 @@ public:
         , m_fact_w(w) {}
 
         virtual defaulttype::Vector3 getPosition(core::VecCoordId v = core::VecCoordId::position()) const {
-//            return m_proximity->getPosition(v);
+            return m_proximity1->getPosition(v) * m_fact_u +
+                   m_proximity2->getPosition(v) * m_fact_v +
+                   m_proximity3->getPosition(v) * m_fact_w;
         }
 
         virtual defaulttype::Vector3 getNormal() const {
@@ -127,7 +129,9 @@ public:
         }
 
         void buildJacobianConstraint(core::MultiMatrixDerivId cId, const helper::vector<defaulttype::Vector3> & dir, double fact, unsigned constraintId) const {
-//            return m_proximity->buildJacobianConstraint(cId,dir,fact,constraintId);
+            m_proximity1->buildJacobianConstraint(cId,dir,fact*m_fact_u,constraintId);
+            m_proximity2->buildJacobianConstraint(cId,dir,fact*m_fact_v,constraintId);
+            m_proximity3->buildJacobianConstraint(cId,dir,fact*m_fact_w,constraintId);
         }
 
         void storeLambda(const core::ConstraintParams* cParams, core::MultiVecDerivId res, unsigned cid_global, unsigned cid_local, const sofa::defaulttype::BaseVector* lambda) const {
@@ -136,7 +140,7 @@ public:
         }
 
         unsigned getElementId() const {
-//            return m_proximity->getElementId();
+            return m_tid;
         }
     private:
         unsigned m_tid;
@@ -230,8 +234,6 @@ public:
 
 
         collisionAlgorithm::DetectionOutput & outPlane = *d_planOutput.beginEdit();
-
-        std::cout << needleConstraint << std::endl;
 
         outPlane.clear();
         for (unsigned i=0;i<needleConstraint.size();i++) {
@@ -434,6 +436,13 @@ public:
             vparams->drawTool()->drawLine(P1,P2, defaulttype::Vec4f(1,0,0,1));
 
             vparams->drawTool()->drawTriangle(P0,P1,P2,cross(P1-P0,P2-P0),defaulttype::Vec4f(0.6,0.1,0,0.8));
+        }
+
+
+        for (unsigned i=0; i<d_planOutput.getValue().size(); i++) {
+            vparams->drawTool()->drawLine(d_planOutput.getValue()[i].first->getPosition(),
+                                          d_planOutput.getValue()[i].second->getPosition(),
+                                          defaulttype::Vec4f(0,1,0,1));
         }
     }
 
