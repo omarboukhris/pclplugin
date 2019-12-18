@@ -52,7 +52,7 @@ public:
 
 
     Data<collisionAlgorithm::DetectionOutput>   d_input;
-    Data<helper::vector<Triangle> >             d_triangleInput;
+    Data<helper::vector<Triangle> >             d_triangle;
     Data<collisionAlgorithm::DetectionOutput>   d_planOutput;
     Data<collisionAlgorithm::DetectionOutput>   d_borderOutput;
     Data<collisionAlgorithm::DetectionOutput>   d_outTrajectory;
@@ -106,10 +106,55 @@ public:
         unsigned m_forceId;
     };
 
+
+    class ProximityTriangleFromTetra : public sofa::collisionAlgorithm::BaseProximity {
+    public:
+        ProximityTriangleFromTetra(unsigned tid, sofa::collisionAlgorithm::BaseProximity::SPtr prox1,sofa::collisionAlgorithm::BaseProximity::SPtr prox2,sofa::collisionAlgorithm::BaseProximity::SPtr prox3, double u,double v, double w)
+        : m_tid(tid)
+        , m_proximity1(prox1)
+        , m_proximity2(prox2)
+        , m_proximity3(prox3)
+        , m_fact_u(u)
+        , m_fact_v(v)
+        , m_fact_w(w) {}
+
+        virtual defaulttype::Vector3 getPosition(core::VecCoordId v = core::VecCoordId::position()) const {
+//            return m_proximity->getPosition(v);
+        }
+
+        virtual defaulttype::Vector3 getNormal() const {
+//            return m_proximity->getNormal();
+        }
+
+        void buildJacobianConstraint(core::MultiMatrixDerivId cId, const helper::vector<defaulttype::Vector3> & dir, double fact, unsigned constraintId) const {
+//            return m_proximity->buildJacobianConstraint(cId,dir,fact,constraintId);
+        }
+
+        void storeLambda(const core::ConstraintParams* cParams, core::MultiVecDerivId res, unsigned cid_global, unsigned cid_local, const sofa::defaulttype::BaseVector* lambda) const {
+//            m_proximity->storeLambda(cParams,res,cid_global,cid_local,lambda);
+//            m_function(cParams,m_forceId,cid_global,cid_local,lambda);
+        }
+
+        unsigned getElementId() const {
+//            return m_proximity->getElementId();
+        }
+    private:
+        unsigned m_tid;
+        sofa::collisionAlgorithm::BaseProximity::SPtr m_proximity1;
+        sofa::collisionAlgorithm::BaseProximity::SPtr m_proximity2;
+        sofa::collisionAlgorithm::BaseProximity::SPtr m_proximity3;
+        double m_fact_u;
+        double m_fact_v;
+        double m_fact_w;
+    };
+
+
+
     PCLTearingAlgorithm()
         : l_needle(initLink("needle","link to needle data"))
         , l_tetraGeom(initLink("tetra","link to tetra data"))
         , d_input(initData(&d_input,"input","link to tetra data"))
+        , d_triangle(initData(&d_triangle, "triangle", "Positions of the points."))
         , d_planOutput(initData(&d_planOutput, "planOutput", "Input for plan constraint"))
         , d_borderOutput(initData(&d_borderOutput, "borderOutput", "Input for border constraint"))
         , d_outTrajectory(initData(&d_outTrajectory, "outTrajectory", "Output for trajectoryconstraint"))
@@ -135,21 +180,79 @@ public:
         sofa::helper::AdvancedTimer::stepBegin("PCLTearingAlgorithm");
 
         const collisionAlgorithm::DetectionOutput & trajectoryInput = d_input.getValue();
+        const helper::vector<core::topology::BaseMeshTopology::Triangle> & triangles = d_triangle.getValue();
 
         collisionAlgorithm::DetectionOutput & outTrajectory = *d_outTrajectory.beginEdit();
 
         m_forces.clear();
-        m_forces.resize(trajectoryInput.size());
+        m_forces.resize(trajectoryInput.size(),defaulttype::Vector3(0,0,0));
+
+        helper::vector<bool> needleConstraint;
+        needleConstraint.resize(l_needle->getState()->getSize(),false);
 
         auto check_func = std::bind(&PCLTearingAlgorithm::computeForce,this,std::placeholders::_1, std::placeholders::_2,std::placeholders::_3,std::placeholders::_4,std::placeholders::_5);
         outTrajectory.clear();
         for (unsigned i=0;i<trajectoryInput.size();i++) {
-            collisionAlgorithm::BaseProximity::SPtr wrapper = collisionAlgorithm::BaseProximity::SPtr(new ProximityWrapper(trajectoryInput[i].first,check_func,i));
 
-            outTrajectory.add(wrapper, trajectoryInput[i].second);
+            defaulttype::Vector3 P = trajectoryInput[i].first->getPosition();
+
+            double fact_u,fact_v,fact_w;
+
+            int tid = getClosestPointOnTriangle(P,fact_u,fact_v,fact_w);
+
+            if (tid == -1) {
+                collisionAlgorithm::BaseProximity::SPtr wrapper = collisionAlgorithm::BaseProximity::SPtr(new ProximityWrapper(trajectoryInput[i].first,check_func,i));
+                outTrajectory.add(wrapper, trajectoryInput[i].second);
+            } else {
+                const Triangle& tri = triangles[tid];
+
+                //Compute Bezier Positions
+                defaulttype::Vector3 P0 = m_pointProx[tri[0]]->getPosition();
+                defaulttype::Vector3 P1 = m_pointProx[tri[1]]->getPosition();
+                defaulttype::Vector3 P2 = m_pointProx[tri[2]]->getPosition();
+
+                defaulttype::Vector3 Q = fact_u * P0 + fact_v*P1 + fact_w * P2;
+
+                if ((P-Q).norm() < std::numeric_limits<double>::epsilon()) {
+                    unsigned eid = trajectoryInput[i].second->getElementId();
+                    auto edge = l_needle->l_topology->getEdge(eid);
+                    needleConstraint[edge[0]] = true;
+                    needleConstraint[edge[1]] = true;
+                } else {
+                    collisionAlgorithm::BaseProximity::SPtr wrapper = collisionAlgorithm::BaseProximity::SPtr(new ProximityWrapper(trajectoryInput[i].first,check_func,i));
+                    outTrajectory.add(wrapper, trajectoryInput[i].second);
+                }
+            }
         }
 
         d_outTrajectory.endEdit();
+
+
+
+        collisionAlgorithm::DetectionOutput & outPlane = *d_planOutput.beginEdit();
+
+        std::cout << needleConstraint << std::endl;
+
+        outPlane.clear();
+        for (unsigned i=0;i<needleConstraint.size();i++) {
+            if (!needleConstraint[i]) continue;
+
+            auto needleProx = collisionAlgorithm::createProximity(l_needle.get(), collisionAlgorithm::PointProximity(i));
+            double fact_u,fact_v,fact_w;
+
+            int tid = getClosestPointOnTriangle(needleProx->getPosition(),fact_u,fact_v,fact_w);
+
+            if (tid == -1) continue;
+
+            Triangle tri = triangles[tid];
+
+            collisionAlgorithm::BaseProximity::SPtr tetraProx = collisionAlgorithm::BaseProximity::SPtr(new ProximityTriangleFromTetra(tid,m_pointProx[tri[0]],m_pointProx[tri[1]],m_pointProx[tri[2]],fact_u,fact_v,fact_w));
+
+            outPlane.add(needleProx,tetraProx);
+        }
+
+        d_planOutput.endEdit();
+
 
         sofa::helper::AdvancedTimer::stepEnd("PCLTearingAlgorithm");
     }
@@ -185,11 +288,69 @@ public:
             }
 
             createTriangles();
+            computeTrianglesInfo();
         }
+    }
+
+    void computeTrianglesInfo() {
+        m_triangleInfo.clear();
+        m_normals.clear();
+        const helper::vector<core::topology::BaseMeshTopology::Triangle> & triangles = d_triangle.getValue();
+
+        for (size_t t=0 ; t<triangles.size() ; t++)
+        {
+            const Triangle& tri = triangles[t];
+
+            //Compute Bezier Positions
+            defaulttype::Vector3 P0 = m_pointProx[tri[0]]->getPosition();
+            defaulttype::Vector3 P1 = m_pointProx[tri[1]]->getPosition();
+            defaulttype::Vector3 P2 = m_pointProx[tri[2]]->getPosition();
+
+            m_triangleInfo.push_back(collisionAlgorithm::computeTinfo(P0,P1,P2));
+            m_normals.push_back(cross(P1-P0,P2-P0).normalized());
+        }
+    }
+
+    int getClosestPointOnTriangle(const defaulttype::Vector3 & P,double & min_u,double & min_v,double & min_w) {
+        //Find closest triangle and projected point
+        double minDist = std::numeric_limits<double>::max();
+        int closestTriangle = -1;
+        defaulttype::Vector3 Q;
+
+        const helper::vector<core::topology::BaseMeshTopology::Triangle> & triangles = d_triangle.getValue();
+
+        for(int tid=0; tid<triangles.size(); tid++) {
+            Triangle tri = triangles[tid];
+            defaulttype::Vector3 P0 = m_pointProx[tri[0]]->getPosition();
+            defaulttype::Vector3 P1 = m_pointProx[tri[1]]->getPosition();
+            defaulttype::Vector3 P2 = m_pointProx[tri[2]]->getPosition();
+
+            double fact_u,fact_v,fact_w;
+            sofa::collisionAlgorithm::projectOnTriangle(P,
+                                                        P0,P1,P2,m_triangleInfo[tid],
+                                                        fact_u,fact_v,fact_w);
+
+            defaulttype::Vec3d projectedP = P0 * fact_u + P1 * fact_v + P2 * fact_w;
+
+            double dist = (projectedP - P).norm();
+            if(dist<minDist) {
+                closestTriangle = tid;
+                Q = projectedP;
+//                N = m_normals[tid];
+                minDist = dist;
+                min_u = fact_u;
+                min_v = fact_v;
+                min_w = fact_w;
+            }
+        }
+
+        return closestTriangle;
     }
 
     virtual void createTriangles() {
         sofa::helper::AdvancedTimer::stepBegin("PCL");
+
+        if (m_pointProx.empty()) return;
 
         pcl::PointCloud<pcl::PointXYZ>::Ptr cloud (new pcl::PointCloud<pcl::PointXYZ> ());
         for (unsigned i=0; i<m_pointProx.size(); i++) {
@@ -229,15 +390,19 @@ public:
         m_gp3.setInputCloud (mls_points);
         m_gp3.reconstruct (output);
 
-        m_triangles.clear();
+        helper::vector<core::topology::BaseMeshTopology::Triangle> & triangles = *d_triangle.beginEdit();
+
+        triangles.clear();
 
         for (unsigned i=0; i<output.polygons.size(); i++) {
             Triangle currentTriangle;
             currentTriangle[0] = output.polygons[i].vertices[0];
             currentTriangle[1] = output.polygons[i].vertices[1];
             currentTriangle[2] = output.polygons[i].vertices[2];
-            m_triangles.push_back(currentTriangle);
+            triangles.push_back(currentTriangle);
         }
+
+        d_triangle.endEdit();
     }
 
     virtual void draw(const core::visual::VisualParams* vparams) {
@@ -256,10 +421,10 @@ public:
             vparams->drawTool()->drawSphere(m_pointProx[i]->getPosition(core::VecId::position()),d_drawRadius.getValue());
         }
 
+        const helper::vector<core::topology::BaseMeshTopology::Triangle> & triangles = d_triangle.getValue();
 
-
-        for (unsigned i=0; i<m_triangles.size(); i++) {
-            Triangle tri = m_triangles[i];
+        for (unsigned i=0; i<triangles.size(); i++) {
+            Triangle tri = triangles[i];
             defaulttype::Vector3 P0 = m_pointProx[tri[0]]->getPosition();
             defaulttype::Vector3 P1 = m_pointProx[tri[1]]->getPosition();
             defaulttype::Vector3 P2 = m_pointProx[tri[2]]->getPosition();
@@ -291,7 +456,8 @@ public:
 
 
 private:
-    helper::vector<core::topology::BaseMeshTopology::Triangle> m_triangles;
+    helper::vector<sofa::collisionAlgorithm::TriangleInfo> m_triangleInfo;
+    helper::vector<sofa::defaulttype::Vector3> m_normals;
     std::vector<defaulttype::Vector3> m_forces;
     std::vector<collisionAlgorithm::BaseProximity::SPtr> m_pointProx;
 };
