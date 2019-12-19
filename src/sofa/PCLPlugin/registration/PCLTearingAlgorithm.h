@@ -133,7 +133,6 @@ public:
         }
 
         void buildJacobianConstraint(core::MultiMatrixDerivId cId, const helper::vector<defaulttype::Vector3> & dir, double fact, unsigned constraintId) const {
-            std::cout<<"hi"<<std::endl;
             m_proximity1->buildJacobianConstraint(cId,dir,fact*m_fact_u,constraintId);
             m_proximity2->buildJacobianConstraint(cId,dir,fact*m_fact_v,constraintId);
             m_proximity3->buildJacobianConstraint(cId,dir,fact*m_fact_w,constraintId);
@@ -157,6 +156,50 @@ public:
         double m_fact_u;
         double m_fact_v;
         double m_fact_w;
+    };
+
+    class ProximityEdgeFromTetra : public sofa::collisionAlgorithm::BaseProximity {
+    public:
+        ProximityEdgeFromTetra(unsigned tid, sofa::collisionAlgorithm::BaseProximity::SPtr prox1,sofa::collisionAlgorithm::BaseProximity::SPtr prox2, double u,double v)
+            : m_tid(tid)
+            , m_proximity1(prox1)
+            , m_proximity2(prox2)
+            , m_fact_u(u)
+            , m_fact_v(v)
+        {}
+
+        virtual defaulttype::Vector3 getPosition(core::VecCoordId v = core::VecCoordId::position()) const {
+            return m_proximity1->getPosition(v) * m_fact_u +
+                   m_proximity2->getPosition(v) * m_fact_v;
+        }
+
+        virtual defaulttype::Vector3 getNormal() const {
+            //TODO
+            defaulttype::Vector3 P1 = m_proximity1->getPosition();
+            defaulttype::Vector3 P2 = m_proximity2->getPosition();
+
+            return  (P2-P1).normalized();
+        }
+
+        void buildJacobianConstraint(core::MultiMatrixDerivId cId, const helper::vector<defaulttype::Vector3> & dir, double fact, unsigned constraintId) const {
+            m_proximity1->buildJacobianConstraint(cId,dir,fact*m_fact_u,constraintId);
+            m_proximity2->buildJacobianConstraint(cId,dir,fact*m_fact_v,constraintId);
+        }
+
+        void storeLambda(const core::ConstraintParams* cParams, core::MultiVecDerivId res, unsigned cid_global, unsigned cid_local, const sofa::defaulttype::BaseVector* lambda) const {
+            m_proximity1->storeLambda(cParams,res,cid_global,cid_local,lambda);
+            m_proximity2->storeLambda(cParams,res,cid_global,cid_local,lambda);
+        }
+
+        unsigned getElementId() const {
+            return m_tid;
+        }
+    private:
+        unsigned m_tid;
+        sofa::collisionAlgorithm::BaseProximity::SPtr m_proximity1;
+        sofa::collisionAlgorithm::BaseProximity::SPtr m_proximity2;
+        double m_fact_u;
+        double m_fact_v;
     };
 
 
@@ -273,6 +316,41 @@ public:
 
         d_planOutput.endEdit();
 
+        collisionAlgorithm::DetectionOutput & outBorder = *d_borderOutput.beginEdit();
+        outBorder.clear();
+        for (unsigned i=0;i<outPlane.size();i++) {
+
+            collisionAlgorithm::BaseProximity::SPtr needleProx = outPlane[i].first;
+            double fact_u,fact_v;
+            int id_u,id_v,tid;
+
+            defaulttype::Vector3 P = needleProx->getPosition();
+            findClosestBorderEdge(P,fact_u,fact_v,id_u,id_v);
+            if((id_u==-1)||(id_v==-1))
+            {
+                serr<<"The plan doesn't have a border"<<sendl;
+                break;
+            }
+
+            for(unsigned j=0; j<m_edges[id_u].size(); j++)
+            {
+                if(m_edges[id_u][j] == id_v)
+                {
+                    if(!m_triangleAroundEdge[id_u][j].size())
+                    {
+                        serr<<"No triangle attached to the edge ("<<id_u<<","<<id_v<<")"<<sendl;
+                    }
+                    else
+                    {
+                        tid = m_triangleAroundEdge[id_u][j][0];
+                    }
+                }
+            }
+
+            collisionAlgorithm::BaseProximity::SPtr EdgeProx = collisionAlgorithm::BaseProximity::SPtr(new ProximityEdgeFromTetra(tid,m_pointProx[id_u],m_pointProx[id_v],fact_u,fact_v));
+            outBorder.add(needleProx,EdgeProx);
+        }
+        d_borderOutput.endEdit();
 
         sofa::helper::AdvancedTimer::stepEnd("PCLTearingAlgorithm");
     }
@@ -495,6 +573,9 @@ public:
         m_edges.clear();
         m_edges.resize(m_pointProx.size());
 
+        m_triangleAroundEdge.clear();
+        m_triangleAroundEdge.resize(m_pointProx.size());
+
         m_boundary.clear();
         m_boundary.resize(m_pointProx.size());
 
@@ -519,14 +600,18 @@ public:
             collisionAlgorithm::TriangleInfo tinfo = collisionAlgorithm::computeTinfo(P0,P1,P2);
 
 
-            //Add the edges s that the triangle is not on the boundary even if desactivated
-            addEdge(currentTriangle[0],currentTriangle[1]);
-            addEdge(currentTriangle[0],currentTriangle[2]);
-            addEdge(currentTriangle[1],currentTriangle[2]);
+
 
             //check the surface of the triangle
             if (tinfo.invDenom > d_maxDenom.getValue()) continue;
             //            std::cout << tinfo.invDenom  << std::endl;
+
+
+            //Add the edges s that the triangle is not on the boundary even if desactivated
+            addEdge(currentTriangle[0],currentTriangle[1],triangles.size());
+            addEdge(currentTriangle[0],currentTriangle[2],triangles.size());
+            addEdge(currentTriangle[1],currentTriangle[2],triangles.size());
+
 
             triangles.push_back(currentTriangle);
             m_triangleInfo.push_back(tinfo);
@@ -538,15 +623,16 @@ public:
         d_triangle.endEdit();
     }
 
-    void addEdge(unsigned p1,unsigned p2) {
+    void addEdge(unsigned p1,unsigned p2,unsigned tid) {
         if (p2 < p1) {
-            addEdge(p2,p1);
+            addEdge(p2,p1,tid);
             return;
         }
 
         for (unsigned i=0;i<m_edges[p1].size();i++) {
             if (m_edges[p1][i] == p2) {
                 m_boundary[p1][i] = false; // the edge is added by another triangle --> it's not on the boundary
+                m_triangleAroundEdge[p1][i].push_back(tid);
                 return;
             }
         }
@@ -554,6 +640,47 @@ public:
         // this is the first time we meet this edges it's on the boundary
         m_edges[p1].push_back(p2);
         m_boundary[p1].push_back(true);
+        m_triangleAroundEdge[p1].push_back(helper::vector<unsigned>());
+        m_triangleAroundEdge[p1][m_triangleAroundEdge[p1].size()-1].push_back(tid);
+    }
+
+    void findClosestBorderEdge(defaulttype::Vec3d P,double &fact_u, double&fact_v, int &id_u, int &id_v)
+    {
+        id_u = -1;
+        id_v = -1;
+        double closestDist = std::numeric_limits<double>::max();
+
+        for(unsigned i=0; i<m_boundary.size();i++)
+        {
+            for(unsigned j=0; j<m_boundary[i].size(); j++)
+            {
+                if(m_boundary[i][j])
+                {
+
+                    const defaulttype::Vector3 & E1 = m_pointProx[i]->getPosition();
+                    const defaulttype::Vector3 & E2 = m_pointProx[m_edges[i][j]]->getPosition();
+                    double fu;
+                    double fv;
+
+                    defaulttype::Vector3 v = E2 - E1;
+                    fv = dot (P - E1,v) / dot(v,v);
+
+                    if (fv<0.0) fv = 0.0;
+                    else if (fv>1.0) fv = 1.0;
+
+                    fu = 1.0-fv;
+                    double dist=(P - (fu*E1 + fv*E2)).norm();
+                    if(dist<closestDist)
+                    {
+                        fact_u = fu;
+                        fact_v = fv;
+                        id_u = i;
+                        id_v = m_edges[i][j];
+                        closestDist = dist;
+                    }
+                }
+            }
+        }
     }
 
     virtual void draw(const core::visual::VisualParams* vparams) {
@@ -606,6 +733,17 @@ public:
                                           d_planOutput.getValue()[i].second->getPosition(),
                                           defaulttype::Vec4f(0,1,0,1));
         }
+
+
+
+        for (unsigned i=0; i<d_borderOutput.getValue().size(); i++) {
+            vparams->drawTool()->drawLine(d_borderOutput.getValue()[i].first->getPosition(),
+                                          d_borderOutput.getValue()[i].second->getPosition(),
+                                          defaulttype::Vec4f(0,0,1,1));
+            vparams->drawTool()->drawSphere(d_borderOutput.getValue()[i].second->getPosition(),d_drawRadius.getValue()*2,defaulttype::Vec4d(1,1,1,1));
+        }
+
+
     }
 
     //Called at the storelambda with the proxy
@@ -632,6 +770,7 @@ private:
     std::vector<defaulttype::Vector3> m_forces;
     std::vector<collisionAlgorithm::BaseProximity::SPtr> m_pointProx;
     helper::vector<helper::vector<unsigned>> m_edges;
+    helper::vector<helper::vector<helper::vector<unsigned>>> m_triangleAroundEdge;
     helper::vector<helper::vector<bool>> m_boundary;
 };
 
