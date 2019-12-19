@@ -337,96 +337,16 @@ public:
                 ruptureForce *= d_scaleForce.getValue();
 
                 //Version with PCL
-                /*collisionAlgorithm::BaseProximity::SPtr overlay = collisionAlgorithm::FixedProximity::create(prox->getPosition() + ruptureForce);
+                collisionAlgorithm::BaseProximity::SPtr overlay = collisionAlgorithm::FixedProximity::create(prox->getPosition() + ruptureForce);
 
                 collisionAlgorithm::BaseProximity::SPtr detection = collisionAlgorithm::BaseClosestProximityAlgorithm::findClosestProximity(overlay,l_tetraGeom.get());
                 needUpdate = (addProx(detection)==-1) | needUpdate;
-                */
-
-                //Version without PCL
-                //Construct the 4 points :
-                collisionAlgorithm::BaseProximity::SPtr firstProx;
-                collisionAlgorithm::BaseProximity::SPtr firstProxWithOverlay;
-                collisionAlgorithm::BaseProximity::SPtr secondProx;
-                collisionAlgorithm::BaseProximity::SPtr secondProxWithOverlay;
-                //                if(i==0)
-                //                    firstProx = prox;
-                //                else
-                //                    firstProx = collisionAlgorithm::FixedProximity::create((d_input.getValue()[i-1].first->getPosition() + prox->getPosition())/2);
-
-
-
-                //                secondProx = collisionAlgorithm::FixedProximity::create((d_input.getValue()[i+1].first->getPosition() + prox->getPosition())/2);
-                firstProx = collisionAlgorithm::FixedProximity::create(d_input.getValue()[1].first->getPosition() -ruptureForce*5);
-                secondProx = collisionAlgorithm::FixedProximity::create(d_input.getValue()[d_input.getValue().size()-1].first->getPosition() -ruptureForce*5);
-
-                firstProxWithOverlay = collisionAlgorithm::FixedProximity::create(firstProx->getPosition()+ruptureForce*10);
-                secondProxWithOverlay = collisionAlgorithm::FixedProximity::create(secondProx->getPosition()+ruptureForce*10);
-
-                collisionAlgorithm::BaseProximity::SPtr firstDetection = collisionAlgorithm::BaseClosestProximityAlgorithm::findClosestProximity(firstProx,l_tetraGeom.get());
-                collisionAlgorithm::BaseProximity::SPtr secondDetection = collisionAlgorithm::BaseClosestProximityAlgorithm::findClosestProximity(secondProx,l_tetraGeom.get());
-                collisionAlgorithm::BaseProximity::SPtr firstDetectionOverlay = collisionAlgorithm::BaseClosestProximityAlgorithm::findClosestProximity(firstProxWithOverlay,l_tetraGeom.get());
-                collisionAlgorithm::BaseProximity::SPtr secondDetectionOverlay = collisionAlgorithm::BaseClosestProximityAlgorithm::findClosestProximity(secondProxWithOverlay,l_tetraGeom.get());
-
-
-                constructNewTriangleWithoutPCL(firstDetection        ,
-                                               secondDetection       ,
-                                               firstDetectionOverlay ,
-                                               secondDetectionOverlay);
 
             }
 
             //Version with PCL
-            //if (needUpdate) createTriangles();
+            if (needUpdate) createTriangles();
         }
-    }
-
-    void constructNewTriangleWithoutPCL(collisionAlgorithm::BaseProximity::SPtr firstProx,
-                                        collisionAlgorithm::BaseProximity::SPtr secondProx,
-                                        collisionAlgorithm::BaseProximity::SPtr firstProxWithOverlay,
-                                        collisionAlgorithm::BaseProximity::SPtr secondProxWithOverlay)
-    {
-        if(m_triangleInfo.size()) return;
-        int fClosePoint ;
-        int sClosePoint ;
-        int foClosePoint;
-        int soClosePoint;
-
-        addProx(firstProx);
-        fClosePoint = m_pointProx.size()-1;
-
-        addProx(secondProx);
-        sClosePoint = m_pointProx.size()-1;
-
-        addProx(firstProxWithOverlay);
-        foClosePoint = m_pointProx.size()-1;
-
-        addProx(secondProxWithOverlay);
-        soClosePoint = m_pointProx.size()-1;
-
-        helper::vector<core::topology::BaseMeshTopology::Triangle> & triangles = *d_triangle.beginEdit();
-
-        Triangle firstTriangle;
-        firstTriangle[0] = fClosePoint;
-        firstTriangle[1] = foClosePoint;
-        firstTriangle[2] = sClosePoint;
-        triangles.push_back(firstTriangle);
-        collisionAlgorithm::TriangleInfo tinfo1 = collisionAlgorithm::computeTinfo(m_pointProx[fClosePoint]->getPosition(),
-                                                                                   m_pointProx[foClosePoint]->getPosition(),
-                                                                                   m_pointProx[sClosePoint]->getPosition());
-        m_triangleInfo.push_back(tinfo1);
-
-        Triangle secondTriangle;
-        secondTriangle[0] = sClosePoint;
-        secondTriangle[1] = foClosePoint;
-        secondTriangle[2] = soClosePoint;
-        triangles.push_back(secondTriangle);
-
-        collisionAlgorithm::TriangleInfo tinfo2 = collisionAlgorithm::computeTinfo(m_pointProx[sClosePoint]->getPosition(),
-                                                                                   m_pointProx[foClosePoint]->getPosition(),
-                                                                                   m_pointProx[soClosePoint]->getPosition());
-        m_triangleInfo.push_back(tinfo2);
-
     }
 
     //return != -1 if and only if you can project inside a triangle
