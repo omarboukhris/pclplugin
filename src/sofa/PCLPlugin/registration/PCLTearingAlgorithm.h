@@ -59,12 +59,15 @@ public:
     Data<double>                                d_distMin;
     Data<double>                                d_scaleForce;
     Data<double>                                d_thresholdForce;
-    Data<double>                                d_drawRadius;
 
     Data<double> d_radiusLS;
     Data<unsigned> d_order;
     Data<double> d_mu;
     Data<double> d_triRadius;
+
+    Data<double> d_maxDenom; // 45 degrees
+
+    Data<double>                                d_drawRadius;
 
     core::objectmodel::DataCallback c_callback;
 
@@ -175,12 +178,14 @@ public:
         , d_order(initData(&d_order, (unsigned) 2, "polynomialOrder", "Order of MS"))
         , d_mu(initData(&d_mu, 6.0, "mu", "Maximum angle allowed."))
         , d_triRadius(initData(&d_triRadius, 4.0, "triRadius", "Maximum angle allowed."))
+        , d_maxDenom(initData(&d_maxDenom, std::numeric_limits<double>::max(), "maxDenom", "Maximum angle allowed."))
         , d_drawRadius(initData(&d_drawRadius,0.2,"drawRadius","Dist min to consider a point on a triangle"))
     {
         c_callback.addInputs({&d_radiusLS,
                               &d_order,
                               &d_mu,
-                              &d_triRadius
+                              &d_triRadius,
+                              &d_maxDenom,
                              });
         c_callback.addCallback(std::bind(&PCLTearingAlgorithm<DataTypes>::createTriangles,this));
 
@@ -198,11 +203,13 @@ public:
         m_forces.resize(trajectoryInput.size(),defaulttype::Vector3(0,0,0));
 
         helper::vector<bool> needleConstraint;
-        needleConstraint.resize(l_needle->getState()->getSize(),false);
+        needleConstraint.resize(l_needle->getState()->getSize(),true);
 
         auto check_func = std::bind(&PCLTearingAlgorithm::computeForce,this,std::placeholders::_1, std::placeholders::_2,std::placeholders::_3,std::placeholders::_4,std::placeholders::_5);
         outTrajectory.clear();
-        for (unsigned i=0;i<trajectoryInput.size();i++) {
+        for (unsigned i=0;i<trajectoryInput.size();i++) {            
+            unsigned eid = trajectoryInput[i].second->getElementId();
+            auto edge = l_needle->l_topology->getEdge(eid);
 
             defaulttype::Vector3 P = trajectoryInput[i].first->getPosition();
 
@@ -213,7 +220,10 @@ public:
             if (tid == -1) {
                 collisionAlgorithm::BaseProximity::SPtr wrapper = collisionAlgorithm::BaseProximity::SPtr(new ProximityWrapper(trajectoryInput[i].first,check_func,i));
                 outTrajectory.add(wrapper, trajectoryInput[i].second);
-            } else {
+                needleConstraint[edge[0]] = false;
+                needleConstraint[edge[1]] = false;
+            }
+//            else {
 //                const Triangle& tri = triangles[tid];
 
 //                //Compute Bezier Positions
@@ -224,15 +234,15 @@ public:
 //                defaulttype::Vector3 Q = fact_u * P0 + fact_v*P1 + fact_w * P2;
 
 //                if ((P-Q).norm() < std::numeric_limits<double>::epsilon()) {
-                    unsigned eid = trajectoryInput[i].second->getElementId();
-                    auto edge = l_needle->l_topology->getEdge(eid);
-                    needleConstraint[edge[0]] = true;
-                    needleConstraint[edge[1]] = true;
+//                    unsigned eid = trajectoryInput[i].second->getElementId();
+//                    auto edge = l_needle->l_topology->getEdge(eid);
+//                    needleConstraint[edge[0]] = true;
+//                    needleConstraint[edge[1]] = true;
 //                } else {
 //                    collisionAlgorithm::BaseProximity::SPtr wrapper = collisionAlgorithm::BaseProximity::SPtr(new ProximityWrapper(trajectoryInput[i].first,check_func,i));
 //                    outTrajectory.add(wrapper, trajectoryInput[i].second);
 //                }
-            }
+//            }
         }
 
         d_outTrajectory.endEdit();
@@ -243,12 +253,14 @@ public:
 
         outPlane.clear();
         for (unsigned i=0;i<needleConstraint.size();i++) {
-            if (!needleConstraint[i]) continue;
+            if (needleConstraint[i]) continue;
 
             auto needleProx = collisionAlgorithm::createProximity(l_needle.get(), collisionAlgorithm::PointProximity(i));
             double fact_u,fact_v,fact_w;
 
-            int tid = getClosestProjectedTriangle(needleProx->getPosition(),fact_u,fact_v,fact_w);
+            defaulttype::Vector3 P = needleProx->getPosition();
+
+            int tid = getClosestProjectedTriangle(P,fact_u,fact_v,fact_w);
 
             if (tid == -1) continue;
 
@@ -268,8 +280,10 @@ public:
     bool addProx(collisionAlgorithm::BaseProximity::SPtr prox) {
         defaulttype::Vector3 P = prox->getPosition(core::VecId::restPosition());
 
+        double minDist = d_thresholdForce.getValue() * d_scaleForce.getValue();
+//        double minDist = d_distMin.getValue();
         for (unsigned i=0;i<m_pointProx.size();i++) {
-            if ((P-m_pointProx[i]->getPosition(core::VecId::restPosition())).norm() < d_distMin.getValue()) return false;
+            if ((P-m_pointProx[i]->getPosition(core::VecId::restPosition())).norm() < minDist) return false;
         }
 
         m_pointProx.push_back(prox);
@@ -294,37 +308,16 @@ public:
                 //if commented --> only add one point ad the threshold
 //                ruptureForce = m_forces[i] - ruptureForce;
 
-                collisionAlgorithm::BaseProximity::SPtr overlay = collisionAlgorithm::FixedProximity::create(prox->getPosition() + ruptureForce * d_scaleForce.getValue());
+                ruptureForce *= d_scaleForce.getValue();
+
+                collisionAlgorithm::BaseProximity::SPtr overlay = collisionAlgorithm::FixedProximity::create(prox->getPosition() + ruptureForce);
 
                 collisionAlgorithm::BaseProximity::SPtr detection = collisionAlgorithm::BaseClosestProximityAlgorithm::findClosestProximity(overlay,l_tetraGeom.get());
 
                 needUpdate = addProx(detection);
             }
 
-            if (needUpdate) {
-                createTriangles();
-
-                computeTrianglesInfo();
-            }
-        }
-    }
-
-    void computeTrianglesInfo() {
-        m_triangleInfo.clear();
-        m_normals.clear();
-        const helper::vector<core::topology::BaseMeshTopology::Triangle> & triangles = d_triangle.getValue();
-
-        for (size_t t=0 ; t<triangles.size() ; t++)
-        {
-            const Triangle& tri = triangles[t];
-
-            //Compute Bezier Positions
-            defaulttype::Vector3 P0 = m_pointProx[tri[0]]->getPosition();
-            defaulttype::Vector3 P1 = m_pointProx[tri[1]]->getPosition();
-            defaulttype::Vector3 P2 = m_pointProx[tri[2]]->getPosition();
-
-            m_triangleInfo.push_back(collisionAlgorithm::computeTinfo(P0,P1,P2));
-            m_normals.push_back(cross(P1-P0,P2-P0).normalized());
+            if (needUpdate) createTriangles();
         }
     }
 
@@ -454,6 +447,11 @@ public:
         m_gp3.setSearchRadius (d_triRadius.getValue());
         m_gp3.setMu (d_mu.getValue());
         m_gp3.setNormalConsistency(true);
+        //    m_gp3.setMaximumNearestNeighbors (d_nearestNeighbors.getValue());
+//        m_gp3.setMaximumSurfaceAngle(d_maxSurfaceAngle.getValue()); // 45 degrees
+//        m_gp3.setMinimumAngle(d_minAngle.getValue()); // 10 degrees
+//        m_gp3.setMaximumAngle(d_maxAngle.getValue()); // 120 degrees
+
         m_gp3.setInputCloud (mls_points);
         m_gp3.reconstruct (output);
 
@@ -467,6 +465,9 @@ public:
         m_boundary.clear();
         m_boundary.resize(m_pointProx.size());
 
+        m_triangleInfo.clear();
+        m_normals.clear();
+
         for (unsigned i=0; i<output.polygons.size(); i++) {
             Triangle currentTriangle;
             currentTriangle[0] = output.polygons[i].vertices[0];
@@ -477,12 +478,29 @@ public:
             if (currentTriangle[0] == currentTriangle[2]) continue;
             if (currentTriangle[1] == currentTriangle[2]) continue;
 
-            triangles.push_back(currentTriangle);
+            //Compute Bezier Positions
+            defaulttype::Vector3 P0 = m_pointProx[currentTriangle[0]]->getPosition();
+            defaulttype::Vector3 P1 = m_pointProx[currentTriangle[1]]->getPosition();
+            defaulttype::Vector3 P2 = m_pointProx[currentTriangle[2]]->getPosition();
 
+            collisionAlgorithm::TriangleInfo tinfo = collisionAlgorithm::computeTinfo(P0,P1,P2);
+
+
+            //Add the edges s that the triangle is not on the boundary even if desactivated
             addEdge(currentTriangle[0],currentTriangle[1]);
             addEdge(currentTriangle[0],currentTriangle[2]);
             addEdge(currentTriangle[1],currentTriangle[2]);
+
+            //check the volume of the triangle
+            if (tinfo.invDenom > d_maxDenom.getValue()) continue;
+//            std::cout << tinfo.invDenom  << std::endl;
+
+            triangles.push_back(currentTriangle);
+            m_triangleInfo.push_back(tinfo);
+            m_normals.push_back(cross(P1-P0,P2-P0).normalized());
         }
+
+//        std::cout << triangles.size() << std::endl;
 
         d_triangle.endEdit();
     }
