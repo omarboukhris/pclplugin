@@ -41,8 +41,10 @@ void PCLIterativeClosestPoint::register_pcl() {
     PointCloudData::PointCloud result ;
     icp.align(result);
 
+    Eigen::Matrix<float, 3, 3> rotationMat = icp.getFinalTransformation().block<3,3>(0,0) ;
+    Eigen::Matrix<float, 3, 1> translationVec = icp.getFinalTransformation().block<3,1>(0,3) ;
     std::cout << this->getTime() << " " << icp.hasConverged() << " score " << icp.getFitnessScore() << std::endl
-              << icp.getFinalTransformation() << std::endl ;
+              << rotationMat << std::endl << translationVec << std::endl ;
     // there should be a format for output : maybe Mat4x4 or 3x4
 }
 
