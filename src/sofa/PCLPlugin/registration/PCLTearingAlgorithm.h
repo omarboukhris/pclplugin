@@ -326,7 +326,7 @@ public:
 
 
                 if (m_forces[i].norm() < d_thresholdForce.getValue()) continue;
-                //                needUpdate = addProx(prox) | needUpdate;
+                needUpdate = addProx(prox) | needUpdate;
 
                 defaulttype::Vector3 ruptureForce = m_forces[i].normalized() * d_thresholdForce.getValue();
 
@@ -340,7 +340,7 @@ public:
                 collisionAlgorithm::BaseProximity::SPtr overlay = collisionAlgorithm::FixedProximity::create(prox->getPosition() + ruptureForce);
 
                 collisionAlgorithm::BaseProximity::SPtr detection = collisionAlgorithm::BaseClosestProximityAlgorithm::findClosestProximity(overlay,l_tetraGeom.get());
-                needUpdate = (addProx(detection)==-1) | needUpdate;
+                needUpdate = addProx(detection) | needUpdate;
 
             }
 
