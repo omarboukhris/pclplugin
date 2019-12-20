@@ -45,6 +45,9 @@ public:
     Data<collisionAlgorithm::DetectionOutput>   d_input;
     Data<collisionAlgorithm::DetectionOutput>   d_planOutput;
     Data<collisionAlgorithm::DetectionOutput>   d_borderOutput;
+    Data<double>                                d_distCut;
+    Data<double>                                d_thresholdForce;
+    Data<bool>                                  d_usePlane;
     Data<double>                                d_drawRadius;
 
     core::objectmodel::DataCallback c_callback;
@@ -187,6 +190,9 @@ public:
         , d_input(initData(&d_input,"input","link to tetra data"))
         , d_planOutput(initData(&d_planOutput, "outPlane", "Input for plan constraint"))
         , d_borderOutput(initData(&d_borderOutput, "outBorder", "Input for border constraint"))
+        , d_distCut(initData(&d_distCut,0.01,"distCut","Dist min to consider a point on a triangle"))
+        , d_thresholdForce(initData(&d_thresholdForce,350.0,"thresholdForce","Dist min to consider a point on a triangle"))
+        , d_usePlane(initData(&d_usePlane,true,"usePlane","Dist min to consider a point on a triangle"))
         , d_drawRadius(initData(&d_drawRadius,0.2,"drawRadius","Dist min to consider a point on a triangle"))
     {
         l_triangles.setPath("@.");
@@ -269,10 +275,9 @@ public:
 
         m_planeForce.clear();
         m_planeForce.resize(nbPlaneConstraint,defaulttype::Vec3d(0,0,0));
-        std::cout<<"Number of plane constraint : "<<nbPlaneConstraint<<std::endl;
+
         m_borderForce.clear();
         m_borderForce.resize(nbBorderConstraint,defaulttype::Vec3d(0,0,0));
-        std::cout<<"Number of border constraint : "<<nbBorderConstraint<<std::endl;
 
         sofa::helper::AdvancedTimer::stepEnd("NeedleSlicing");
     }
@@ -329,9 +334,27 @@ public:
     void handleEvent(sofa::core::objectmodel::Event *event) {
         if (dynamic_cast<sofa::simulation::AnimateEndEvent*>(event))
         {
-            if(m_planeForce.size())
-            std::cout<<"m_planeForce : "<<m_planeForce<<std::endl;
-            std::cout<<"m_borderForce : "<<m_borderForce<<std::endl;
+            collisionAlgorithm::DetectionOutput & outBorder = *d_borderOutput.beginEdit();
+            std::function<bool(const collisionAlgorithm::BaseProximity::SPtr, const collisionAlgorithm::BaseProximity::SPtr)> acceptFilter = [](const collisionAlgorithm::BaseProximity::SPtr a, const collisionAlgorithm::BaseProximity::SPtr b) { return true; };
+            collisionAlgorithm::Distance3DProximityMeasure distanceMeasure;
+            for(unsigned i=0; i<m_planeForce.size(); i++)
+            {
+                if(m_borderForce[i].norm()>0)
+                {
+                    defaulttype::Vec3d dir;
+                    if(d_usePlane.getValue())
+                        dir = (m_borderForce[i] + m_planeForce[i]);
+                    else
+                        dir = m_borderForce[i];
+
+                    if(dir.norm()>d_thresholdForce.getValue())
+                    {
+                        collisionAlgorithm::BaseProximity::SPtr overlay = collisionAlgorithm::FixedProximity::create(outBorder[i].first->getPosition() + dir.normalized()*d_distCut.getValue());
+                        collisionAlgorithm::BaseProximity::SPtr prox = collisionAlgorithm::findClosestProximity(overlay,l_tetraGeom.get(),acceptFilter,distanceMeasure);
+                        l_triangles->addProx(prox);
+                    }
+                }
+            }
         }
     }
 
