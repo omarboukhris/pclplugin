@@ -47,6 +47,7 @@ public:
     core::objectmodel::SingleLink<PCLTearingTriangle<DataTypes>, collisionAlgorithm::TetrahedronGeometry<DataTypes>,BaseLink::FLAG_STRONGLINK|BaseLink::FLAG_STOREPATH> l_tetraGeom;
 
     Data<helper::vector<Triangle> >             d_triangle;
+    Data<helper::vector<defaulttype::Vector3> > d_pointPosition;
     Data<double>                                d_radiusLS;
     Data<unsigned>                              d_order;
     Data<double>                                d_mu;
@@ -62,6 +63,7 @@ public:
     PCLTearingTriangle()
         : l_tetraGeom(initLink("tetra","link to tetra data"))
         , d_triangle(initData(&d_triangle, "triangle", "Positions of the points."))
+        , d_pointPosition(initData(&d_pointPosition, "position", "Positions"))
         , d_radiusLS(initData(&d_radiusLS, 20.0, "radiusLS", "Set the sphere radius that is to be used for determining the k-nearest neighbors used for fitting."))
         , d_order(initData(&d_order, (unsigned) 2, "polynomialOrder", "Order of MS"))
         , d_mu(initData(&d_mu, 6.0, "mu", "Maximum angle allowed."))
@@ -70,6 +72,7 @@ public:
         , d_nearestNeighbors(initData(&d_nearestNeighbors, (unsigned) 4, "nearestNeighbors", "Maximum angle allowed."))
         , d_drawRadius(initData(&d_drawRadius,0.2,"drawRadius","Dist min to consider a point on a triangle"))
     {
+        f_listening.setValue(true);
         c_callback.addInputs({&d_radiusLS,
                               &d_order,
                               &d_mu,
@@ -203,6 +206,7 @@ public:
     void callbackUpdate() {
         m_dirty = true;
         createTriangles();
+
     }
 
     void createTriangles() {
@@ -264,8 +268,8 @@ public:
         m_edges.clear();
         m_edges.resize(m_pointProx.size());
 
-//        m_triangleAroundEdge.clear();
-//        m_triangleAroundEdge.resize(m_pointProx.size());
+        //        m_triangleAroundEdge.clear();
+        //        m_triangleAroundEdge.resize(m_pointProx.size());
 
         m_boundary.clear();
         m_boundary.resize(m_pointProx.size());
@@ -297,7 +301,7 @@ public:
 
 
             //check the surface of the triangle
-//            if (tinfo.invDenom > d_maxDenom.getValue()) continue;
+            //            if (tinfo.invDenom > d_maxDenom.getValue()) continue;
             //            std::cout << tinfo.invDenom  << std::endl;
 
 
@@ -315,6 +319,8 @@ public:
         //        std::cout << triangles.size() << std::endl;
 
         d_triangle.endEdit();
+
+        updatePos();
     }
 
     //add the last point of the triangle in order to know the positive side
@@ -327,7 +333,7 @@ public:
         for (unsigned i=0;i<m_edges[p1].size();i++) {
             if (m_edges[p1][i] == p2) {
                 m_boundary[p1][i] = false; // the edge is added by another triangle --> it's not on the boundary
-//                m_triangleAroundEdge[p1][i].push_back(tid);
+                //                m_triangleAroundEdge[p1][i].push_back(tid);
                 return;
             }
         }
@@ -336,8 +342,8 @@ public:
         m_edges[p1].push_back(p2);
         m_boundary[p1].push_back(true);
         m_last[p1].push_back(last);
-//        m_triangleAroundEdge[p1].push_back(helper::vector<unsigned>());
-//        m_triangleAroundEdge[p1][m_triangleAroundEdge[p1].size()-1].push_back(tid);
+        //        m_triangleAroundEdge[p1].push_back(helper::vector<unsigned>());
+        //        m_triangleAroundEdge[p1][m_triangleAroundEdge[p1].size()-1].push_back(tid);
     }
 
     void findClosestBorderEdge(defaulttype::Vec3d P,double &fact_u, double&fact_v, int &id_u, int &id_v, int & id_l)
@@ -393,9 +399,9 @@ public:
 
         for (unsigned i=0; i<triangles.size(); i++) {
             Triangle tri = triangles[i];
-//            defaulttype::Vector3 P0 = m_pointProx[tri[0]]->getPosition(core::VecId::restPosition());
-//            defaulttype::Vector3 P1 = m_pointProx[tri[1]]->getPosition(core::VecId::restPosition());
-//            defaulttype::Vector3 P2 = m_pointProx[tri[2]]->getPosition(core::VecId::restPosition());
+            //            defaulttype::Vector3 P0 = m_pointProx[tri[0]]->getPosition(core::VecId::restPosition());
+            //            defaulttype::Vector3 P1 = m_pointProx[tri[1]]->getPosition(core::VecId::restPosition());
+            //            defaulttype::Vector3 P2 = m_pointProx[tri[2]]->getPosition(core::VecId::restPosition());
 
             defaulttype::Vector3 P0 = m_pointProx[tri[0]]->getPosition();
             defaulttype::Vector3 P1 = m_pointProx[tri[1]]->getPosition();
@@ -422,13 +428,25 @@ public:
         }
     }
 
+    void updatePos()
+    {
+        helper::vector<defaulttype::Vector3> & position = *d_pointPosition.beginEdit();
+        position.clear();
+        for(unsigned i=0; i<m_pointProx.size(); i++)
+        {
+            position.push_back(m_pointProx[i]->getPosition());
+        }
+        d_pointPosition.endEdit();
+
+    }
+
 private:
     helper::vector<sofa::collisionAlgorithm::TriangleInfo> m_triangleInfo;
     helper::vector<sofa::defaulttype::Vector3> m_normals;
     std::vector<collisionAlgorithm::BaseProximity::SPtr> m_pointProx;
     helper::vector<helper::vector<unsigned>> m_edges;
     helper::vector<helper::vector<unsigned>> m_last;
-//    helper::vector<helper::vector<helper::vector<unsigned>>> m_triangleAroundEdge;
+    //    helper::vector<helper::vector<helper::vector<unsigned>>> m_triangleAroundEdge;
     helper::vector<helper::vector<bool>> m_boundary;
     bool m_dirty;
 };
