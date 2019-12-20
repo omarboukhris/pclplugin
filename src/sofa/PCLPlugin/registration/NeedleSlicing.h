@@ -42,7 +42,7 @@ public:
     core::objectmodel::SingleLink<NeedleSlicing<DataTypes>, PCLTearingTriangle<DataTypes>,BaseLink::FLAG_STRONGLINK|BaseLink::FLAG_STOREPATH> l_triangles;
 
 
-    Data<helper::vector<unsigned> >   d_input;
+    Data<collisionAlgorithm::DetectionOutput>   d_input;
     Data<collisionAlgorithm::DetectionOutput>   d_planOutput;
     Data<collisionAlgorithm::DetectionOutput>   d_borderOutput;
     Data<double>                                d_drawRadius;
@@ -182,13 +182,34 @@ public:
     void doDetection() {
         sofa::helper::AdvancedTimer::stepBegin("NeedleSlicing");
 
-        const helper::vector<unsigned> & cst = d_input.getValue();
+
+        const collisionAlgorithm::DetectionOutput & trajectoryInput = d_input.getValue();
+        if (trajectoryInput.size() == 0) return;
+
+        m_needleConstraint.clear();
+        for (unsigned i=0;i<trajectoryInput.size();i++) {
+            //Add the tip is it's outside of the trianglated surface
+            auto bind = trajectoryInput[i];
+            int tid = l_triangles->getClosestProjectedTriangle(bind.first->getPosition(core::VecCoordId::restPosition()),core::VecCoordId::restPosition());
+
+            if (tid != -1) {
+                m_needleConstraint.push_back(i);
+            }
+        }
+
+
+        return;
+
+
+
+
+
 
         //find the points of the needle to constrain
         collisionAlgorithm::DetectionOutput & outPlane = *d_planOutput.beginEdit();
         outPlane.clear();
-        for (unsigned i=0;i<cst.size();i++) {
-            unsigned pid = cst[i];
+        for (unsigned i=0;i<m_needleConstraint.size();i++) {
+            unsigned pid = m_needleConstraint[i];
             auto needleProx = collisionAlgorithm::createProximity(l_needle.get(), collisionAlgorithm::PointProximity(pid));
 
             double fact_u,fact_v,fact_w;
@@ -211,8 +232,8 @@ public:
 
         collisionAlgorithm::DetectionOutput & outBorder = *d_borderOutput.beginEdit();
         outBorder.clear();
-        for (unsigned i=0;i<cst.size();i++) {
-            unsigned pid = cst[i];
+        for (unsigned i=0;i<m_needleConstraint.size();i++) {
+            unsigned pid = m_needleConstraint[i];
             auto needleProx = collisionAlgorithm::createProximity(l_needle.get(), collisionAlgorithm::PointProximity(pid));
 
             double fact_u,fact_v;
@@ -253,13 +274,14 @@ public:
     virtual void draw(const core::visual::VisualParams* vparams) {
         if (! vparams->displayFlags().getShowCollisionModels()) return ;
 
-        const helper::ReadAccessor<core::objectmodel::Data<VecCoord> > & pos = l_needle->getState()->read(core::VecCoordId::position());
+        const collisionAlgorithm::DetectionOutput & trajectoryInput = d_input.getValue();
 
-        const helper::vector<unsigned> & cst = d_input.getValue();
+        for (unsigned i=0;i<trajectoryInput.size();i++) {
+            glColor4f(1,0,1,1);
+            vparams->drawTool()->drawSphere(trajectoryInput[i].first->getPosition(core::VecId::restPosition()),d_drawRadius.getValue());
 
-        glColor4f(1,0,1,1);
-        for (unsigned i=0;i<cst.size();i++) {
-            vparams->drawTool()->drawSphere(pos[cst[i]],d_drawRadius.getValue());
+//            glColor4f(0,1,1,1);
+//            vparams->drawTool()->drawSphere(trajectoryInput[m_needleConstraint[i]].second->getPosition(),d_drawRadius.getValue());
         }
 /*
         const helper::vector<core::topology::BaseMeshTopology::Triangle> & triangles = d_triangle.getValue();
@@ -309,8 +331,8 @@ public:
 
     }
 
-//private :
-//    helper::vector<unsigned> m_needleConstraint;
+private :
+    helper::vector<unsigned> m_needleConstraint;
 };
 
 } // namespace needleConstraint

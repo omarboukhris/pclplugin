@@ -42,7 +42,6 @@ public:
 
     Data<collisionAlgorithm::DetectionOutput>   d_input;
     Data<collisionAlgorithm::DetectionOutput>   d_outTrajectory;
-    Data<helper::vector<unsigned>>              d_needleCst;
     Data<double>                                d_distCut;
     Data<double>                                d_thresholdForce;
     Data<double>                                d_drawRadius;
@@ -92,7 +91,6 @@ public:
         , l_triangles(initLink("triangles","link to tetra data"))
         , d_input(initData(&d_input,"input","link to tetra data"))
         , d_outTrajectory(initData(&d_outTrajectory, "outTrajectory", "Output for trajectoryconstraint"))
-        , d_needleCst(initData(&d_needleCst, "outCstId", "Output for trajectoryconstraint"))
         , d_distCut(initData(&d_distCut,0.01,"distCut","Dist min to consider a point on a triangle"))
         , d_thresholdForce(initData(&d_thresholdForce,350.0,"thresholdForce","Dist min to consider a point on a triangle"))
         , d_drawRadius(initData(&d_drawRadius,0.2,"drawRadius","Dist min to consider a point on a triangle"))
@@ -100,7 +98,7 @@ public:
         l_triangles.setPath("@.");
         c_callback.addInputs({&d_input});
         c_callback.addCallback(std::bind(&NeedleTearing<DataTypes>::doDetection,this));
-
+        this->f_listening.setValue(true);
     }
 
     void init() {
@@ -116,79 +114,24 @@ public:
 
         collisionAlgorithm::DetectionOutput & outTrajectory = *d_outTrajectory.beginEdit();
 
-        double avrGlobalF = m_globalForce.norm()*1.0/trajectoryInput.size();
-//        std::cout << avrGlobalF << std::endl;
-        if (avrGlobalF > d_thresholdForce.getValue()) m_globalCut = true;
-
         outTrajectory.clear();
 
-        if (!m_globalCut) {
-            m_globalForce = defaulttype::Vector3(0,0,0);
-            auto check_func = std::bind(&NeedleTearing::computeForce,this,std::placeholders::_1, std::placeholders::_2,std::placeholders::_3,std::placeholders::_4,std::placeholders::_5);
+        auto check_func = std::bind(&NeedleTearing::computeForce,this,std::placeholders::_1, std::placeholders::_2,std::placeholders::_3,std::placeholders::_4,std::placeholders::_5);
 
-            for (unsigned i=0;i<trajectoryInput.size();i++) {
-                //filter cutted constraints
+        for (unsigned i=0;i<trajectoryInput.size();i++) {
+            //Add the tip is it's outside of the trianglated surface
+            auto bind = trajectoryInput[i];
+
+            double fact_u,fact_v,fact_w;
+            int tid = l_triangles->getClosestProjectedTriangle(bind.first->getPosition(core::VecCoordId::restPosition()),fact_u,fact_v,fact_w,core::VecCoordId::restPosition());
+
+            std::cout << "GLOBAL = " << tid << " : " << fact_u << " " << fact_v << " " << fact_w << std::endl;
+
+            if (tid == -1) {
+                //add needle and contribution to the globalForce
                 collisionAlgorithm::BaseProximity::SPtr wrapper = collisionAlgorithm::BaseProximity::SPtr(new ProximityWrapper(trajectoryInput[i].first,check_func,i));
                 outTrajectory.add(wrapper, trajectoryInput[i].second);
             }
-        } else {
-            const helper::ReadAccessor<core::objectmodel::Data<VecCoord> > & pos = l_needle->getState()->read(core::VecCoordId::position());
-
-            m_cutProx_left.resize(trajectoryInput.size(),NULL);
-            m_cutProx_right.resize(trajectoryInput.size(),NULL);
-
-            defaulttype::Vector3 gN = m_globalForce.normalized();
-
-            std::function<bool(const collisionAlgorithm::BaseProximity::SPtr, const collisionAlgorithm::BaseProximity::SPtr)> acceptFilter = [](const collisionAlgorithm::BaseProximity::SPtr a, const collisionAlgorithm::BaseProximity::SPtr b) { return true; };
-            collisionAlgorithm::Distance3DProximityMeasure distanceMeasure;
-
-
-            helper::vector<unsigned> needCst;
-            needCst.resize(pos.size(),0);
-
-            for (unsigned i=0;i<trajectoryInput.size();i++) {
-                unsigned eid = trajectoryInput[i].second->getElementId();
-                auto edge = l_needle->l_topology->getEdge(eid);
-                needCst[edge[0]]++;
-                needCst[edge[1]]++;
-
-                if (m_cutProx_left[i] != NULL) continue;
-
-                defaulttype::Vector3 eN = (pos[edge[1]] - pos[edge[0]]).normalized();
-                defaulttype::Vector3 dir = cross(gN,eN).normalized() * d_distCut.getValue();
-
-                collisionAlgorithm::BaseProximity::SPtr overlayl = collisionAlgorithm::FixedProximity::create(trajectoryInput[i].first->getPosition() - dir);
-                collisionAlgorithm::BaseProximity::SPtr left = collisionAlgorithm::findClosestProximity(overlayl,l_tetraGeom.get(),acceptFilter,distanceMeasure);
-
-                collisionAlgorithm::BaseProximity::SPtr overlayr = collisionAlgorithm::FixedProximity::create(trajectoryInput[i].first->getPosition() + dir);
-                collisionAlgorithm::BaseProximity::SPtr right = collisionAlgorithm::findClosestProximity(overlayr,l_tetraGeom.get(),acceptFilter,distanceMeasure);
-
-                if (l_triangles->addProx(left))
-                    l_triangles->addProx(right,false); //do not check the dist for right
-
-            }
-
-            l_triangles->createTriangles();
-
-            //Add the tip is it's outside of the trianglated surface
-            auto tipBind = trajectoryInput[trajectoryInput.size()-1];
-            int tid = l_triangles->getClosestProjectedTriangle(tipBind.first->getPosition());
-            if (tid == -1) outTrajectory.push_back(tipBind);
-
-//            //For debug --> add proxies
-//            for (unsigned i=0;i<trajectoryInput.size();i++) {
-//                //filter cutted constraints
-//                outTrajectory.push_back();
-//            }
-
-            //Add the index of points to constrain
-            //If a point has been counted 2 times it means that there is no needle insertion on it
-            helper::vector<unsigned> & cst = *d_needleCst.beginEdit();
-            cst.clear();
-            for (unsigned i=0;i<pos.size();i++) {
-                if (needCst[i]==2) cst.push_back(i);
-            }
-            d_needleCst.endEdit();
         }
 
         d_outTrajectory.endEdit();
@@ -196,17 +139,62 @@ public:
         sofa::helper::AdvancedTimer::stepEnd("NeedleTearing");
     }
 
-    virtual void draw(const core::visual::VisualParams* vparams) {
-        if (! vparams->displayFlags().getShowCollisionModels()) return ;
-        if (!d_drawRadius.getValue()) return;
+    void handleEvent(sofa::core::objectmodel::Event *event) {
+        if (dynamic_cast<sofa::simulation::AnimateBeginEvent*>(event)) m_globalForce = defaulttype::Vector3(0,0,0);
 
-        glColor4f(0,1,0,1);
-        for (unsigned i=0;i<m_cutProx_left.size();i++) {
-            if (m_cutProx_left[i] == NULL) continue;
-            vparams->drawTool()->drawSphere(m_cutProx_left[i]->getPosition(),d_drawRadius.getValue());
-            vparams->drawTool()->drawSphere(m_cutProx_right[i]->getPosition(),d_drawRadius.getValue());
+
+        if (dynamic_cast<sofa::simulation::AnimateEndEvent*>(event)) {
+            const collisionAlgorithm::DetectionOutput & trajectoryInput = d_input.getValue();
+            const helper::ReadAccessor<core::objectmodel::Data<VecCoord> > & pos = l_needle->getState()->read(core::VecCoordId::position());
+
+            double avrGlobalF = m_globalForce.norm()*1.0/trajectoryInput.size();
+    //        std::cout << avrGlobalF << std::endl;
+
+            //Cannot be changed to false at the moment
+            if (avrGlobalF > d_thresholdForce.getValue()) m_globalCut = true;
+
+            if (m_globalCut) {
+                defaulttype::Vector3 gN = m_globalForce.normalized();
+
+                std::function<bool(const collisionAlgorithm::BaseProximity::SPtr, const collisionAlgorithm::BaseProximity::SPtr)> acceptFilter = [](const collisionAlgorithm::BaseProximity::SPtr a, const collisionAlgorithm::BaseProximity::SPtr b) { return true; };
+                collisionAlgorithm::Distance3DProximityMeasure distanceMeasure;
+
+                for (unsigned i=0;i<trajectoryInput.size();i++) {
+                    unsigned eid = trajectoryInput[i].second->getElementId();
+                    auto edge = l_needle->l_topology->getEdge(eid);
+
+                    defaulttype::Vector3 eN = (pos[edge[1]] - pos[edge[0]]).normalized();
+                    defaulttype::Vector3 dir = cross(gN,eN).normalized() * d_distCut.getValue();
+
+                    collisionAlgorithm::BaseProximity::SPtr overlayl = collisionAlgorithm::FixedProximity::create(trajectoryInput[i].first->getPosition() - dir);
+                    collisionAlgorithm::BaseProximity::SPtr left = collisionAlgorithm::findClosestProximity(overlayl,l_tetraGeom.get(),acceptFilter,distanceMeasure);
+
+                    collisionAlgorithm::BaseProximity::SPtr overlayr = collisionAlgorithm::FixedProximity::create(trajectoryInput[i].first->getPosition() + dir);
+                    collisionAlgorithm::BaseProximity::SPtr right = collisionAlgorithm::findClosestProximity(overlayr,l_tetraGeom.get(),acceptFilter,distanceMeasure);
+
+                    if (l_triangles->addProx(left))
+                        l_triangles->addProx(right,false); //do not check the dist for right
+
+                }
+
+                l_triangles->createTriangles();
+            }
         }
     }
+
+
+
+//    virtual void draw(const core::visual::VisualParams* vparams) {
+//        if (! vparams->displayFlags().getShowCollisionModels()) return ;
+//        if (!d_drawRadius.getValue()) return;
+
+//        glColor4f(0,1,0,1);
+//        for (unsigned i=0;i<m_cutProx_left.size();i++) {
+//            if (m_cutProx_left[i] == NULL) continue;
+//            vparams->drawTool()->drawSphere(m_cutProx_left[i]->getPosition(),d_drawRadius.getValue());
+//            vparams->drawTool()->drawSphere(m_cutProx_right[i]->getPosition(),d_drawRadius.getValue());
+//        }
+//    }
 
     //Called at the storelambda with the proxy
     void computeForce(const core::ConstraintParams* cParams, unsigned forceId, unsigned cid_global, unsigned cid_local, const sofa::defaulttype::BaseVector* lambda) {
@@ -231,8 +219,8 @@ private:
     bool m_globalCut;
     defaulttype::Vector3 m_globalForce;
     //proxi after the cut (or NULL)
-    helper::vector<collisionAlgorithm::BaseProximity::SPtr> m_cutProx_left;
-    helper::vector<collisionAlgorithm::BaseProximity::SPtr> m_cutProx_right;
+//    helper::vector<collisionAlgorithm::BaseProximity::SPtr> m_cutProx_left;
+//    helper::vector<collisionAlgorithm::BaseProximity::SPtr> m_cutProx_right;
 };
 
 } // namespace needleConstraint
