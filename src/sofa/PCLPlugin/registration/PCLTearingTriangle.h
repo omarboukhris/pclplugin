@@ -85,10 +85,10 @@ public:
 
     bool addProx(collisionAlgorithm::BaseProximity::SPtr prox, bool checkDist = true) {
         if (checkDist) {
-            defaulttype::Vector3 P = prox->getPosition(core::VecId::restPosition());
+            defaulttype::Vector3 P = prox->getPosition(core::VecId::position());
             double minDist = d_minDist.getValue();
             for (unsigned i=0;i<m_pointProx.size();i++) {
-                double dist = (P-m_pointProx[i]->getPosition(core::VecId::restPosition())).norm();
+                double dist = (P-m_pointProx[i]->getPosition(core::VecId::position())).norm();
                 if(dist<minDist) return false;
             }
         }
@@ -220,7 +220,7 @@ public:
         m_dirty = false;
 
         std::cout << "ADD POINTS : " << m_pointProx.size() << std::endl;
-
+        updatePos();
         sofa::helper::AdvancedTimer::stepBegin("PCL");
         pcl::PointCloud<pcl::PointXYZ>::Ptr cloud (new pcl::PointCloud<pcl::PointXYZ> ());
         for (unsigned i=0; i<m_pointProx.size(); i++) {
@@ -324,7 +324,7 @@ public:
 
         d_triangle.endEdit();
 
-        updatePos();
+
     }
 
     //add the last point of the triangle in order to know the positive side

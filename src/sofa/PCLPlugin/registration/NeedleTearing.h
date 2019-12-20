@@ -43,6 +43,7 @@ public:
     Data<collisionAlgorithm::DetectionOutput>   d_input;
     Data<collisionAlgorithm::DetectionOutput>   d_outTrajectory;
     Data<double>                                d_thresholdForce;
+    Data<double>                                d_firstFact;
     Data<double>                                d_drawRadius;
 
     SOFA_CLASS(NeedleTearing, core::objectmodel::BaseObject);
@@ -90,6 +91,7 @@ public:
         , l_triangles(initLink("triangles","link to tetra data"))
         , d_input(initData(&d_input,"input","link to tetra data"))
         , d_outTrajectory(initData(&d_outTrajectory, "outTrajectory", "Output for trajectoryconstraint"))
+        , d_firstFact(initData(&d_firstFact,0.5, "firstFact","first factor"))
         , d_thresholdForce(initData(&d_thresholdForce,350.0,"thresholdForce","Dist min to consider a point on a triangle"))
         , d_drawRadius(initData(&d_drawRadius,0.2,"drawRadius","Dist min to consider a point on a triangle"))
     {
@@ -114,7 +116,7 @@ public:
         collisionAlgorithm::DetectionOutput & outTrajectory = *d_outTrajectory.beginEdit();
         outTrajectory.clear();
 
-        if (! m_globalCutting) {
+        if ((! m_globalCutting)&&(trajectoryInput.size()>1)) {
             for (unsigned i=0;i<trajectoryInput.size();i++) {
                 //Add the tip is it's outside of the trianglated surface
                 auto bind = trajectoryInput[i];
@@ -169,7 +171,7 @@ public:
                     auto edge = l_needle->l_topology->getEdge(eid);
 
                     defaulttype::Vector3 eN = (pos[edge[1]] - pos[edge[0]]).normalized();
-                    defaulttype::Vector3 dir = cross(gN,eN).normalized() * l_triangles->d_minDist.getValue()*0.5;
+                    defaulttype::Vector3 dir = gN.normalized() * l_triangles->d_minDist.getValue()*d_firstFact.getValue();
 
                     collisionAlgorithm::BaseProximity::SPtr overlayl = collisionAlgorithm::FixedProximity::create(trajectoryInput[i].first->getPosition() - dir);
                     collisionAlgorithm::BaseProximity::SPtr left = collisionAlgorithm::findClosestProximity(overlayl,l_tetraGeom.get(),acceptFilter,distanceMeasure);
