@@ -98,6 +98,10 @@ public:
         return true;
     }
 
+    unsigned getNbTriangles() {
+        return d_triangle.getValue().size();
+    }
+
     Triangle getTriangle(unsigned tid) {
         return d_triangle.getValue()[tid];
     }

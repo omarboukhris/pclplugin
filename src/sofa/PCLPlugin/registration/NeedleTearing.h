@@ -101,6 +101,10 @@ public:
         this->f_listening.setValue(true);
     }
 
+    void init() {
+        m_globalCutting = false;
+    }
+
     void doDetection() {
         sofa::helper::AdvancedTimer::stepBegin("NeedleTearing");
 
@@ -111,24 +115,27 @@ public:
 
         collisionAlgorithm::DetectionOutput & outTrajectory = *d_outTrajectory.beginEdit();
         outTrajectory.clear();
-        for (unsigned i=0;i<trajectoryInput.size();i++) {
-            //Add the tip is it's outside of the trianglated surface
-            auto bind = trajectoryInput[i];
 
-            int tid;
-            double fact_u,fact_v,fact_w;
-            defaulttype::Vector3 P = bind.first->getPosition(core::VecCoordId::restPosition());
-            defaulttype::Vector3 Q = l_triangles->getClosestPointOnTriangle(P,tid,fact_u,fact_v,fact_w,core::VecCoordId::restPosition());
+        if (! m_globalCutting) {
+            for (unsigned i=0;i<trajectoryInput.size();i++) {
+                //Add the tip is it's outside of the trianglated surface
+                auto bind = trajectoryInput[i];
 
-            if (tid == -1 || (P-Q).norm() > 0.1) {
-                //add needle and contribution to the globalForce
-                collisionAlgorithm::BaseProximity::SPtr wrapper = collisionAlgorithm::BaseProximity::SPtr(new ProximityWrapper(trajectoryInput[i].first,check_func,i));
-                outTrajectory.add(wrapper, trajectoryInput[i].second);
+                int tid;
+                double fact_u,fact_v,fact_w;
+                defaulttype::Vector3 P = bind.first->getPosition(core::VecCoordId::restPosition());
+                defaulttype::Vector3 Q = l_triangles->getClosestPointOnTriangle(P,tid,fact_u,fact_v,fact_w,core::VecCoordId::restPosition());
+
+//                if (tid == -1 || (P-Q).norm() > 0.1) {
+                    //add needle and contribution to the globalForce
+                    collisionAlgorithm::BaseProximity::SPtr wrapper = collisionAlgorithm::BaseProximity::SPtr(new ProximityWrapper(trajectoryInput[i].first,check_func,i));
+                    outTrajectory.add(wrapper, trajectoryInput[i].second);
+//                }
+    //            else if (i == trajectoryInput.size() - 1) {
+    //                std::cout << "ADD LAST" << std::endl;
+    //                outTrajectory.push_back(trajectoryInput[i]);
+    //            }
             }
-//            else if (i == trajectoryInput.size() - 1) {
-//                std::cout << "ADD LAST" << std::endl;
-//                outTrajectory.push_back(trajectoryInput[i]);
-//            }
         }
 
         d_outTrajectory.endEdit();
@@ -149,6 +156,7 @@ public:
 
             //Cannot be changed to false at the moment
             if (avrGlobalF > d_thresholdForce.getValue()) {
+                m_globalCutting = true;
                 defaulttype::Vector3 gN = m_globalForce.normalized();
 
                 std::function<bool(const collisionAlgorithm::BaseProximity::SPtr, const collisionAlgorithm::BaseProximity::SPtr)> acceptFilter = [](const collisionAlgorithm::BaseProximity::SPtr a, const collisionAlgorithm::BaseProximity::SPtr b) { return true; };
@@ -221,7 +229,7 @@ public:
     }
 
 private:
-//    bool m_globalCut;
+    bool m_globalCutting;
     defaulttype::Vector3 m_globalForce;
     //proxi after the cut (or NULL)
 //    helper::vector<collisionAlgorithm::BaseProximity::SPtr> m_cutProx_left;

@@ -192,7 +192,7 @@ public:
         , d_borderOutput(initData(&d_borderOutput, "outBorder", "Input for border constraint"))
         , d_distCut(initData(&d_distCut,0.01,"distCut","Dist min to consider a point on a triangle"))
         , d_thresholdForce(initData(&d_thresholdForce,350.0,"thresholdForce","Dist min to consider a point on a triangle"))
-        , d_usePlane(initData(&d_usePlane,true,"usePlane","Dist min to consider a point on a triangle"))
+        , d_usePlane(initData(&d_usePlane,false,"usePlane","Dist min to consider a point on a triangle"))
         , d_drawRadius(initData(&d_drawRadius,0.2,"drawRadius","Dist min to consider a point on a triangle"))
     {
         l_triangles.setPath("@.");
@@ -208,25 +208,32 @@ public:
         const collisionAlgorithm::DetectionOutput & trajectoryInput = d_input.getValue();
         if (trajectoryInput.size() == 0) return;
 
+        if (l_triangles->getNbTriangles() == 0) return;
+
 
         auto plane_check_func = std::bind(&NeedleSlicing<DataTypes>::computePlaneForce,this,std::placeholders::_1, std::placeholders::_2,std::placeholders::_3,std::placeholders::_4,std::placeholders::_5);
         auto border_check_func = std::bind(&NeedleSlicing<DataTypes>::computeBorderForce,this,std::placeholders::_1, std::placeholders::_2,std::placeholders::_3,std::placeholders::_4,std::placeholders::_5);
+
+        //fint the inserted point
+        if (trajectoryInput.size() == 0) return;
+        unsigned eid = trajectoryInput[0].second->getElementId();
+        auto edge = l_needle->l_topology->getEdge(eid);
+        unsigned start = std::max(edge[0],edge[1]);
 
 
         //find the points of the needle to constrain
         collisionAlgorithm::DetectionOutput & outPlane = *d_planOutput.beginEdit();
         outPlane.clear();
         unsigned nbPlaneConstraint = 0;
-        for (unsigned i=0;i<trajectoryInput.size();i++) {
-            auto trajProx = trajectoryInput[i].first; //Take trajectory prox
-            auto needleProx = trajectoryInput[i].second;//collisionAlgorithm::createProximity(l_needle.get(), collisionAlgorithm::PointProximity(pid));
+        for (unsigned i=start;i<l_needle->getState()->getSize();i++) {
+            auto needleProx = collisionAlgorithm::createProximity(l_needle.get(), collisionAlgorithm::PointProximity(i));
 
             int tid;
             double fact_u,fact_v,fact_w;
-            defaulttype::Vector3 P = trajProx->getPosition(core::VecCoordId::restPosition());
-            defaulttype::Vector3 Q = l_triangles->getClosestPointOnTriangle(P,tid,fact_u,fact_v,fact_w,core::VecCoordId::restPosition());
+            defaulttype::Vector3 P = needleProx->getPosition(core::VecCoordId::position());
+            defaulttype::Vector3 Q = l_triangles->getClosestPointOnTriangle(P,tid,fact_u,fact_v,fact_w,core::VecCoordId::position());
 
-            if (tid == -1 || (P-Q).norm() > 0.1) continue;
+            if (tid == -1) continue;
 //            else if (i == trajectoryInput.size() - 1) continue;
 
             Triangle tri = l_triangles->getTriangle(tid);
@@ -242,11 +249,10 @@ public:
 
         collisionAlgorithm::DetectionOutput & outBorder = *d_borderOutput.beginEdit();
         outBorder.clear();
-
         unsigned nbBorderConstraint = 0;
+
         for (unsigned i=0;i<outPlane.size();i++) {
             auto needleProx = outPlane[i].first;
-
 
             double fact_u,fact_v;
             int id_u,id_v,id_l;
@@ -355,6 +361,8 @@ public:
                     }
                 }
             }
+
+            l_triangles->createTriangles();
         }
     }
 
