@@ -252,7 +252,7 @@ public:
         pcl::GreedyProjectionTriangulation<pcl::PointNormal> m_gp3;
         m_gp3.setSearchRadius (d_triRadius.getValue());
         m_gp3.setMu (d_mu.getValue());
-        m_gp3.setNormalConsistency(true);
+//        m_gp3.setNormalConsistency(true);
         m_gp3.setMaximumNearestNeighbors (d_nearestNeighbors.getValue());
         //        m_gp3.setMaximumSurfaceAngle(d_maxSurfaceAngle.getValue()); // 45 degrees
         //        m_gp3.setMinimumAngle(d_minAngle.getValue()); // 10 degrees
@@ -390,7 +390,7 @@ public:
     virtual void draw(const core::visual::VisualParams* vparams) {
         if (! vparams->displayFlags().getShowCollisionModels()) return ;
 
-        glColor4f(0,1,0,1);
+        glColor4f(0,1,1,1);
         for (unsigned i=0;i<m_pointProx.size();i++) {
             vparams->drawTool()->drawSphere(m_pointProx[i]->getPosition(core::VecId::position()),d_drawRadius.getValue());
         }
