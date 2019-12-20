@@ -69,7 +69,7 @@ public:
         , d_mu(initData(&d_mu, 6.0, "mu", "Maximum angle allowed."))
         , d_triRadius(initData(&d_triRadius, 4.0, "triRadius", "Maximum angle allowed."))
         , d_minDist(initData(&d_minDist, 1.0, "minDist", "Maximum angle allowed."))
-        , d_nearestNeighbors(initData(&d_nearestNeighbors, (unsigned) 4, "nearestNeighbors", "Maximum angle allowed."))
+        , d_nearestNeighbors(initData(&d_nearestNeighbors, (unsigned) 0, "nearestNeighbors", "Maximum angle allowed."))
         , d_drawRadius(initData(&d_drawRadius,0.2,"drawRadius","Dist min to consider a point on a triangle"))
     {
         f_listening.setValue(true);
@@ -255,9 +255,9 @@ public:
 
         pcl::GreedyProjectionTriangulation<pcl::PointNormal> m_gp3;
         m_gp3.setSearchRadius (d_triRadius.getValue());
-        m_gp3.setMu (d_mu.getValue());
-//        m_gp3.setNormalConsistency(true);
-        m_gp3.setMaximumNearestNeighbors (d_nearestNeighbors.getValue());
+        if (d_mu.getValue() != 0) m_gp3.setMu (d_mu.getValue());
+        m_gp3.setNormalConsistency(true);
+        if (d_nearestNeighbors.getValue() != 0) m_gp3.setMaximumNearestNeighbors (d_nearestNeighbors.getValue());
         //        m_gp3.setMaximumSurfaceAngle(d_maxSurfaceAngle.getValue()); // 45 degrees
         //        m_gp3.setMinimumAngle(d_minAngle.getValue()); // 10 degrees
         //        m_gp3.setMaximumAngle(d_maxAngle.getValue()); // 120 degrees

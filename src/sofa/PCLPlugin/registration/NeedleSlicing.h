@@ -45,7 +45,6 @@ public:
     Data<collisionAlgorithm::DetectionOutput>   d_input;
     Data<collisionAlgorithm::DetectionOutput>   d_planOutput;
     Data<collisionAlgorithm::DetectionOutput>   d_borderOutput;
-    Data<double>                                d_distCut;
     Data<double>                                d_thresholdForce;
     Data<bool>                                  d_usePlane;
     Data<double>                                d_drawRadius;
@@ -190,7 +189,6 @@ public:
         , d_input(initData(&d_input,"input","link to tetra data"))
         , d_planOutput(initData(&d_planOutput, "outPlane", "Input for plan constraint"))
         , d_borderOutput(initData(&d_borderOutput, "outBorder", "Input for border constraint"))
-        , d_distCut(initData(&d_distCut,0.01,"distCut","Dist min to consider a point on a triangle"))
         , d_thresholdForce(initData(&d_thresholdForce,350.0,"thresholdForce","Dist min to consider a point on a triangle"))
         , d_usePlane(initData(&d_usePlane,false,"usePlane","Dist min to consider a point on a triangle"))
         , d_drawRadius(initData(&d_drawRadius,0.2,"drawRadius","Dist min to consider a point on a triangle"))
@@ -355,7 +353,7 @@ public:
 
                     if(dir.norm()>d_thresholdForce.getValue())
                     {
-                        collisionAlgorithm::BaseProximity::SPtr overlay = collisionAlgorithm::FixedProximity::create(outBorder[i].first->getPosition() + dir.normalized()*d_distCut.getValue());
+                        collisionAlgorithm::BaseProximity::SPtr overlay = collisionAlgorithm::FixedProximity::create(outBorder[i].first->getPosition() + dir.normalized()*l_triangles->d_minDist.getValue());
                         collisionAlgorithm::BaseProximity::SPtr prox = collisionAlgorithm::findClosestProximity(overlay,l_tetraGeom.get(),acceptFilter,distanceMeasure);
                         l_triangles->addProx(prox);
                     }

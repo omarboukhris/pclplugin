@@ -42,7 +42,6 @@ public:
 
     Data<collisionAlgorithm::DetectionOutput>   d_input;
     Data<collisionAlgorithm::DetectionOutput>   d_outTrajectory;
-    Data<double>                                d_distCut;
     Data<double>                                d_thresholdForce;
     Data<double>                                d_drawRadius;
 
@@ -91,7 +90,6 @@ public:
         , l_triangles(initLink("triangles","link to tetra data"))
         , d_input(initData(&d_input,"input","link to tetra data"))
         , d_outTrajectory(initData(&d_outTrajectory, "outTrajectory", "Output for trajectoryconstraint"))
-        , d_distCut(initData(&d_distCut,0.01,"distCut","Dist min to consider a point on a triangle"))
         , d_thresholdForce(initData(&d_thresholdForce,350.0,"thresholdForce","Dist min to consider a point on a triangle"))
         , d_drawRadius(initData(&d_drawRadius,0.2,"drawRadius","Dist min to consider a point on a triangle"))
     {
@@ -168,7 +166,7 @@ public:
                     auto edge = l_needle->l_topology->getEdge(eid);
 
                     defaulttype::Vector3 eN = (pos[edge[1]] - pos[edge[0]]).normalized();
-                    defaulttype::Vector3 dir = cross(gN,eN).normalized() * d_distCut.getValue();
+                    defaulttype::Vector3 dir = cross(gN,eN).normalized() * l_triangles->d_minDist.getValue()*0.5;
 
                     collisionAlgorithm::BaseProximity::SPtr overlayl = collisionAlgorithm::FixedProximity::create(trajectoryInput[i].first->getPosition() - dir);
                     collisionAlgorithm::BaseProximity::SPtr left = collisionAlgorithm::findClosestProximity(overlayl,l_tetraGeom.get(),acceptFilter,distanceMeasure);
