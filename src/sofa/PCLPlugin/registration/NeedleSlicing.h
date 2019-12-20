@@ -117,8 +117,9 @@ public:
     public:
         typedef std::function<void(const core::ConstraintParams* cParams, unsigned forceId, unsigned cid_global, unsigned cid_local, const sofa::defaulttype::BaseVector* lambda)> CallbackFunction;
 
-        ProximityEdgeFromTetra(unsigned tid, sofa::collisionAlgorithm::BaseProximity::SPtr prox1,sofa::collisionAlgorithm::BaseProximity::SPtr prox2, sofa::collisionAlgorithm::BaseProximity::SPtr proxl, sofa::collisionAlgorithm::BaseProximity::SPtr proxn,double u,double v, unsigned forceId, CallbackFunction cFunction)
-            : m_tid(tid)
+        ProximityEdgeFromTetra(bool isLast, defaulttype::Vec3d needleNorm, sofa::collisionAlgorithm::BaseProximity::SPtr prox1,sofa::collisionAlgorithm::BaseProximity::SPtr prox2, sofa::collisionAlgorithm::BaseProximity::SPtr proxl, sofa::collisionAlgorithm::BaseProximity::SPtr proxn,double u,double v, unsigned forceId, CallbackFunction cFunction)
+            : m_isLast(isLast)
+            , m_needleNorm(needleNorm)
             , m_proximity1(prox1)
             , m_proximity2(prox2)
             , m_proximityL(proxl)
@@ -152,6 +153,11 @@ public:
 
             if (dot(dir,Z)<0) dir *= -1.0;
 
+            if(!m_isLast)
+            {
+                dir = (dir-dot(dir,m_needleNorm)*m_needleNorm.normalized()).normalized();
+            }
+
             return dir;
         }
 
@@ -171,7 +177,8 @@ public:
             return m_proximityN->getElementId();
         }
     private:
-        unsigned m_tid;
+        bool m_isLast;
+        defaulttype::Vec3d m_needleNorm;
         sofa::collisionAlgorithm::BaseProximity::SPtr m_proximity1;
         sofa::collisionAlgorithm::BaseProximity::SPtr m_proximity2;
         sofa::collisionAlgorithm::BaseProximity::SPtr m_proximityL;
@@ -269,7 +276,7 @@ public:
             auto pl = l_triangles->getProx(id_l);
 
 
-            collisionAlgorithm::BaseProximity::SPtr EdgeProx = collisionAlgorithm::BaseProximity::SPtr(new ProximityEdgeFromTetra(-1,p0,p1,pl,needleProx,fact_u,fact_v,nbBorderConstraint,border_check_func));
+            collisionAlgorithm::BaseProximity::SPtr EdgeProx = collisionAlgorithm::BaseProximity::SPtr(new ProximityEdgeFromTetra(true /*i==(outPlane.size()-1)*/,needleProx->getNormal(),p0,p1,pl,needleProx,fact_u,fact_v,nbBorderConstraint,border_check_func));
             nbBorderConstraint++;
             outBorder.add(needleProx,EdgeProx);
         }
