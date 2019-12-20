@@ -42,7 +42,7 @@ public:
     core::objectmodel::SingleLink<NeedleSlicing<DataTypes>, PCLTearingTriangle<DataTypes>,BaseLink::FLAG_STRONGLINK|BaseLink::FLAG_STOREPATH> l_triangles;
 
 
-    Data<collisionAlgorithm::DetectionOutput>   d_input;
+    Data<helper::vector<unsigned> >   d_input;
     Data<collisionAlgorithm::DetectionOutput>   d_planOutput;
     Data<collisionAlgorithm::DetectionOutput>   d_borderOutput;
     Data<double>                                d_drawRadius;
@@ -162,89 +162,27 @@ public:
     void doDetection() {
         sofa::helper::AdvancedTimer::stepBegin("NeedleSlicing");
 
-        const helper::ReadAccessor<core::objectmodel::Data<VecCoord> > & pos = l_needle->getState()->read(core::VecCoordId::position());
+        const helper::vector<unsigned> & cst = d_input.getValue();
 
-        std::cout << "update" << std::endl;
-        m_cst.clear();
-        for (unsigned i=0;i<pos.size();i++) {
-            double fact_u,fact_v,fact_w;
-            int tid = l_triangles->getClosestProjectedTriangle(pos[i],fact_u,fact_v,fact_w);
-
-            if (tid == -1) continue;
-
-            m_cst.push_back(i);
-        }
-
-/*
-        const collisionAlgorithm::DetectionOutput & trajectoryInput = d_input.getValue();
-        const helper::vector<core::topology::BaseMeshTopology::Triangle> & triangles = d_triangle.getValue();
-
-        collisionAlgorithm::DetectionOutput & outTrajectory = *d_outTrajectory.beginEdit();
-
-        auto check_func = std::bind(&NeedleSlicing::computeForce,this,std::placeholders::_1, std::placeholders::_2,std::placeholders::_3,std::placeholders::_4,std::placeholders::_5);
-        outTrajectory.clear();
-        for (unsigned i=0;i<trajectoryInput.size();i++)
-        {
-            unsigned eid = trajectoryInput[i].second->getElementId();
-            auto edge = l_needle->l_topology->getEdge(eid);
-
-            defaulttype::Vector3 P = trajectoryInput[i].first->getPosition();
-
-            double fact_u,fact_v,fact_w;
-
-            int tid = getClosestProjectedTriangle(P,fact_u,fact_v,fact_w);
-
-            if ((tid == -1) ) //Don't treat the tip
-            {
-                collisionAlgorithm::BaseProximity::SPtr wrapper = collisionAlgorithm::BaseProximity::SPtr(new ProximityWrapper(trajectoryInput[i].first,check_func,i));
-                outTrajectory.add(wrapper, trajectoryInput[i].second);
-                needleConstraint[edge[0]] = false;
-                needleConstraint[edge[1]] = false;
-            }
-            //            else {
-            //                const Triangle& tri = triangles[tid];
-
-            //                //Compute Bezier Positions
-            //                defaulttype::Vector3 P0 = m_pointProx[tri[0]]->getPosition();
-            //                defaulttype::Vector3 P1 = m_pointProx[tri[1]]->getPosition();
-            //                defaulttype::Vector3 P2 = m_pointProx[tri[2]]->getPosition();
-
-            //                defaulttype::Vector3 Q = fact_u * P0 + fact_v*P1 + fact_w * P2;
-
-            //                if ((P-Q).norm() < std::numeric_limits<double>::epsilon()) {
-            //                    unsigned eid = trajectoryInput[i].second->getElementId();
-            //                    auto edge = l_needle->l_topology->getEdge(eid);
-            //                    needleConstraint[edge[0]] = true;
-            //                    needleConstraint[edge[1]] = true;
-            //                } else {
-            //                    collisionAlgorithm::BaseProximity::SPtr wrapper = collisionAlgorithm::BaseProximity::SPtr(new ProximityWrapper(trajectoryInput[i].first,check_func,i));
-            //                    outTrajectory.add(wrapper, trajectoryInput[i].second);
-            //                }
-            //            }
-        }
-
-        d_outTrajectory.endEdit();
-
-
-
+        //find the points of the needle to constrain
         collisionAlgorithm::DetectionOutput & outPlane = *d_planOutput.beginEdit();
-
         outPlane.clear();
-        for (unsigned i=0;i<needleConstraint.size();i++) {
-            if (!needleConstraint[i]) continue;
+        for (unsigned i=0;i<cst.size();i++) {
+            unsigned pid = cst[i];
+            auto needleProx = collisionAlgorithm::createProximity(l_needle.get(), collisionAlgorithm::PointProximity(pid));
 
-            auto needleProx = collisionAlgorithm::createProximity(l_needle.get(), collisionAlgorithm::PointProximity(i));
             double fact_u,fact_v,fact_w;
 
-            defaulttype::Vector3 P = needleProx->getPosition();
-
-            int tid = getClosestProjectedTriangle(P,fact_u,fact_v,fact_w);
+            int tid = l_triangles->getClosestProjectedTriangle(needleProx->getPosition(),fact_u,fact_v,fact_w);
 
             if (tid == -1) continue;
 
-            Triangle tri = triangles[tid];
+            Triangle tri = l_triangles->getTriangle(tid);
+            auto p0 = l_triangles->getProx(tri[0]);
+            auto p1 = l_triangles->getProx(tri[1]);
+            auto p2 = l_triangles->getProx(tri[2]);
 
-            collisionAlgorithm::BaseProximity::SPtr tetraProx = collisionAlgorithm::BaseProximity::SPtr(new ProximityTriangleFromTetra(tid,m_pointProx[tri[0]],m_pointProx[tri[1]],m_pointProx[tri[2]],fact_u,fact_v,fact_w));
+            collisionAlgorithm::BaseProximity::SPtr tetraProx = collisionAlgorithm::BaseProximity::SPtr(new ProximityTriangleFromTetra(tid,p0,p1,p2,fact_u,fact_v,fact_w));
 
             outPlane.add(needleProx,tetraProx);
         }
@@ -253,50 +191,43 @@ public:
 
         collisionAlgorithm::DetectionOutput & outBorder = *d_borderOutput.beginEdit();
         outBorder.clear();
-        for (unsigned i=0;i<outPlane.size();i++) {
+        for (unsigned i=0;i<cst.size();i++) {
+            unsigned pid = cst[i];
+            auto needleProx = collisionAlgorithm::createProximity(l_needle.get(), collisionAlgorithm::PointProximity(pid));
 
-            collisionAlgorithm::BaseProximity::SPtr needleProx = outPlane[i].first;
             double fact_u,fact_v;
-            int id_u,id_v,tid;
+            int id_u,id_v,id_l;
 
+            //id_l is the index of the last point of the triangle who created this edge
             defaulttype::Vector3 P = needleProx->getPosition();
-            findClosestBorderEdge(P,fact_u,fact_v,id_u,id_v);
-            if((id_u==-1)||(id_v==-1))
+            l_triangles->findClosestBorderEdge(P,fact_u,fact_v,id_u,id_v,id_l);
+            if((id_u==-1)||(id_v==-1)||(id_l==-1))
             {
                 serr<<"The plan doesn't have a border"<<sendl;
                 break;
             }
 
-            for(unsigned j=0; j<m_edges[id_u].size(); j++)
-            {
-                if(m_edges[id_u][j] == id_v)
-                {
-                    if(!m_triangleAroundEdge[id_u][j].size())
-                    {
-                        serr<<"No triangle attached to the edge ("<<id_u<<","<<id_v<<")"<<sendl;
-                    }
-                    else
-                    {
-                        tid = m_triangleAroundEdge[id_u][j][0];
-                    }
-                }
-            }
+            auto p0 = l_triangles->getProx(id_u);
+            auto p1 = l_triangles->getProx(id_v);
+            auto pl = l_triangles->getProx(id_l);
 
-            //TODO
             defaulttype::Vector3 P1 = needleProx->getPosition(); //Needle
-            defaulttype::Vector3 P2 = m_pointProx[id_u]->getPosition()*fact_u + m_pointProx[id_v]->getPosition()*fact_v; //Border
-            defaulttype::Vector3 PQ = (P1-P2).normalized(); //Normal should be pointing to the needle
-                                             //(in fact it should be pointing to the plan but if the gauss-seidel is working well, it is the same)
+            defaulttype::Vector3 P2 = p0->getPosition()*fact_u + p1->getPosition()*fact_v; //Border
+            defaulttype::Vector3 PQ = (P1-P2); //Normal should be pointing to the needle
+//                                             //(in fact it should be pointing to the plan but if the gauss-seidel is working well, it is the same)
 
-            defaulttype::Vector3 normal = PQ-needleProx->getNormal()*dot(needleProx->getNormal(),PQ);
+            //PQ = PQ-needleProx->getNormal()*dot(needleProx->getNormal(),PQ);
 
-            collisionAlgorithm::BaseProximity::SPtr EdgeProx = collisionAlgorithm::BaseProximity::SPtr(new ProximityEdgeFromTetra(tid,m_pointProx[id_u],m_pointProx[id_v],fact_u,fact_v,normal));
+            if (dot(pl->getPosition() - P2,P1 - P2) < 0) PQ *= -1;
+
+            defaulttype::Vector3 normal = PQ.normalized();
+
+            collisionAlgorithm::BaseProximity::SPtr EdgeProx = collisionAlgorithm::BaseProximity::SPtr(new ProximityEdgeFromTetra(-1,p0,p1,fact_u,fact_v,normal));
             outBorder.add(needleProx,EdgeProx);
         }
         d_borderOutput.endEdit();
 
         sofa::helper::AdvancedTimer::stepEnd("NeedleSlicing");
-        */
     }
 
     virtual void draw(const core::visual::VisualParams* vparams) {
@@ -304,9 +235,11 @@ public:
 
         const helper::ReadAccessor<core::objectmodel::Data<VecCoord> > & pos = l_needle->getState()->read(core::VecCoordId::position());
 
+        const helper::vector<unsigned> & cst = d_input.getValue();
+
         glColor4f(1,0,1,1);
-        for (unsigned i=0;i<m_cst.size();i++) {
-            vparams->drawTool()->drawSphere(pos[m_cst[i]],d_drawRadius.getValue());
+        for (unsigned i=0;i<cst.size();i++) {
+            vparams->drawTool()->drawSphere(pos[cst[i]],d_drawRadius.getValue());
         }
 /*
         const helper::vector<core::topology::BaseMeshTopology::Triangle> & triangles = d_triangle.getValue();
@@ -343,21 +276,21 @@ public:
                                           d_planOutput.getValue()[i].second->getPosition(),
                                           defaulttype::Vec4f(0,1,0,1));
         }
-
+*/
 
 
         for (unsigned i=0; i<d_borderOutput.getValue().size(); i++) {
             vparams->drawTool()->drawLine(d_borderOutput.getValue()[i].first->getPosition(),
                                           d_borderOutput.getValue()[i].second->getPosition(),
                                           defaulttype::Vec4f(0,0,1,1));
-            vparams->drawTool()->drawSphere(d_borderOutput.getValue()[i].second->getPosition(),d_drawRadius.getValue()*2,defaulttype::Vec4d(1,1,1,1));
+//            vparams->drawTool()->drawSphere(d_borderOutput.getValue()[i].second->getPosition(),d_drawRadius.getValue()*2,defaulttype::Vec4d(1,1,1,1));
         }
-        */
+
 
     }
 
-private :
-    helper::vector<unsigned> m_cst;
+//private :
+//    helper::vector<unsigned> m_needleConstraint;
 };
 
 } // namespace needleConstraint

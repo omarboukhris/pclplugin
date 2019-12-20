@@ -121,6 +121,14 @@ public:
 //        return false;
     }
 
+    Triangle getTriangle(unsigned tid) {
+        return d_triangle.getValue()[tid];
+    }
+
+    collisionAlgorithm::BaseProximity::SPtr getProx(unsigned pid) {
+        return m_pointProx[pid];
+    }
+
 
     //return != -1 if and only if you can project inside a triangle
     int getClosestProjectedTriangle(const defaulttype::Vector3 & P,double & min_u,double & min_v,double & min_w) {
@@ -266,11 +274,14 @@ public:
         m_edges.clear();
         m_edges.resize(m_pointProx.size());
 
-        m_triangleAroundEdge.clear();
-        m_triangleAroundEdge.resize(m_pointProx.size());
+//        m_triangleAroundEdge.clear();
+//        m_triangleAroundEdge.resize(m_pointProx.size());
 
         m_boundary.clear();
         m_boundary.resize(m_pointProx.size());
+
+        m_last.clear();
+        m_last.resize(m_pointProx.size());
 
         m_triangleInfo.clear();
         m_normals.clear();
@@ -301,9 +312,9 @@ public:
 
 
             //Add the edges s that the triangle is not on the boundary even if desactivated
-            addEdge(currentTriangle[0],currentTriangle[1],triangles.size());
-            addEdge(currentTriangle[0],currentTriangle[2],triangles.size());
-            addEdge(currentTriangle[1],currentTriangle[2],triangles.size());
+            addEdge(currentTriangle[0],currentTriangle[1],currentTriangle[2]);
+            addEdge(currentTriangle[0],currentTriangle[2],currentTriangle[1]);
+            addEdge(currentTriangle[1],currentTriangle[2],currentTriangle[0]);
 
 
             triangles.push_back(currentTriangle);
@@ -316,16 +327,17 @@ public:
         d_triangle.endEdit();
     }
 
-    void addEdge(unsigned p1,unsigned p2,unsigned tid) {
+    //add the last point of the triangle in order to know the positive side
+    void addEdge(unsigned p1,unsigned p2,unsigned last) {
         if (p2 < p1) {
-            addEdge(p2,p1,tid);
+            addEdge(p2,p1,last);
             return;
         }
 
         for (unsigned i=0;i<m_edges[p1].size();i++) {
             if (m_edges[p1][i] == p2) {
                 m_boundary[p1][i] = false; // the edge is added by another triangle --> it's not on the boundary
-                m_triangleAroundEdge[p1][i].push_back(tid);
+//                m_triangleAroundEdge[p1][i].push_back(tid);
                 return;
             }
         }
@@ -333,14 +345,16 @@ public:
         // this is the first time we meet this edges it's on the boundary
         m_edges[p1].push_back(p2);
         m_boundary[p1].push_back(true);
-        m_triangleAroundEdge[p1].push_back(helper::vector<unsigned>());
-        m_triangleAroundEdge[p1][m_triangleAroundEdge[p1].size()-1].push_back(tid);
+        m_last[p1].push_back(last);
+//        m_triangleAroundEdge[p1].push_back(helper::vector<unsigned>());
+//        m_triangleAroundEdge[p1][m_triangleAroundEdge[p1].size()-1].push_back(tid);
     }
 
-    void findClosestBorderEdge(defaulttype::Vec3d P,double &fact_u, double&fact_v, int &id_u, int &id_v)
+    void findClosestBorderEdge(defaulttype::Vec3d P,double &fact_u, double&fact_v, int &id_u, int &id_v, int & id_l)
     {
         id_u = -1;
         id_v = -1;
+        id_l = -1;
         double closestDist = std::numeric_limits<double>::max();
 
         for(unsigned i=0; i<m_boundary.size();i++)
@@ -369,6 +383,7 @@ public:
                         fact_v = fv;
                         id_u = i;
                         id_v = m_edges[i][j];
+                        id_l = m_last[i][j];
                         closestDist = dist;
                     }
                 }
@@ -418,7 +433,8 @@ private:
     helper::vector<sofa::defaulttype::Vector3> m_normals;
     std::vector<collisionAlgorithm::BaseProximity::SPtr> m_pointProx;
     helper::vector<helper::vector<unsigned>> m_edges;
-    helper::vector<helper::vector<helper::vector<unsigned>>> m_triangleAroundEdge;
+    helper::vector<helper::vector<unsigned>> m_last;
+//    helper::vector<helper::vector<helper::vector<unsigned>>> m_triangleAroundEdge;
     helper::vector<helper::vector<bool>> m_boundary;
 };
 

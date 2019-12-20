@@ -92,7 +92,7 @@ public:
         , l_triangles(initLink("triangles","link to tetra data"))
         , d_input(initData(&d_input,"input","link to tetra data"))
         , d_outTrajectory(initData(&d_outTrajectory, "outTrajectory", "Output for trajectoryconstraint"))
-        , d_needleCst(initData(&d_needleCst, "needleCst", "Output for trajectoryconstraint"))
+        , d_needleCst(initData(&d_needleCst, "outCstId", "Output for trajectoryconstraint"))
         , d_distCut(initData(&d_distCut,0.01,"distCut","Dist min to consider a point on a triangle"))
         , d_thresholdForce(initData(&d_thresholdForce,350.0,"thresholdForce","Dist min to consider a point on a triangle"))
         , d_drawRadius(initData(&d_drawRadius,0.2,"drawRadius","Dist min to consider a point on a triangle"))
@@ -143,14 +143,14 @@ public:
             collisionAlgorithm::Distance3DProximityMeasure distanceMeasure;
 
 
-            helper::vector<bool> needCst;
-            needCst.resize(pos.size(),false);
+            helper::vector<unsigned> needCst;
+            needCst.resize(pos.size(),0);
 
             for (unsigned i=0;i<trajectoryInput.size();i++) {
                 unsigned eid = trajectoryInput[i].second->getElementId();
                 auto edge = l_needle->l_topology->getEdge(eid);
-                needCst[edge[0]] = true;
-                needCst[edge[1]] = true;
+                needCst[edge[0]]++;
+                needCst[edge[1]]++;
 
                 if (m_cutProx_left[i] != NULL) continue;
 
@@ -178,10 +178,11 @@ public:
 //            }
 
             //Add the index of points to constrain
+            //If a point has been counted 2 times it means that there is no needle insertion on it
             helper::vector<unsigned> & cst = *d_needleCst.beginEdit();
             cst.clear();
             for (unsigned i=0;i<pos.size();i++) {
-                if (needCst[i]) cst.push_back(i);
+                if (needCst[i]==2) cst.push_back(i);
             }
             d_needleCst.endEdit();
         }
