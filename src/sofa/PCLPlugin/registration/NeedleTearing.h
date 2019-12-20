@@ -101,11 +101,6 @@ public:
         this->f_listening.setValue(true);
     }
 
-    void init() {
-        m_globalCut = false;
-        m_globalForce = defaulttype::Vector3(0,0,0);
-    }
-
     void doDetection() {
         sofa::helper::AdvancedTimer::stepBegin("NeedleTearing");
 
@@ -125,7 +120,7 @@ public:
             defaulttype::Vector3 P = bind.first->getPosition(core::VecCoordId::restPosition());
             defaulttype::Vector3 Q = l_triangles->getClosestPointOnTriangle(P,tid,fact_u,fact_v,fact_w,core::VecCoordId::restPosition());
 
-            if (tid == -1 || (P-Q).norm() < std::numeric_limits<double>::epsilon()) {
+            if (tid == -1 || (P-Q).norm() > 0.1) {
                 //add needle and contribution to the globalForce
                 collisionAlgorithm::BaseProximity::SPtr wrapper = collisionAlgorithm::BaseProximity::SPtr(new ProximityWrapper(trajectoryInput[i].first,check_func,i));
                 outTrajectory.add(wrapper, trajectoryInput[i].second);
@@ -149,13 +144,11 @@ public:
             const collisionAlgorithm::DetectionOutput & trajectoryInput = d_input.getValue();
             const helper::ReadAccessor<core::objectmodel::Data<VecCoord> > & pos = l_needle->getState()->read(core::VecCoordId::position());
 
-            double avrGlobalF = m_globalForce.norm()*1.0/trajectoryInput.size();
+            double avrGlobalF = m_globalForce.norm()*1.0/d_outTrajectory.getValue().size();
     //        std::cout << avrGlobalF << std::endl;
 
             //Cannot be changed to false at the moment
-            if (avrGlobalF > d_thresholdForce.getValue()) m_globalCut = true;
-
-            if (m_globalCut) {
+            if (avrGlobalF > d_thresholdForce.getValue()) {
                 defaulttype::Vector3 gN = m_globalForce.normalized();
 
                 std::function<bool(const collisionAlgorithm::BaseProximity::SPtr, const collisionAlgorithm::BaseProximity::SPtr)> acceptFilter = [](const collisionAlgorithm::BaseProximity::SPtr a, const collisionAlgorithm::BaseProximity::SPtr b) { return true; };
@@ -228,7 +221,7 @@ public:
     }
 
 private:
-    bool m_globalCut;
+//    bool m_globalCut;
     defaulttype::Vector3 m_globalForce;
     //proxi after the cut (or NULL)
 //    helper::vector<collisionAlgorithm::BaseProximity::SPtr> m_cutProx_left;
