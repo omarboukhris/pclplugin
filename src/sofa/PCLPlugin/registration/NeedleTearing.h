@@ -170,10 +170,15 @@ public:
 
             l_triangles->createTriangles();
 
+            //Add the tip is it's outside of the trianglated surface
+            auto tipBind = trajectoryInput[trajectoryInput.size()-1];
+            int tid = l_triangles->getClosestProjectedTriangle(tipBind.first->getPosition());
+            if (tid == -1) outTrajectory.push_back(tipBind);
+
 //            //For debug --> add proxies
 //            for (unsigned i=0;i<trajectoryInput.size();i++) {
 //                //filter cutted constraints
-                outTrajectory.push_back(trajectoryInput[trajectoryInput.size()-1]);
+//                outTrajectory.push_back();
 //            }
 
             //Add the index of points to constrain
@@ -193,6 +198,7 @@ public:
 
     virtual void draw(const core::visual::VisualParams* vparams) {
         if (! vparams->displayFlags().getShowCollisionModels()) return ;
+        if (!d_drawRadius.getValue()) return;
 
         glColor4f(0,1,0,1);
         for (unsigned i=0;i<m_cutProx_left.size();i++) {

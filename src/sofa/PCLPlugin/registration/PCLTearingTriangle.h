@@ -52,6 +52,7 @@ public:
     Data<double>                                d_mu;
     Data<double>                                d_triRadius;
     Data<double>                                d_minDist; // 45 degrees
+    Data<unsigned>                              d_nearestNeighbors; // 45 degrees
     Data<double>                                d_drawRadius;
 
     core::objectmodel::DataCallback c_callback;
@@ -66,12 +67,14 @@ public:
         , d_mu(initData(&d_mu, 6.0, "mu", "Maximum angle allowed."))
         , d_triRadius(initData(&d_triRadius, 4.0, "triRadius", "Maximum angle allowed."))
         , d_minDist(initData(&d_minDist, 1.0, "minDist", "Maximum angle allowed."))
+        , d_nearestNeighbors(initData(&d_nearestNeighbors, (unsigned) 4, "nearestNeighbors", "Maximum angle allowed."))
         , d_drawRadius(initData(&d_drawRadius,0.2,"drawRadius","Dist min to consider a point on a triangle"))
     {
         c_callback.addInputs({&d_radiusLS,
                               &d_order,
                               &d_mu,
-                              &d_triRadius
+                              &d_triRadius,
+                              &d_nearestNeighbors
                              });
         c_callback.addCallback(std::bind(&PCLTearingTriangle<DataTypes>::callbackUpdate,this));
         m_dirty = false;
@@ -79,12 +82,10 @@ public:
 
     bool addProx(collisionAlgorithm::BaseProximity::SPtr prox, bool checkDist = true) {
         if (checkDist) {
-//            core::VecId v = core::VecId::restPosition();
-
-            defaulttype::Vector3 P = prox->getPosition();
+            defaulttype::Vector3 P = prox->getPosition(core::VecId::restPosition());
             double minDist = d_minDist.getValue();
             for (unsigned i=0;i<m_pointProx.size();i++) {
-                double dist = (P-m_pointProx[i]->getPosition()).norm();
+                double dist = (P-m_pointProx[i]->getPosition(core::VecId::restPosition())).norm();
                 if(dist<minDist) return false;
             }
         }
@@ -100,6 +101,12 @@ public:
 
     collisionAlgorithm::BaseProximity::SPtr getProx(unsigned pid) {
         return m_pointProx[pid];
+    }
+
+    //return != -1 if and only if you can project inside a triangle
+    int getClosestProjectedTriangle(const defaulttype::Vector3 & P) {
+        double min_u,min_v,min_w;
+        return getClosestProjectedTriangle(P,min_u,min_v,min_w);
     }
 
 
@@ -203,8 +210,7 @@ public:
 
         m_dirty = false;
 
-        std::cout << "ADD POINTS" << std::endl;
-
+        std::cout << "ADD POINTS : " << m_pointProx.size() << std::endl;
 
         sofa::helper::AdvancedTimer::stepBegin("PCL");
         pcl::PointCloud<pcl::PointXYZ>::Ptr cloud (new pcl::PointCloud<pcl::PointXYZ> ());
@@ -242,7 +248,7 @@ public:
         m_gp3.setSearchRadius (d_triRadius.getValue());
         m_gp3.setMu (d_mu.getValue());
         m_gp3.setNormalConsistency(true);
-        //    m_gp3.setMaximumNearestNeighbors (d_nearestNeighbors.getValue());
+        m_gp3.setMaximumNearestNeighbors (d_nearestNeighbors.getValue());
         //        m_gp3.setMaximumSurfaceAngle(d_maxSurfaceAngle.getValue()); // 45 degrees
         //        m_gp3.setMinimumAngle(d_minAngle.getValue()); // 10 degrees
         //        m_gp3.setMaximumAngle(d_maxAngle.getValue()); // 120 degrees

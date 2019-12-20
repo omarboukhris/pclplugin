@@ -104,11 +104,12 @@ public:
 
     class ProximityEdgeFromTetra : public sofa::collisionAlgorithm::BaseProximity {
     public:
-        ProximityEdgeFromTetra(unsigned tid, sofa::collisionAlgorithm::BaseProximity::SPtr prox1,sofa::collisionAlgorithm::BaseProximity::SPtr prox2, sofa::collisionAlgorithm::BaseProximity::SPtr proxl, double u,double v)
+        ProximityEdgeFromTetra(unsigned tid, sofa::collisionAlgorithm::BaseProximity::SPtr prox1,sofa::collisionAlgorithm::BaseProximity::SPtr prox2, sofa::collisionAlgorithm::BaseProximity::SPtr proxl, sofa::collisionAlgorithm::BaseProximity::SPtr proxn,double u,double v)
             : m_tid(tid)
             , m_proximity1(prox1)
             , m_proximity2(prox2)
             , m_proximityL(proxl)
+            , m_proximityN(proxn)
             , m_fact_u(u)
             , m_fact_v(v)
         {}
@@ -119,13 +120,24 @@ public:
         }
 
         virtual defaulttype::Vector3 getNormal() const {
-            defaulttype::Vector3 P1 = m_proximity1->getPosition();
-            defaulttype::Vector3 P2 = m_proximity2->getPosition();
-            defaulttype::Vector3 P3 = m_proximityL->getPosition();
+            defaulttype::Vector3 P1 = m_proximity1->getPosition(); //point1 of the edge
+            defaulttype::Vector3 P2 = m_proximity2->getPosition(); //point2 of the edge
+            defaulttype::Vector3 P3 = m_proximityL->getPosition(); //last point of the triangle
+            defaulttype::Vector3 TN = cross(P2-P1,P3-P1).normalized(); // triangle Normal
 
-            defaulttype::Vector3 N = cross(P2-P1,P3-P1);
+            defaulttype::Vector3 PU = getPosition(); //point on the edge
+            defaulttype::Vector3 PN = m_proximityN->getPosition(); // point on the needle
 
-            return cross(P1-P2,N).normalized();
+            defaulttype::Vector3 PUPN = (PN - PU); //needle to edge point
+
+            defaulttype::Vector3 dir = (PUPN - dot(PUPN,TN) * TN).normalized(); //direction projected on the triangle plane
+
+
+            defaulttype::Vector3 Z = cross(P1-P2,TN).normalized();
+
+            if (dot(dir,Z)<0) dir *= -1.0;
+
+            return dir;
         }
 
         void buildJacobianConstraint(core::MultiMatrixDerivId cId, const helper::vector<defaulttype::Vector3> & dir, double fact, unsigned constraintId) const {
@@ -139,13 +151,14 @@ public:
         }
 
         unsigned getElementId() const {
-            return m_tid;
+            return m_proximityN->getElementId();
         }
     private:
         unsigned m_tid;
         sofa::collisionAlgorithm::BaseProximity::SPtr m_proximity1;
         sofa::collisionAlgorithm::BaseProximity::SPtr m_proximity2;
         sofa::collisionAlgorithm::BaseProximity::SPtr m_proximityL;
+        sofa::collisionAlgorithm::BaseProximity::SPtr m_proximityN;
         double m_fact_u;
         double m_fact_v;
 //        defaulttype::Vec3d m_normal;
@@ -229,7 +242,7 @@ public:
 
 //            defaulttype::Vector3 normal = PQ.normalized();
 
-            collisionAlgorithm::BaseProximity::SPtr EdgeProx = collisionAlgorithm::BaseProximity::SPtr(new ProximityEdgeFromTetra(-1,p0,p1,pl,fact_u,fact_v));
+            collisionAlgorithm::BaseProximity::SPtr EdgeProx = collisionAlgorithm::BaseProximity::SPtr(new ProximityEdgeFromTetra(-1,p0,p1,pl,needleProx,fact_u,fact_v));
             outBorder.add(needleProx,EdgeProx);
         }
         d_borderOutput.endEdit();
