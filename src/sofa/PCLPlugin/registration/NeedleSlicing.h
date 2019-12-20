@@ -57,7 +57,7 @@ public:
     public:
         typedef std::function<void(const core::ConstraintParams* cParams, unsigned forceId, unsigned cid_global, unsigned cid_local, const sofa::defaulttype::BaseVector* lambda)> CallbackFunction;
 
-        ProximityTriangleFromTetra(unsigned tid, sofa::collisionAlgorithm::BaseProximity::SPtr prox1,sofa::collisionAlgorithm::BaseProximity::SPtr prox2,sofa::collisionAlgorithm::BaseProximity::SPtr prox3, double u,double v, double w, unsigned forceId, CallbackFunction cFunction)
+        ProximityTriangleFromTetra(unsigned tid, sofa::collisionAlgorithm::BaseProximity::SPtr prox1,sofa::collisionAlgorithm::BaseProximity::SPtr prox2,sofa::collisionAlgorithm::BaseProximity::SPtr prox3, double u,double v, double w)
             : m_tid(tid)
             , m_proximity1(prox1)
             , m_proximity2(prox2)
@@ -65,8 +65,6 @@ public:
             , m_fact_u(u)
             , m_fact_v(v)
             , m_fact_w(w)
-            , m_forceId(forceId)
-            , m_function(cFunction)
         {}
 
         virtual defaulttype::Vector3 getPosition(core::VecCoordId v = core::VecCoordId::position()) const {
@@ -93,7 +91,6 @@ public:
             m_proximity1->storeLambda(cParams,res,cid_global,cid_local,lambda);
             m_proximity2->storeLambda(cParams,res,cid_global,cid_local,lambda);
             m_proximity3->storeLambda(cParams,res,cid_global,cid_local,lambda);
-            m_function(cParams,m_forceId,cid_global,cid_local,lambda);
 
         }
 
@@ -108,8 +105,6 @@ public:
         double m_fact_u;
         double m_fact_v;
         double m_fact_w;
-        unsigned m_forceId;
-        CallbackFunction m_function;
 
     };
 
@@ -215,8 +210,6 @@ public:
 
         if (l_triangles->getNbTriangles() == 0) return;
 
-
-        auto plane_check_func = std::bind(&NeedleSlicing<DataTypes>::computePlaneForce,this,std::placeholders::_1, std::placeholders::_2,std::placeholders::_3,std::placeholders::_4,std::placeholders::_5);
         auto border_check_func = std::bind(&NeedleSlicing<DataTypes>::computeBorderForce,this,std::placeholders::_1, std::placeholders::_2,std::placeholders::_3,std::placeholders::_4,std::placeholders::_5);
 
         //fint the inserted point
@@ -229,7 +222,6 @@ public:
         //find the points of the needle to constrain
         collisionAlgorithm::DetectionOutput & outPlane = *d_planOutput.beginEdit();
         outPlane.clear();
-        unsigned nbPlaneConstraint = 0;
         for (unsigned i=start;i<l_needle->getState()->getSize();i++) {
             auto needleProx = collisionAlgorithm::createProximity(l_needle.get(), collisionAlgorithm::PointProximity(i));
 
@@ -245,8 +237,7 @@ public:
             auto p1 = l_triangles->getProx(tri[1]);
             auto p2 = l_triangles->getProx(tri[2]);
 
-            collisionAlgorithm::BaseProximity::SPtr tetraProx = collisionAlgorithm::BaseProximity::SPtr(new ProximityTriangleFromTetra(tid,p0,p1,p2,fact_u,fact_v,fact_w,nbPlaneConstraint,plane_check_func));
-            nbPlaneConstraint++;
+            collisionAlgorithm::BaseProximity::SPtr tetraProx = collisionAlgorithm::BaseProximity::SPtr(new ProximityTriangleFromTetra(tid,p0,p1,p2,fact_u,fact_v,fact_w));
             outPlane.add(needleProx,tetraProx);
 
         }
@@ -285,8 +276,6 @@ public:
         d_planOutput.endEdit();
         d_borderOutput.endEdit();
 
-        m_planeForce.clear();
-        m_planeForce.resize(nbPlaneConstraint,defaulttype::Vec3d(0,0,0));
 
         m_borderForce.clear();
         m_borderForce.resize(nbBorderConstraint,defaulttype::Vec3d(0,0,0));
@@ -314,20 +303,6 @@ public:
 
     }
 
-    void computePlaneForce(const core::ConstraintParams* cParams, unsigned forceId, unsigned cid_global, unsigned cid_local, const sofa::defaulttype::BaseVector* lambda) {
-
-        const typename DataTypes::MatrixDeriv& j = cParams->readJ(l_tetraGeom->getState())->getValue();
-        auto rowIt = j.readLine(cid_global+cid_local);
-        const double f = lambda->element(cid_global+cid_local);
-
-        defaulttype::Vector3 force;
-        for (auto colIt = rowIt.begin(), colItEnd = rowIt.end(); colIt != colItEnd; ++colIt) {
-            force += colIt.val() * f;
-        }
-
-        m_planeForce[forceId] += force;
-    }
-
     void computeBorderForce(const core::ConstraintParams* cParams, unsigned forceId, unsigned cid_global, unsigned cid_local, const sofa::defaulttype::BaseVector* lambda) {
 
         const typename DataTypes::MatrixDeriv& j = cParams->readJ(l_tetraGeom->getState())->getValue();
@@ -349,15 +324,13 @@ public:
             collisionAlgorithm::DetectionOutput & outBorder = *d_borderOutput.beginEdit();
             std::function<bool(const collisionAlgorithm::BaseProximity::SPtr, const collisionAlgorithm::BaseProximity::SPtr)> acceptFilter = [](const collisionAlgorithm::BaseProximity::SPtr a, const collisionAlgorithm::BaseProximity::SPtr b) { return true; };
             collisionAlgorithm::Distance3DProximityMeasure distanceMeasure;
-            for(unsigned i=0; i<m_planeForce.size(); i++)
+            for(unsigned i=0; i<m_borderForce.size(); i++)
             {
                 if(m_borderForce[i].norm()>0)
                 {
                     defaulttype::Vec3d dir;
-                    if(d_usePlane.getValue())
-                        dir = (m_borderForce[i] + m_planeForce[i]);
-                    else
-                        dir = m_borderForce[i];
+
+                    dir = m_borderForce[i];
 
                     if(dir.norm()>d_thresholdForce.getValue())
                     {
@@ -375,7 +348,6 @@ public:
 
 private :
     helper::vector<unsigned> m_needleConstraint;
-    helper::vector<defaulttype::Vector3> m_planeForce;
     helper::vector<defaulttype::Vector3> m_borderForce;
 };
 
