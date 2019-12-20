@@ -45,6 +45,19 @@ void PCLIterativeClosestPoint::register_pcl() {
     Eigen::Matrix<float, 3, 1> translationVec = icp.getFinalTransformation().block<3,1>(0,3) ;
     std::cout << this->getTime() << " " << icp.hasConverged() << " score " << icp.getFitnessScore() << std::endl
               << rotationMat << std::endl << translationVec << std::endl ;
+
+    defaulttype::Mat3x3 mat (
+        defaulttype::Vector3(rotationMat(0,0), rotationMat(0,1), rotationMat(0,2)),
+        defaulttype::Vector3(rotationMat(1,0), rotationMat(1,1), rotationMat(1,2)),
+        defaulttype::Vector3(rotationMat(2,0), rotationMat(2,1), rotationMat(2,2))
+    ), tmp_mat ;
+    helper::Quater<double> q = defaulttype::Quat::identity();
+    q.fromMatrix(mat);
+
+    q.toMatrix(tmp_mat) ;
+    std::cout << "q=" << q << std::endl ;
+    std::cout << rotationMat << "=?=" << tmp_mat << std::endl ;
+
     // there should be a format for output : maybe Mat4x4 or 3x4
 }
 
