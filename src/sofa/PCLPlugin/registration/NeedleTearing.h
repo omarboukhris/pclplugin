@@ -112,25 +112,26 @@ public:
         const collisionAlgorithm::DetectionOutput & trajectoryInput = d_input.getValue();
         if (trajectoryInput.size() == 0) return;
 
-        collisionAlgorithm::DetectionOutput & outTrajectory = *d_outTrajectory.beginEdit();
-
-        outTrajectory.clear();
-
         auto check_func = std::bind(&NeedleTearing::computeForce,this,std::placeholders::_1, std::placeholders::_2,std::placeholders::_3,std::placeholders::_4,std::placeholders::_5);
 
+        collisionAlgorithm::DetectionOutput & outTrajectory = *d_outTrajectory.beginEdit();
+        outTrajectory.clear();
         for (unsigned i=0;i<trajectoryInput.size();i++) {
             //Add the tip is it's outside of the trianglated surface
             auto bind = trajectoryInput[i];
 
+            int tid;
             double fact_u,fact_v,fact_w;
-            int tid = l_triangles->getClosestProjectedTriangle(bind.first->getPosition(core::VecCoordId::restPosition()),fact_u,fact_v,fact_w,core::VecCoordId::restPosition());
+            defaulttype::Vector3 P = bind.first->getPosition(core::VecCoordId::restPosition());
+            defaulttype::Vector3 Q = l_triangles->getClosestPointOnTriangle(P,tid,fact_u,fact_v,fact_w,core::VecCoordId::restPosition());
 
-            std::cout << "GLOBAL = " << tid << " : " << fact_u << " " << fact_v << " " << fact_w << std::endl;
-
-            if (tid == -1) {
+            if (tid == -1 || (P-Q).norm() < std::numeric_limits<double>::epsilon()) {
                 //add needle and contribution to the globalForce
                 collisionAlgorithm::BaseProximity::SPtr wrapper = collisionAlgorithm::BaseProximity::SPtr(new ProximityWrapper(trajectoryInput[i].first,check_func,i));
                 outTrajectory.add(wrapper, trajectoryInput[i].second);
+            } else if (i == trajectoryInput.size() - 1) {
+                std::cout << "ADD LAST" << std::endl;
+                outTrajectory.push_back(trajectoryInput[i]);
             }
         }
 
@@ -184,9 +185,9 @@ public:
 
 
 
-//    virtual void draw(const core::visual::VisualParams* vparams) {
-//        if (! vparams->displayFlags().getShowCollisionModels()) return ;
-//        if (!d_drawRadius.getValue()) return;
+    virtual void draw(const core::visual::VisualParams* vparams) {
+        if (! vparams->displayFlags().getShowCollisionModels()) return ;
+        if (!d_drawRadius.getValue()) return;
 
 //        glColor4f(0,1,0,1);
 //        for (unsigned i=0;i<m_cutProx_left.size();i++) {
@@ -194,7 +195,17 @@ public:
 //            vparams->drawTool()->drawSphere(m_cutProx_left[i]->getPosition(),d_drawRadius.getValue());
 //            vparams->drawTool()->drawSphere(m_cutProx_right[i]->getPosition(),d_drawRadius.getValue());
 //        }
-//    }
+        const collisionAlgorithm::DetectionOutput & trajectoryInput = d_input.getValue();
+
+
+        for (unsigned i=0;i<trajectoryInput.size();i++) {
+            glColor4f(1,0,1,1);
+            vparams->drawTool()->drawSphere(trajectoryInput[i].first->getPosition(core::VecId::restPosition()),d_drawRadius.getValue());
+
+//            glColor4f(0,1,1,1);
+//            vparams->drawTool()->drawSphere(trajectoryInput[m_needleConstraint[i]].second->getPosition(),d_drawRadius.getValue());
+        }
+    }
 
     //Called at the storelambda with the proxy
     void computeForce(const core::ConstraintParams* cParams, unsigned forceId, unsigned cid_global, unsigned cid_local, const sofa::defaulttype::BaseVector* lambda) {

@@ -103,6 +103,7 @@ public:
         return m_pointProx[pid];
     }
 
+    /*
     //return != -1 if and only if you can project inside a triangle
     int getClosestProjectedTriangle(const defaulttype::Vector3 & P,core::VecCoordId v) {
         double min_u,min_v,min_w;
@@ -111,6 +112,7 @@ public:
 
 
     //return != -1 if and only if you can project inside a triangle
+
     int getClosestProjectedTriangle(const defaulttype::Vector3 & P,double & min_u,double & min_v,double & min_w,core::VecCoordId v = core::VecCoordId::position()) {
         //Find closest triangle and projected point
         double minDist = std::numeric_limits<double>::max();
@@ -157,22 +159,25 @@ public:
         }
 
         return closestTriangle;
-    }
+    }*/
 
     //return the closes triangle (always != -1)
-    int getClosestTriangle(const defaulttype::Vector3 & P,double & min_u,double & min_v,double & min_w) {
+    defaulttype::Vector3 getClosestPointOnTriangle(const defaulttype::Vector3 & P,int & closestTriangle,double & min_u,double & min_v,double & min_w,core::VecCoordId v = core::VecCoordId::position()) {
         //Find closest triangle and projected point
         double minDist = std::numeric_limits<double>::max();
-        int closestTriangle = -1;
+        closestTriangle = -1;
+        min_u = 0;
+        min_v = 0;
+        min_w = 0;
         defaulttype::Vector3 Q;
 
         const helper::vector<core::topology::BaseMeshTopology::Triangle> & triangles = d_triangle.getValue();
 
         for(int tid=0; tid<triangles.size(); tid++) {
             Triangle tri = triangles[tid];
-            defaulttype::Vector3 P0 = m_pointProx[tri[0]]->getPosition();
-            defaulttype::Vector3 P1 = m_pointProx[tri[1]]->getPosition();
-            defaulttype::Vector3 P2 = m_pointProx[tri[2]]->getPosition();
+            defaulttype::Vector3 P0 = m_pointProx[tri[0]]->getPosition(v);
+            defaulttype::Vector3 P1 = m_pointProx[tri[1]]->getPosition(v);
+            defaulttype::Vector3 P2 = m_pointProx[tri[2]]->getPosition(v);
 
             double fact_u,fact_v,fact_w;
             sofa::collisionAlgorithm::projectOnTriangle(P,
@@ -185,7 +190,6 @@ public:
             if(dist<minDist) {
                 closestTriangle = tid;
                 Q = projectedP;
-                //                N = m_normals[tid];
                 minDist = dist;
                 min_u = fact_u;
                 min_v = fact_v;
@@ -193,7 +197,7 @@ public:
             }
         }
 
-        return closestTriangle;
+        return Q;
     }
 
     void callbackUpdate() {
@@ -389,9 +393,13 @@ public:
 
         for (unsigned i=0; i<triangles.size(); i++) {
             Triangle tri = triangles[i];
-            defaulttype::Vector3 P0 = m_pointProx[tri[0]]->getPosition(core::VecId::restPosition());
-            defaulttype::Vector3 P1 = m_pointProx[tri[1]]->getPosition(core::VecId::restPosition());
-            defaulttype::Vector3 P2 = m_pointProx[tri[2]]->getPosition(core::VecId::restPosition());
+//            defaulttype::Vector3 P0 = m_pointProx[tri[0]]->getPosition(core::VecId::restPosition());
+//            defaulttype::Vector3 P1 = m_pointProx[tri[1]]->getPosition(core::VecId::restPosition());
+//            defaulttype::Vector3 P2 = m_pointProx[tri[2]]->getPosition(core::VecId::restPosition());
+
+            defaulttype::Vector3 P0 = m_pointProx[tri[0]]->getPosition();
+            defaulttype::Vector3 P1 = m_pointProx[tri[1]]->getPosition();
+            defaulttype::Vector3 P2 = m_pointProx[tri[2]]->getPosition();
 
             //            vparams->drawTool()->drawLine(P0,P1, defaulttype::Vec4f(1,0,0,1));
             //            vparams->drawTool()->drawLine(P0,P2, defaulttype::Vec4f(1,0,0,1));

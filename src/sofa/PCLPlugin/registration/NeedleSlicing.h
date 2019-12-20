@@ -182,41 +182,23 @@ public:
     void doDetection() {
         sofa::helper::AdvancedTimer::stepBegin("NeedleSlicing");
 
-
         const collisionAlgorithm::DetectionOutput & trajectoryInput = d_input.getValue();
         if (trajectoryInput.size() == 0) return;
-
-        m_needleConstraint.clear();
-        for (unsigned i=0;i<trajectoryInput.size();i++) {
-            //Add the tip is it's outside of the trianglated surface
-            auto bind = trajectoryInput[i];
-            int tid = l_triangles->getClosestProjectedTriangle(bind.first->getPosition(core::VecCoordId::restPosition()),core::VecCoordId::restPosition());
-
-            if (tid != -1) {
-                m_needleConstraint.push_back(i);
-            }
-        }
-
-
-        return;
-
-
-
-
-
 
         //find the points of the needle to constrain
         collisionAlgorithm::DetectionOutput & outPlane = *d_planOutput.beginEdit();
         outPlane.clear();
-        for (unsigned i=0;i<m_needleConstraint.size();i++) {
-            unsigned pid = m_needleConstraint[i];
-            auto needleProx = collisionAlgorithm::createProximity(l_needle.get(), collisionAlgorithm::PointProximity(pid));
+        for (unsigned i=0;i<trajectoryInput.size();i++) {
+            //Add the tip is it's outside of the trianglated surface
+            auto bind = trajectoryInput[i];
 
+            int tid;
             double fact_u,fact_v,fact_w;
+            defaulttype::Vector3 P = bind.first->getPosition(core::VecCoordId::restPosition());
+            defaulttype::Vector3 Q = l_triangles->getClosestPointOnTriangle(P,tid,fact_u,fact_v,fact_w,core::VecCoordId::restPosition());
 
-            int tid = l_triangles->getClosestProjectedTriangle(needleProx->getPosition(),fact_u,fact_v,fact_w);
-
-            if (tid == -1) continue;
+            if (tid == -1 || (P-Q).norm() < std::numeric_limits<double>::epsilon()) continue;
+            else if (i == trajectoryInput.size() - 1) continue;
 
             Triangle tri = l_triangles->getTriangle(tid);
             auto p0 = l_triangles->getProx(tri[0]);
@@ -225,16 +207,13 @@ public:
 
             collisionAlgorithm::BaseProximity::SPtr tetraProx = collisionAlgorithm::BaseProximity::SPtr(new ProximityTriangleFromTetra(tid,p0,p1,p2,fact_u,fact_v,fact_w));
 
-            outPlane.add(needleProx,tetraProx);
+            outPlane.add(trajectoryInput[i].second,tetraProx);
         }
-
-        d_planOutput.endEdit();
 
         collisionAlgorithm::DetectionOutput & outBorder = *d_borderOutput.beginEdit();
         outBorder.clear();
-        for (unsigned i=0;i<m_needleConstraint.size();i++) {
-            unsigned pid = m_needleConstraint[i];
-            auto needleProx = collisionAlgorithm::createProximity(l_needle.get(), collisionAlgorithm::PointProximity(pid));
+        for (unsigned i=0;i<outPlane.size();i++) {
+            auto needleProx = outPlane[i].first;
 
             double fact_u,fact_v;
             int id_u,id_v,id_l;
@@ -266,6 +245,8 @@ public:
             collisionAlgorithm::BaseProximity::SPtr EdgeProx = collisionAlgorithm::BaseProximity::SPtr(new ProximityEdgeFromTetra(-1,p0,p1,pl,needleProx,fact_u,fact_v));
             outBorder.add(needleProx,EdgeProx);
         }
+
+        d_planOutput.endEdit();
         d_borderOutput.endEdit();
 
         sofa::helper::AdvancedTimer::stepEnd("NeedleSlicing");
@@ -274,58 +255,18 @@ public:
     virtual void draw(const core::visual::VisualParams* vparams) {
         if (! vparams->displayFlags().getShowCollisionModels()) return ;
 
-        const collisionAlgorithm::DetectionOutput & trajectoryInput = d_input.getValue();
-
-        for (unsigned i=0;i<trajectoryInput.size();i++) {
-            glColor4f(1,0,1,1);
-            vparams->drawTool()->drawSphere(trajectoryInput[i].first->getPosition(core::VecId::restPosition()),d_drawRadius.getValue());
-
-//            glColor4f(0,1,1,1);
-//            vparams->drawTool()->drawSphere(trajectoryInput[m_needleConstraint[i]].second->getPosition(),d_drawRadius.getValue());
-        }
-/*
-        const helper::vector<core::topology::BaseMeshTopology::Triangle> & triangles = d_triangle.getValue();
-
-        for (unsigned i=0; i<triangles.size(); i++) {
-            Triangle tri = triangles[i];
-            defaulttype::Vector3 P0 = m_pointProx[tri[0]]->getPosition();
-            defaulttype::Vector3 P1 = m_pointProx[tri[1]]->getPosition();
-            defaulttype::Vector3 P2 = m_pointProx[tri[2]]->getPosition();
-
-            //            vparams->drawTool()->drawLine(P0,P1, defaulttype::Vec4f(1,0,0,1));
-            //            vparams->drawTool()->drawLine(P0,P2, defaulttype::Vec4f(1,0,0,1));
-            //            vparams->drawTool()->drawLine(P1,P2, defaulttype::Vec4f(1,0,0,1));
-
-            vparams->drawTool()->drawTriangle(P0,P1,P2,cross(P1-P0,P2-P0),defaulttype::Vec4f(0.6,0.1,0,0.5));
-        }
-
-
-        for (unsigned i=0; i<m_boundary.size(); i++) {
-            for(unsigned j=0;j<m_boundary[i].size();j++) {
-                if (!m_boundary[i][j]) continue;
-
-                unsigned p2 = m_edges[i][j];
-                defaulttype::Vector3 P0 = m_pointProx[i]->getPosition();
-                defaulttype::Vector3 P1 = m_pointProx[p2]->getPosition();
-
-                vparams->drawTool()->drawLine(P0,P1, defaulttype::Vec4f(1,1,0,1));
-            }
-        }
-
-
         for (unsigned i=0; i<d_planOutput.getValue().size(); i++) {
             vparams->drawTool()->drawLine(d_planOutput.getValue()[i].first->getPosition(),
                                           d_planOutput.getValue()[i].second->getPosition(),
                                           defaulttype::Vec4f(0,1,0,1));
         }
-*/
+
 
 
         for (unsigned i=0; i<d_borderOutput.getValue().size(); i++) {
             vparams->drawTool()->drawLine(d_borderOutput.getValue()[i].first->getPosition(),
                                           d_borderOutput.getValue()[i].second->getPosition(),
                                           defaulttype::Vec4f(0,0,1,1));
-//            vparams->drawTool()->drawSphere(d_borderOutput.getValue()[i].second->getPosition(),d_drawRadius.getValue()*2,defaulttype::Vec4d(1,1,1,1));
         }
 
 
