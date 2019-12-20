@@ -143,14 +143,17 @@ public:
     }
 
     void handleEvent(sofa::core::objectmodel::Event *event) {
-        if (dynamic_cast<sofa::simulation::AnimateBeginEvent*>(event)) m_globalForce = defaulttype::Vector3(0,0,0);
+        if (dynamic_cast<sofa::simulation::AnimateBeginEvent*>(event)) {
+            m_globalNorm = 0.0;
+            m_globalForce = defaulttype::Vector3(0,0,0);
+        }
 
 
         if (dynamic_cast<sofa::simulation::AnimateEndEvent*>(event)) {
             const collisionAlgorithm::DetectionOutput & trajectoryInput = d_input.getValue();
             const helper::ReadAccessor<core::objectmodel::Data<VecCoord> > & pos = l_needle->getState()->read(core::VecCoordId::position());
 
-            double avrGlobalF = m_globalForce.norm()*1.0/d_outTrajectory.getValue().size();
+            double avrGlobalF = m_globalNorm*1.0/d_outTrajectory.getValue().size();
     //        std::cout << avrGlobalF << std::endl;
 
             //Cannot be changed to false at the moment
@@ -224,11 +227,13 @@ public:
             force += colIt.val() * f;
         }
 
+        m_globalNorm += force.norm();
         m_globalForce += force;
     }
 
 private:
     bool m_globalCutting;
+    double m_globalNorm;
     defaulttype::Vector3 m_globalForce;
     //proxi after the cut (or NULL)
 //    helper::vector<collisionAlgorithm::BaseProximity::SPtr> m_cutProx_left;
