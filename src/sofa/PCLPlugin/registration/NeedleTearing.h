@@ -133,9 +133,10 @@ public:
 //                }
     //            else if (i == trajectoryInput.size() - 1) {
     //                std::cout << "ADD LAST" << std::endl;
-    //                outTrajectory.push_back(trajectoryInput[i]);
     //            }
             }
+        } else {
+            outTrajectory.push_back(trajectoryInput[0]);
         }
 
         d_outTrajectory.endEdit();
