@@ -171,11 +171,11 @@ public:
             }
             l_triangles->createTriangles();
 
-            //For debug --> add proxies
-            for (unsigned i=0;i<trajectoryInput.size();i++) {
-                //filter cutted constraints
-                outTrajectory.push_back(trajectoryInput[i]);
-            }
+//            //For debug --> add proxies
+//            for (unsigned i=0;i<trajectoryInput.size();i++) {
+//                //filter cutted constraints
+                outTrajectory.push_back(trajectoryInput[trajectoryInput.size()-1]);
+//            }
 
             //Add the index of points to constrain
             helper::vector<unsigned> & cst = *d_needleCst.beginEdit();
