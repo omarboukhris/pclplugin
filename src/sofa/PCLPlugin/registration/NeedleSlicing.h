@@ -298,10 +298,6 @@ public:
     }
 
     void computePlaneForce(const core::ConstraintParams* cParams, unsigned forceId, unsigned cid_global, unsigned cid_local, const sofa::defaulttype::BaseVector* lambda) {
-        if (l_tetraGeom == NULL) return;
-
-        //do not accumulate for the shaft forces
-        if (cid_local == 0) return;
 
         const typename DataTypes::MatrixDeriv& j = cParams->readJ(l_tetraGeom->getState())->getValue();
         auto rowIt = j.readLine(cid_global+cid_local);
@@ -316,10 +312,6 @@ public:
     }
 
     void computeBorderForce(const core::ConstraintParams* cParams, unsigned forceId, unsigned cid_global, unsigned cid_local, const sofa::defaulttype::BaseVector* lambda) {
-        if (l_tetraGeom == NULL) return;
-
-        //do not accumulate for the shaft forces
-        if (cid_local == 0) return;
 
         const typename DataTypes::MatrixDeriv& j = cParams->readJ(l_tetraGeom->getState())->getValue();
         auto rowIt = j.readLine(cid_global+cid_local);
