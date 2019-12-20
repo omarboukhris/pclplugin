@@ -117,7 +117,7 @@ public:
         collisionAlgorithm::DetectionOutput & outTrajectory = *d_outTrajectory.beginEdit();
 
         double avrGlobalF = m_globalForce.norm()*1.0/trajectoryInput.size();
-        std::cout << avrGlobalF << std::endl;
+//        std::cout << avrGlobalF << std::endl;
         if (avrGlobalF > d_thresholdForce.getValue()) m_globalCut = true;
 
         outTrajectory.clear();
@@ -158,17 +158,16 @@ public:
                 defaulttype::Vector3 dir = cross(gN,eN).normalized() * d_distCut.getValue();
 
                 collisionAlgorithm::BaseProximity::SPtr overlayl = collisionAlgorithm::FixedProximity::create(trajectoryInput[i].first->getPosition() - dir);
-                m_cutProx_left[i] = collisionAlgorithm::findClosestProximity(overlayl,l_tetraGeom.get(),acceptFilter,distanceMeasure);
+                collisionAlgorithm::BaseProximity::SPtr left = collisionAlgorithm::findClosestProximity(overlayl,l_tetraGeom.get(),acceptFilter,distanceMeasure);
 
                 collisionAlgorithm::BaseProximity::SPtr overlayr = collisionAlgorithm::FixedProximity::create(trajectoryInput[i].first->getPosition() + dir);
-                m_cutProx_right[i] = collisionAlgorithm::findClosestProximity(overlayr,l_tetraGeom.get(),acceptFilter,distanceMeasure);
+                collisionAlgorithm::BaseProximity::SPtr right = collisionAlgorithm::findClosestProximity(overlayr,l_tetraGeom.get(),acceptFilter,distanceMeasure);
+
+                if (l_triangles->addProx(left))
+                    l_triangles->addProx(right,false); //do not check the dist for right
+
             }
 
-            l_triangles->clear();
-            for (unsigned i=0;i<m_cutProx_left.size();i++) {
-                if (m_cutProx_left[i] != NULL) l_triangles->addProx(m_cutProx_left[i]);
-                if (m_cutProx_right[i] != NULL) l_triangles->addProx(m_cutProx_right[i]);
-            }
             l_triangles->createTriangles();
 
 //            //For debug --> add proxies

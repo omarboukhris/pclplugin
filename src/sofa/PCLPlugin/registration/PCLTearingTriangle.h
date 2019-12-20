@@ -51,7 +51,7 @@ public:
     Data<unsigned>                              d_order;
     Data<double>                                d_mu;
     Data<double>                                d_triRadius;
-    Data<double>                                d_maxDenom; // 45 degrees
+    Data<double>                                d_minDist; // 45 degrees
     Data<double>                                d_drawRadius;
 
     core::objectmodel::DataCallback c_callback;
@@ -65,60 +65,33 @@ public:
         , d_order(initData(&d_order, (unsigned) 2, "polynomialOrder", "Order of MS"))
         , d_mu(initData(&d_mu, 6.0, "mu", "Maximum angle allowed."))
         , d_triRadius(initData(&d_triRadius, 4.0, "triRadius", "Maximum angle allowed."))
-        , d_maxDenom(initData(&d_maxDenom, std::numeric_limits<double>::max(), "maxDenom", "Maximum angle allowed."))
+        , d_minDist(initData(&d_minDist, 1.0, "minDist", "Maximum angle allowed."))
         , d_drawRadius(initData(&d_drawRadius,0.2,"drawRadius","Dist min to consider a point on a triangle"))
     {
         c_callback.addInputs({&d_radiusLS,
                               &d_order,
                               &d_mu,
-                              &d_triRadius,
-                              &d_maxDenom,
+                              &d_triRadius
                              });
-        c_callback.addCallback(std::bind(&PCLTearingTriangle<DataTypes>::createTriangles,this));
-
+        c_callback.addCallback(std::bind(&PCLTearingTriangle<DataTypes>::callbackUpdate,this));
+        m_dirty = false;
     }
 
-    int pointTooClose(collisionAlgorithm::BaseProximity::SPtr prox)
-    {
-        /*
-        defaulttype::Vector3 P = prox->getPosition(core::VecId::restPosition());
+    bool addProx(collisionAlgorithm::BaseProximity::SPtr prox, bool checkDist = true) {
+        if (checkDist) {
+//            core::VecId v = core::VecId::restPosition();
 
-        double minDist = d_thresholdForce.getValue() * d_scaleForce.getValue();
-        double closestDist = std::numeric_limits<double>::max();
-        int closestId = -1;
-        bool shouldBePushed = true;
-        for (unsigned i=0;i<m_pointProx.size();i++) {
-            double dist = (P-m_pointProx[i]->getPosition(core::VecId::restPosition())).norm();
-            if(dist<closestDist)
-            {
-                closestId = i;
-                closestDist = dist;
+            defaulttype::Vector3 P = prox->getPosition();
+            double minDist = d_minDist.getValue();
+            for (unsigned i=0;i<m_pointProx.size();i++) {
+                double dist = (P-m_pointProx[i]->getPosition()).norm();
+                if(dist<minDist) return false;
             }
-            if (dist < minDist) shouldBePushed = false;
         }
-        if(shouldBePushed) //If we push the point in the pointCloud we send -1
-        {
-            return -1;
-        }
-        else //otherWise we send the closest point
-        {
-            return closestId;
-        }
-        */
-    }
 
-    bool clear() {
-        m_pointProx.clear();
-    }
-
-    bool addProx(collisionAlgorithm::BaseProximity::SPtr prox) {
-
-//        if(pointTooClose(prox)==-1)
-//        {
-            m_pointProx.push_back(prox);
-//            return true;
-//        }
-//        return false;
+        m_dirty = true;
+        m_pointProx.push_back(prox);
+        return true;
     }
 
     Triangle getTriangle(unsigned tid) {
@@ -219,11 +192,21 @@ public:
         return closestTriangle;
     }
 
-    void createTriangles() {
-        sofa::helper::AdvancedTimer::stepBegin("PCL");
+    void callbackUpdate() {
+        m_dirty = true;
+        createTriangles();
+    }
 
+    void createTriangles() {
+        if (!m_dirty) return;
         if (m_pointProx.empty()) return;
 
+        m_dirty = false;
+
+        std::cout << "ADD POINTS" << std::endl;
+
+
+        sofa::helper::AdvancedTimer::stepBegin("PCL");
         pcl::PointCloud<pcl::PointXYZ>::Ptr cloud (new pcl::PointCloud<pcl::PointXYZ> ());
         for (unsigned i=0; i<m_pointProx.size(); i++) {
             defaulttype::Vector3 P = m_pointProx[i]->getPosition(core::VecId::restPosition());
@@ -307,7 +290,7 @@ public:
 
 
             //check the surface of the triangle
-            if (tinfo.invDenom > d_maxDenom.getValue()) continue;
+//            if (tinfo.invDenom > d_maxDenom.getValue()) continue;
             //            std::cout << tinfo.invDenom  << std::endl;
 
 
@@ -436,6 +419,7 @@ private:
     helper::vector<helper::vector<unsigned>> m_last;
 //    helper::vector<helper::vector<helper::vector<unsigned>>> m_triangleAroundEdge;
     helper::vector<helper::vector<bool>> m_boundary;
+    bool m_dirty;
 };
 
 } // namespace needleConstraint
