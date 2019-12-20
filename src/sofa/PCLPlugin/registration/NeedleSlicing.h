@@ -239,7 +239,6 @@ public:
             defaulttype::Vector3 Q = l_triangles->getClosestPointOnTriangle(P,tid,fact_u,fact_v,fact_w,core::VecCoordId::position());
 
             if (tid == -1) continue;
-//            else if (i == trajectoryInput.size() - 1) continue;
 
             Triangle tri = l_triangles->getTriangle(tid);
             auto p0 = l_triangles->getProx(tri[0]);
@@ -257,6 +256,8 @@ public:
         unsigned nbBorderConstraint = 0;
 
         for (unsigned i=0;i<outPlane.size();i++) {
+            if (i == 0) continue;
+
             auto needleProx = outPlane[i].first;
 
             double fact_u,fact_v;
