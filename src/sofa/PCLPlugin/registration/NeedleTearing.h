@@ -129,10 +129,11 @@ public:
                 //add needle and contribution to the globalForce
                 collisionAlgorithm::BaseProximity::SPtr wrapper = collisionAlgorithm::BaseProximity::SPtr(new ProximityWrapper(trajectoryInput[i].first,check_func,i));
                 outTrajectory.add(wrapper, trajectoryInput[i].second);
-            } else if (i == trajectoryInput.size() - 1) {
-                std::cout << "ADD LAST" << std::endl;
-                outTrajectory.push_back(trajectoryInput[i]);
             }
+//            else if (i == trajectoryInput.size() - 1) {
+//                std::cout << "ADD LAST" << std::endl;
+//                outTrajectory.push_back(trajectoryInput[i]);
+//            }
         }
 
         d_outTrajectory.endEdit();

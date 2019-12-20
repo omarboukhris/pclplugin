@@ -198,7 +198,7 @@ public:
             defaulttype::Vector3 Q = l_triangles->getClosestPointOnTriangle(P,tid,fact_u,fact_v,fact_w,core::VecCoordId::restPosition());
 
             if (tid == -1 || (P-Q).norm() < std::numeric_limits<double>::epsilon()) continue;
-            else if (i == trajectoryInput.size() - 1) continue;
+//            else if (i == trajectoryInput.size() - 1) continue;
 
             Triangle tri = l_triangles->getTriangle(tid);
             auto p0 = l_triangles->getProx(tri[0]);
