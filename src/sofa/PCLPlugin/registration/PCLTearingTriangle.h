@@ -213,11 +213,21 @@ public:
 
     }
 
+//    int count = 0;
+//    int totalcount = 0;
+//    int ncount = 0;
+
     void createTriangles() {
+//        count++;
         if (!m_dirty) return;
         if (m_pointProx.empty()) return;
 
         m_dirty = false;
+
+//        totalcount += count;
+//        std::cout << "COUNT " << totalcount * 1.0/(double)ncount << " ncount " << ncount << std::endl;
+//        count = 0;
+//        ncount++;
 
         std::cout << "ADD POINTS : " << m_pointProx.size() << std::endl;
         updatePos();

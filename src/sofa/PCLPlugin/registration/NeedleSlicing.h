@@ -57,11 +57,12 @@ public:
     public:
         typedef std::function<void(const core::ConstraintParams* cParams, unsigned forceId, unsigned cid_global, unsigned cid_local, const sofa::defaulttype::BaseVector* lambda)> CallbackFunction;
 
-        ProximityTriangleFromTetra(unsigned tid, sofa::collisionAlgorithm::BaseProximity::SPtr prox1,sofa::collisionAlgorithm::BaseProximity::SPtr prox2,sofa::collisionAlgorithm::BaseProximity::SPtr prox3, double u,double v, double w)
+        ProximityTriangleFromTetra(unsigned tid, sofa::collisionAlgorithm::BaseProximity::SPtr prox1,sofa::collisionAlgorithm::BaseProximity::SPtr prox2,sofa::collisionAlgorithm::BaseProximity::SPtr prox3, sofa::collisionAlgorithm::BaseProximity::SPtr proxN, double u,double v, double w)
             : m_tid(tid)
             , m_proximity1(prox1)
             , m_proximity2(prox2)
             , m_proximity3(prox3)
+            , m_proximityN(proxN)
             , m_fact_u(u)
             , m_fact_v(v)
             , m_fact_w(w)
@@ -74,11 +75,7 @@ public:
         }
 
         virtual defaulttype::Vector3 getNormal() const {
-            defaulttype::Vector3 P1 = m_proximity1->getPosition();
-            defaulttype::Vector3 P2 = m_proximity2->getPosition();
-            defaulttype::Vector3 P3 = m_proximity3->getPosition();
-
-            return cross (P2-P1,P3-P1).normalized();
+            return (m_proximityN->getPosition() - getPosition()).normalized();
         }
 
         void buildJacobianConstraint(core::MultiMatrixDerivId cId, const helper::vector<defaulttype::Vector3> & dir, double fact, unsigned constraintId) const {
@@ -102,6 +99,7 @@ public:
         sofa::collisionAlgorithm::BaseProximity::SPtr m_proximity1;
         sofa::collisionAlgorithm::BaseProximity::SPtr m_proximity2;
         sofa::collisionAlgorithm::BaseProximity::SPtr m_proximity3;
+        sofa::collisionAlgorithm::BaseProximity::SPtr m_proximityN;
         double m_fact_u;
         double m_fact_v;
         double m_fact_w;
@@ -237,7 +235,7 @@ public:
             auto p1 = l_triangles->getProx(tri[1]);
             auto p2 = l_triangles->getProx(tri[2]);
 
-            collisionAlgorithm::BaseProximity::SPtr tetraProx = collisionAlgorithm::BaseProximity::SPtr(new ProximityTriangleFromTetra(tid,p0,p1,p2,fact_u,fact_v,fact_w));
+            collisionAlgorithm::BaseProximity::SPtr tetraProx = collisionAlgorithm::BaseProximity::SPtr(new ProximityTriangleFromTetra(tid,p0,p1,p2,needleProx,fact_u,fact_v,fact_w));
             outPlane.add(needleProx,tetraProx);
 
         }

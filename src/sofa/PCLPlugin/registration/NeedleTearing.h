@@ -167,10 +167,9 @@ public:
                 collisionAlgorithm::Distance3DProximityMeasure distanceMeasure;
 
                 for (unsigned i=0;i<trajectoryInput.size();i++) {
-                    unsigned eid = trajectoryInput[i].second->getElementId();
-                    auto edge = l_needle->l_topology->getEdge(eid);
-
-                    defaulttype::Vector3 eN = (pos[edge[1]] - pos[edge[0]]).normalized();
+//                    unsigned eid = trajectoryInput[i].second->getElementId();
+//                    auto edge = l_needle->l_topology->getEdge(eid);
+//                    defaulttype::Vector3 eN = (pos[edge[1]] - pos[edge[0]]).normalized();
                     defaulttype::Vector3 dir = gN.normalized() * l_triangles->d_minDist.getValue()*d_firstFact.getValue();
 
                     collisionAlgorithm::BaseProximity::SPtr overlayl = collisionAlgorithm::FixedProximity::create(trajectoryInput[i].first->getPosition() - dir);
