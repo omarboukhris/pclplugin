@@ -13,6 +13,7 @@ PCLIterativeClosestPoint::PCLIterativeClosestPoint()
     : Inherit()
     , d_source(initData(&d_source, "source", "source point cloud"))
     , d_target(initData(&d_target, "target", "target point cloud"))
+    , l_meca(initLink("mo", "link to mechanical object"))
 {
     c_pcl.addInputs({&d_source, &d_target});
     c_pcl.addCallback(std::bind(&PCLIterativeClosestPoint::register_pcl, this));
@@ -26,11 +27,15 @@ void PCLIterativeClosestPoint::init() {
 
 void PCLIterativeClosestPoint::register_pcl() {
     if (d_source.getValue().getPointCloud() == nullptr) {
-        std::cout << "(PCLIterativeClosestPoint) source is nullptr" << std::endl ;
+        std::cerr << "(PCLIterativeClosestPoint) source is nullptr" << std::endl ;
         return ;
     }
     if (d_target.getValue().getPointCloud() == nullptr) {
-        std::cout << "(PCLIterativeClosestPoint) target is nullptr" << std::endl ;
+        std::cerr << "(PCLIterativeClosestPoint) target is nullptr" << std::endl ;
+        return ;
+    }
+    if (!l_meca) {
+        std::cerr << "(PCLIterativeClosestPoint) link to mechanical object broken" << std::endl ;
         return ;
     }
 
@@ -50,13 +55,12 @@ void PCLIterativeClosestPoint::register_pcl() {
         defaulttype::Vector3(rotationMat(0,0), rotationMat(0,1), rotationMat(0,2)),
         defaulttype::Vector3(rotationMat(1,0), rotationMat(1,1), rotationMat(1,2)),
         defaulttype::Vector3(rotationMat(2,0), rotationMat(2,1), rotationMat(2,2))
-    ), tmp_mat ;
+    ) ;
     helper::Quater<double> q = defaulttype::Quat::identity();
     q.fromMatrix(mat);
 
-    q.toMatrix(tmp_mat) ;
-    std::cout << "q=" << q << std::endl ;
-    std::cout << rotationMat << "=?=" << tmp_mat << std::endl ;
+//    l_meca->applyRotation(q);
+//    l_meca->applyTranslation(translationVec(0), translationVec(1), translationVec(2));
 
     // there should be a format for output : maybe Mat4x4 or 3x4
 }
