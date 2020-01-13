@@ -32,6 +32,9 @@ public:
     void init() override;
 
     void register_pcl () ;
+    void handleEvent(sofa::core::objectmodel::Event* event) override ;
+protected :
+    bool active_registration ;
 };
 
 } // namespace pointcloud
