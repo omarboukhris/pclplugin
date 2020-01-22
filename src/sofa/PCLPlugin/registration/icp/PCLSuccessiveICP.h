@@ -3,7 +3,7 @@
 #include <sofa/core/objectmodel/BaseObject.h>
 #include <sofa/core/objectmodel/DataCallback.h>
 
-#include "../PointCloudData.h"
+#include "../../PointCloudData.h"
 
 namespace sofa {
 
