@@ -18,8 +18,6 @@ PCLIterativeClosestPoint::PCLIterativeClosestPoint()
     , l_meca(initLink("mo", "link to mechanical object"))
     , active_registration(true)
 {
-//    c_pcl.addInputs({&d_source, &d_target});
-//    c_pcl.addCallback(std::bind(&PCLIterativeClosestPoint::register_pcl, this));
 
     this->f_listening.setValue(true);
 }
@@ -30,15 +28,13 @@ void PCLIterativeClosestPoint::draw(const core::visual::VisualParams * vparams) 
 void PCLIterativeClosestPoint::init() {
 }
 
-void PCLIterativeClosestPoint::applyTransform(const Eigen::Matrix<float, 3, 1> translationVec, const helper::Quater<double> q)
+void PCLIterativeClosestPoint::updateTransform(const Eigen::Matrix<float, 3, 1> translationVec, const helper::Quater<double> q)
 {
     helper::WriteAccessor<Data <defaulttype::Vec3dTypes::VecCoord> > x = l_meca->write(core::VecCoordId::position());
     defaulttype::Vector3 tr (translationVec(0), translationVec(1), translationVec(2)) ;
     for (size_t i = 0 ; i < x.size() ; i++) {
         x[i] = q.rotate(x[i]) + tr ;
     }
-//    l_meca->applyTranslation(translationVec(0), translationVec(1), translationVec(2));
-//    l_meca->applyRotation(q);
     l_meca->updateInternal();
 }
 
@@ -87,7 +83,7 @@ void PCLIterativeClosestPoint::register_pcl() {
     Eigen::Matrix<float, 3, 1> translationVec ;
 
     computeTransform(translationVec, q) ;
-    applyTransform(translationVec, q);
+    updateTransform(translationVec, q);
 }
 
 void PCLIterativeClosestPoint::handleEvent(core::objectmodel::Event *event) {
