@@ -35,7 +35,6 @@ void PCLIterativeClosestPoint::updateTransform(const Eigen::Matrix<float, 3, 1> 
     for (size_t i = 0 ; i < x.size() ; i++) {
         x[i] = q.rotate(x[i]) + tr ;
     }
-    l_meca->updateInternal();
 }
 
 bool PCLIterativeClosestPoint::checkInputData () {
@@ -82,17 +81,20 @@ void PCLIterativeClosestPoint::register_pcl() {
     helper::Quater<double> q = defaulttype::Quat::identity();
     Eigen::Matrix<float, 3, 1> translationVec ;
 
-    computeTransform(translationVec, q) ;
-    updateTransform(translationVec, q);
+    for (int i = 10 ; i-- ; ) {
+        computeTransform(translationVec, q) ;
+        updateTransform(translationVec, q);
+    }
 }
 
 void PCLIterativeClosestPoint::handleEvent(core::objectmodel::Event *event) {
     if (simulation::AnimateBeginEvent * ev = dynamic_cast<simulation::AnimateBeginEvent*>(event)) {
-        if (active_registration)
-            register_pcl();
+//        if (active_registration)
+//            register_pcl();
     } else if (sofa::core::objectmodel::KeyreleasedEvent * ev = dynamic_cast<core::objectmodel::KeyreleasedEvent*>(event)) {
         if (ev->getKey() == '1') { // || ev->getKey() == 'M') {
-            active_registration = !active_registration ;
+            register_pcl();
+//            active_registration = !active_registration ;
         }
     }
 }

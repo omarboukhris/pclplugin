@@ -67,8 +67,6 @@ public :
     typedef core::objectmodel::BaseObject Inherited;
 
     Data<PointCloudData> d_in ;
-    Data<defaulttype::Vector3> d_rotation ;
-    core::objectmodel::DataCallback c_rotation ;
 
     core::objectmodel::SingleLink<
         MouseRotationHandler,
@@ -79,21 +77,17 @@ public :
     MouseRotationHandler()
         : Inherited()
         , d_in (initData(&d_in, "input", "input pcl pointcloud data"))
-        , d_rotation(initData(&d_rotation, defaulttype::Vector3(0,0,0), "rotation", "rotation angles"))
         , l_meca(initLink("mo", "link to mechanical object"))
     {
-        c_rotation.addInputs({&d_rotation});
-        c_rotation.addCallback(std::bind(&MouseRotationHandler::applyTransform, this));
         this->f_listening.setValue(true) ;
     }
 
-    void applyTransform() {
+    void applyTransform(const defaulttype::Vector3 & phi) {
         PointCloud::Ptr
             cloud (d_in.getValue().getPointCloud()),
             cloud_tf_1 (new PointCloud),
             cloud_tf_2 (new PointCloud);
 
-        const auto & phi = d_rotation.getValue() ;
         Eigen::Affine3f transform (Eigen::Affine3f::Identity());
         Eigen::Matrix3f rotation (
             Eigen::AngleAxisf((phi[0]*M_PI) / 180, Eigen::Vector3f::UnitX()) *
@@ -119,13 +113,15 @@ public :
         for (const auto & pt : *cloud_tf_2) {
             x[i++] = defaulttype::Vector3(pt.x, pt.y, pt.z) ;
         }
-        l_meca->updateInternal();
-        d_rotation.setValue(defaulttype::Vector3(0,0,0));
+        helper::WriteAccessor<Data <defaulttype::Vec3dTypes::VecCoord> > xfree = l_meca->write(core::VecCoordId::freePosition());
+        for (i = 0 ; i < xfree.size() ; i++) {
+            xfree[i] = x[i] ;
+        }
     }
 
     void handleEvent(sofa::core::objectmodel::Event* event) override {
         if (sofa::core::objectmodel::MouseEvent * ev = dynamic_cast<sofa::core::objectmodel::MouseEvent*>(event)){
-            defaulttype::Vector3 phi = d_rotation.getValue() ;
+            defaulttype::Vector3 phi (0,0,0) ;
             static int selected_dim = -1 ; // 0 x, 1 y, 2 z
             if (ev->getState() == core::objectmodel::MouseEvent::LeftPressed) {
             // set x
@@ -149,9 +145,6 @@ public :
             }
             else if (ev->getState() == core::objectmodel::MouseEvent::Move) {
                 x_1 = ev->getPosX() ; y_1 = ev->getPosY() ;
-                if(x_0 == x_1) {
-                    x_1 = 1 ; x_0 = 0 ;
-                }
                 float a = -(float)(y_1-y_0) / 15.f ;//(float)(x_1-x_0) ;
 
                 if (selected_dim >= 0 && selected_dim <= 2) {
@@ -162,7 +155,7 @@ public :
                         phi[selected_dim] = -180.f ;
                 }
             }
-            d_rotation.setValue(phi);
+            applyTransform(phi);
         }
     }
 private :
