@@ -456,7 +456,7 @@ public:
             double c1 = dot(x1x2,m_triangleInfo[tid].ax2);
             defaulttype::Vector3 proj_P = P0 + m_triangleInfo[tid].ax1 * c0 + m_triangleInfo[tid].ax2 * c1;
 
-            sofa::collisionAlgorithm::toolBox::computeTriangleBaryCoords(proj_P, m_triangleInfo[tid], P0, fact_u,fact_v,fact_w);
+            collisionAlgorithm::toolBox::computeTriangleBaryCoords(proj_P,P0, m_triangleInfo[tid], fact_u,fact_v,fact_w);
 
 
 
