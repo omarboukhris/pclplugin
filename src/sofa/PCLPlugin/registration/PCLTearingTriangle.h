@@ -187,7 +187,7 @@ public:
             defaulttype::Vector3 P2 = m_pointProx[tri[2]]->getPosition(v);
 
             double fact_u,fact_v,fact_w;
-            sofa::collisionAlgorithm::projectOnTriangle(P,
+            sofa::collisionAlgorithm::toolBox::projectOnTriangle(P,
                                                         P0,P1,P2,m_triangleInfo[tid],
                                                         fact_u,fact_v,fact_w);
 
@@ -309,7 +309,7 @@ public:
             defaulttype::Vector3 P1 = m_pointProx[currentTriangle[1]]->getPosition();
             defaulttype::Vector3 P2 = m_pointProx[currentTriangle[2]]->getPosition();
 
-            collisionAlgorithm::TriangleInfo tinfo = collisionAlgorithm::computeTinfo(P0,P1,P2);
+            collisionAlgorithm::TriangleInfo tinfo = collisionAlgorithm::toolBox::computeTriangleInfo(P0,P1,P2);
 
 
 

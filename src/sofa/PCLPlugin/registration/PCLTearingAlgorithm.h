@@ -456,7 +456,7 @@ public:
             double c1 = dot(x1x2,m_triangleInfo[tid].ax2);
             defaulttype::Vector3 proj_P = P0 + m_triangleInfo[tid].ax1 * c0 + m_triangleInfo[tid].ax2 * c1;
 
-            sofa::collisionAlgorithm::computeBaryCoords(proj_P, m_triangleInfo[tid], P0, fact_u,fact_v,fact_w);
+            sofa::collisionAlgorithm::toolBox::computeTriangleBaryCoords(proj_P, m_triangleInfo[tid], P0, fact_u,fact_v,fact_w);
 
 
 
@@ -503,7 +503,7 @@ public:
             defaulttype::Vector3 P2 = m_pointProx[tri[2]]->getPosition();
 
             double fact_u,fact_v,fact_w;
-            sofa::collisionAlgorithm::projectOnTriangle(P,
+            sofa::collisionAlgorithm::toolBox::projectOnTriangle(P,
                                                         P0,P1,P2,m_triangleInfo[tid],
                                                         fact_u,fact_v,fact_w);
 
@@ -603,7 +603,7 @@ public:
             defaulttype::Vector3 P1 = m_pointProx[currentTriangle[1]]->getPosition();
             defaulttype::Vector3 P2 = m_pointProx[currentTriangle[2]]->getPosition();
 
-            collisionAlgorithm::TriangleInfo tinfo = collisionAlgorithm::computeTinfo(P0,P1,P2);
+            collisionAlgorithm::TriangleInfo tinfo = collisionAlgorithm::toolBox::computeTriangleInfo(P0,P1,P2);
 
 
 
