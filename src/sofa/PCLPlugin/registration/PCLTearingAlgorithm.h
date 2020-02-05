@@ -440,13 +440,10 @@ public:
         int closestTriangle = -1;
         defaulttype::Vector3 Q;
 
-        const helper::vector<core::topology::BaseMeshTopology::Triangle> & triangles = d_triangle.getValue();
-
-        for(int tid=0; tid<triangles.size(); tid++) {
-            Triangle tri = triangles[tid];
-            defaulttype::Vector3 P0 = m_pointProx[tri[0]]->getPosition();
-            defaulttype::Vector3 P1 = m_pointProx[tri[1]]->getPosition();
-            defaulttype::Vector3 P2 = m_pointProx[tri[2]]->getPosition();
+        for(int tid=0; tid<m_triangleInfo.size(); tid++) {
+            const defaulttype::Vector3 & P0 = m_triangleInfo[tid].P0;
+            const defaulttype::Vector3 & P1 = m_triangleInfo[tid].P1;
+            const defaulttype::Vector3 & P2 = m_triangleInfo[tid].P2;
 
             double fact_u,fact_v,fact_w;
             defaulttype::Vector3 x1x2 = P - P0;
@@ -456,7 +453,7 @@ public:
             double c1 = dot(x1x2,m_triangleInfo[tid].ax2);
             defaulttype::Vector3 proj_P = P0 + m_triangleInfo[tid].ax1 * c0 + m_triangleInfo[tid].ax2 * c1;
 
-            collisionAlgorithm::toolBox::computeTriangleBaryCoords(proj_P,P0, m_triangleInfo[tid], fact_u,fact_v,fact_w);
+            collisionAlgorithm::toolBox::computeTriangleBaryCoords(proj_P, m_triangleInfo[tid], fact_u,fact_v,fact_w);
 
 
 
@@ -504,7 +501,7 @@ public:
 
             double fact_u,fact_v,fact_w;
             sofa::collisionAlgorithm::toolBox::projectOnTriangle(P,
-                                                        P0,P1,P2,m_triangleInfo[tid],
+                                                        m_triangleInfo[tid],
                                                         fact_u,fact_v,fact_w);
 
             defaulttype::Vec3d projectedP = P0 * fact_u + P1 * fact_v + P2 * fact_w;
