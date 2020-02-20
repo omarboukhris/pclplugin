@@ -1,7 +1,9 @@
 cmake_minimum_required(VERSION 3.1)
 project(PCLPlugin)
 
-find_package(PCL 1.8 REQUIRED)
+if(COMMAND setupGitInfo)
+        setupGitInfo(PLUGIN_GIT_INFO)
+endif()
 
 file(GLOB_RECURSE HEADER_FILES
     "src/*.h"
@@ -29,10 +31,8 @@ file(GLOB_RECURSE DEPRECATED_FILES
     "deprecated/*.cpp"
 )
 
-if(COMMAND setupGitInfo)
-	setupGitInfo(PLUGIN_GIT_INFO)
-endif()
 
+find_package(PCL 1.8 REQUIRED)
 include_directories(${PCL_INCLUDE_DIRS})
 add_definitions(${PCL_DEFINITIONS})
 
