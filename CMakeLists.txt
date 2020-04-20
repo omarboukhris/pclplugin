@@ -51,7 +51,7 @@ target_link_libraries(
 	SofaBaseMechanics
 	SofaBaseLinearSolver
 	SofaBaseVisual SofaHelper SofaOpenglVisual
-	SofaComponentBase SofaSimulationTree SofaUserInteraction
+        SofaSimulationTree SofaUserInteraction
 	ConstraintGeometry NeedleConstraint ${PCL_LIBRARIES}
 )
 #target_link_libraries(${PROJECT_NAME} SofaFramework SofaBase SofaSimulation SofaGeneral ConstraintGeometry NeedleConstraint)
