@@ -9,6 +9,7 @@
 
 #include <pcl/surface/gp3.h>
 #include <pcl/PolygonMesh.h>
+#include <pcl/search/impl/search.hpp>
 
 namespace sofa {
 

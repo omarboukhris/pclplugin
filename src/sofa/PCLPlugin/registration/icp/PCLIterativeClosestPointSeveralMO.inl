@@ -1,6 +1,6 @@
 ﻿#pragma once
 
-#include "PCLIterativeClosestPoint.h"
+#include "PCLIterativeClosestPointSeveralMO.h"
 
 #include <sofa/core/objectmodel/KeypressedEvent.h>
 #include <sofa/core/objectmodel/KeyreleasedEvent.h>
@@ -11,24 +11,25 @@ namespace sofa {
 
 namespace pointcloud {
 
-PCLIterativeClosestPoint::PCLIterativeClosestPoint()
+PCLIterativeClosestPointSeveralMO::PCLIterativeClosestPointSeveralMO()
     : Inherit()
     , d_source(initData(&d_source, "source", "source point cloud"))
     , d_target(initData(&d_target, "target", "target point cloud"))
     , l_meca(initLink("mo", "link to mechanical object"))
+    , l_meca1(initLink("mo1", "link to another mechanical object"))
     , active_registration(true)
 {
 
     this->f_listening.setValue(true);
 }
 
-void PCLIterativeClosestPoint::draw(const core::visual::VisualParams * vparams) {
+void PCLIterativeClosestPointSeveralMO::draw(const core::visual::VisualParams * vparams) {
 }
 
-void PCLIterativeClosestPoint::init() {
+void PCLIterativeClosestPointSeveralMO::init() {
 }
 
-void PCLIterativeClosestPoint::updateTransform(const Eigen::Matrix<float, 3, 1> translationVec, const helper::Quater<double> q)
+void PCLIterativeClosestPointSeveralMO::updateTransform(const Eigen::Matrix<float, 3, 1> translationVec, const helper::Quater<double> q)
 {
     helper::WriteAccessor<Data <defaulttype::Vec3dTypes::VecCoord> > x = l_meca->write(core::VecCoordId::position());
     defaulttype::Vector3 tr (translationVec(0), translationVec(1), translationVec(2)) ;
@@ -40,9 +41,19 @@ void PCLIterativeClosestPoint::updateTransform(const Eigen::Matrix<float, 3, 1> 
     for (size_t i = 0 ; i < xrest.size() ; i++) {
         xrest[i] = x[i] ;
     }
+    
+    helper::WriteAccessor<Data <defaulttype::Vec3dTypes::VecCoord> > x1 = l_meca1->write(core::VecCoordId::position());
+    for (size_t i = 0 ; i < x1.size() ; i++) {
+        x1[i] = q.rotate(x1[i]) + tr ;
+    }
+
+    helper::WriteAccessor<Data <defaulttype::Vec3dTypes::VecCoord> > xrest1 = l_meca1->write(core::VecCoordId::restPosition());
+    for (size_t i = 0 ; i < xrest1.size() ; i++) {
+        xrest1[i] = x1[i] ;
+    }
 }
 
-bool PCLIterativeClosestPoint::checkInputData () {
+bool PCLIterativeClosestPointSeveralMO::checkInputData () {
     if (d_source.getValue().getPointCloud() == nullptr) {
         std::cerr << "(PCLIterativeClosestPoint) source is nullptr" << std::endl ;
         return false ;
@@ -55,10 +66,14 @@ bool PCLIterativeClosestPoint::checkInputData () {
         std::cerr << "(PCLIterativeClosestPoint) link to mechanical object broken" << std::endl ;
         return false ;
     }
+    if (!l_meca1) {
+        std::cerr << "(PCLIterativeClosestPoint) link to mechanical object1 broken" << std::endl ;
+        return false ;
+    }
     return true ;
 }
 
-void PCLIterativeClosestPoint::computeTransform(Eigen::Matrix<float, 3, 1> & translationVec, helper::Quater<double> & q) {
+void PCLIterativeClosestPointSeveralMO::computeTransform(Eigen::Matrix<float, 3, 1> & translationVec, helper::Quater<double> & q) {
     // !!!! computes accumulated transforms in accMat/accVec
     pcl::IterativeClosestPoint<PointCloudData::PointType, PointCloudData::PointType> icp ;
     icp.setInputSource(d_source.getValue().getPointCloud());
@@ -80,7 +95,7 @@ void PCLIterativeClosestPoint::computeTransform(Eigen::Matrix<float, 3, 1> & tra
     q.fromMatrix(mat);
 }
 
-void PCLIterativeClosestPoint::register_pcl() {
+void PCLIterativeClosestPointSeveralMO::register_pcl() {
     if (!checkInputData()) return ;
 
     helper::Quater<double> q = defaulttype::Quat::identity();
@@ -92,7 +107,7 @@ void PCLIterativeClosestPoint::register_pcl() {
     }
 }
 
-void PCLIterativeClosestPoint::handleEvent(core::objectmodel::Event *event) {
+void PCLIterativeClosestPointSeveralMO::handleEvent(core::objectmodel::Event *event) {
     if (simulation::AnimateBeginEvent * ev = dynamic_cast<simulation::AnimateBeginEvent*>(event)) {
 //        if (active_registration)
 //            register_pcl();

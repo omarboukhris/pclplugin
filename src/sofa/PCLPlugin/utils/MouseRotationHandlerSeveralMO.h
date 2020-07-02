@@ -61,25 +61,34 @@ namespace pointcloud
 typedef pcl::PointXYZ PointType ;
 typedef pcl::PointCloud<PointType> PointCloud ;
 
-class MouseRotationHandler : public core::objectmodel::BaseObject {
+class MouseRotationHandlerSeveralMO : public core::objectmodel::BaseObject {
 public :
-    SOFA_CLASS( MouseRotationHandler, core::objectmodel::BaseObject);
+    SOFA_CLASS( MouseRotationHandlerSeveralMO, core::objectmodel::BaseObject);
     typedef core::objectmodel::BaseObject Inherited;
 
     Data<PointCloudData> d_in ;
+    Data<PointCloudData> d_in1 ;
     Data<defaulttype::Vector3> d_initPhi;
     bool m_applyInitial;
 
     core::objectmodel::SingleLink<
-        MouseRotationHandler,
+        MouseRotationHandlerSeveralMO,
         component::container::MechanicalObject<defaulttype::Vec3dTypes>,
         BaseLink::FLAG_STOREPATH|BaseLink::FLAG_STRONGLINK
     > l_meca ;
 
-    MouseRotationHandler()
+    core::objectmodel::SingleLink<
+        MouseRotationHandlerSeveralMO,
+        component::container::MechanicalObject<defaulttype::Vec3dTypes>,
+        BaseLink::FLAG_STOREPATH|BaseLink::FLAG_STRONGLINK
+    > l_meca1 ;
+
+    MouseRotationHandlerSeveralMO()
         : Inherited()
         , d_in (initData(&d_in, "input", "input pcl pointcloud data"))
+        , d_in1 (initData(&d_in1, "input1", " another input pcl pointcloud data"))
         , l_meca(initLink("mo", "link to mechanical object"))
+        , l_meca1(initLink("mo1", "link to another mechanical object"))
         , d_initPhi(initData(&d_initPhi, defaulttype::Vector3(0.0, 0.0, 0.0), "initPhi", "initial rotation angle"))
     {
         this->f_listening.setValue(true) ;
@@ -89,8 +98,10 @@ public :
     void applyTransform(const defaulttype::Vector3 & phi) {
         PointCloud::Ptr
             cloud (d_in.getValue().getPointCloud()),
+            cloud1 (d_in1.getValue().getPointCloud()),
             cloud_tf_1 (new PointCloud),
-            cloud_tf_2 (new PointCloud);
+            cloud_tf_2 (new PointCloud),
+            cloud_tf_3 (new PointCloud);
 
         Eigen::Affine3f transform (Eigen::Affine3f::Identity());
         Eigen::Matrix3f rotation (
@@ -124,6 +135,22 @@ public :
         helper::WriteAccessor<Data <defaulttype::Vec3dTypes::VecCoord> > xrest = l_meca->write(core::VecCoordId::freePosition());
         for (i = 0 ; i < xrest.size() ; i++) {
             xrest[i] = x[i] ;
+        }
+
+        pcl::transformPointCloud(*cloud1, *cloud_tf_3, transform);
+
+        helper::WriteAccessor<Data <defaulttype::Vec3dTypes::VecCoord> > x1 = l_meca1->write(core::VecCoordId::position());
+        i = 0 ;
+        for (const auto & pt : *cloud_tf_3) {
+            x1[i++] = defaulttype::Vector3(pt.x, pt.y, pt.z) ;
+        }
+        helper::WriteAccessor<Data <defaulttype::Vec3dTypes::VecCoord> > xfree1 = l_meca1->write(core::VecCoordId::freePosition());
+        for (i = 0 ; i < xfree1.size() ; i++) {
+            xfree1[i] = x1[i] ;
+        }
+        helper::WriteAccessor<Data <defaulttype::Vec3dTypes::VecCoord> > xrest1 = l_meca1->write(core::VecCoordId::freePosition());
+        for (i = 0 ; i < xrest1.size() ; i++) {
+            xrest1[i] = x1[i] ;
         }
     }
 
