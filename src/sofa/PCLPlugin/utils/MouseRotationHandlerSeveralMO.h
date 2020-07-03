@@ -68,6 +68,7 @@ public :
 
     Data<PointCloudData> d_in ;
     Data<PointCloudData> d_in1 ;
+    Data<PointCloudData> d_in2 ;
     Data<defaulttype::Vector3> d_initPhi;
     bool m_applyInitial;
 
@@ -83,12 +84,20 @@ public :
         BaseLink::FLAG_STOREPATH|BaseLink::FLAG_STRONGLINK
     > l_meca1 ;
 
+    core::objectmodel::SingleLink<
+        MouseRotationHandlerSeveralMO,
+        component::container::MechanicalObject<defaulttype::Vec3dTypes>,
+        BaseLink::FLAG_STOREPATH|BaseLink::FLAG_STRONGLINK
+    > l_meca2 ;
+
     MouseRotationHandlerSeveralMO()
         : Inherited()
         , d_in (initData(&d_in, "input", "input pcl pointcloud data"))
         , d_in1 (initData(&d_in1, "input1", " another input pcl pointcloud data"))
+        , d_in2 (initData(&d_in2, "input2", " third input pcl pointcloud data"))
         , l_meca(initLink("mo", "link to mechanical object"))
         , l_meca1(initLink("mo1", "link to another mechanical object"))
+        , l_meca2(initLink("mo2", "link to the third mechanical object"))
         , d_initPhi(initData(&d_initPhi, defaulttype::Vector3(0.0, 0.0, 0.0), "initPhi", "initial rotation angle"))
     {
         this->f_listening.setValue(true) ;
@@ -99,9 +108,11 @@ public :
         PointCloud::Ptr
             cloud (d_in.getValue().getPointCloud()),
             cloud1 (d_in1.getValue().getPointCloud()),
+            cloud2 (d_in2.getValue().getPointCloud()),
             cloud_tf_1 (new PointCloud),
             cloud_tf_2 (new PointCloud),
-            cloud_tf_3 (new PointCloud);
+            cloud_tf_3 (new PointCloud),
+            cloud_tf_4 (new PointCloud);
 
         Eigen::Affine3f transform (Eigen::Affine3f::Identity());
         Eigen::Matrix3f rotation (
@@ -132,7 +143,7 @@ public :
         for (i = 0 ; i < xfree.size() ; i++) {
             xfree[i] = x[i] ;
         }
-        helper::WriteAccessor<Data <defaulttype::Vec3dTypes::VecCoord> > xrest = l_meca->write(core::VecCoordId::freePosition());
+        helper::WriteAccessor<Data <defaulttype::Vec3dTypes::VecCoord> > xrest = l_meca->write(core::VecCoordId::restPosition());
         for (i = 0 ; i < xrest.size() ; i++) {
             xrest[i] = x[i] ;
         }
@@ -148,9 +159,27 @@ public :
         for (i = 0 ; i < xfree1.size() ; i++) {
             xfree1[i] = x1[i] ;
         }
-        helper::WriteAccessor<Data <defaulttype::Vec3dTypes::VecCoord> > xrest1 = l_meca1->write(core::VecCoordId::freePosition());
+        helper::WriteAccessor<Data <defaulttype::Vec3dTypes::VecCoord> > xrest1 = l_meca1->write(core::VecCoordId::restPosition());
         for (i = 0 ; i < xrest1.size() ; i++) {
             xrest1[i] = x1[i] ;
+        }
+
+        if (l_meca2) {
+            pcl::transformPointCloud(*cloud2, *cloud_tf_4, transform);
+
+            helper::WriteAccessor<Data <defaulttype::Vec3dTypes::VecCoord> > x2 = l_meca2->write(core::VecCoordId::position());
+            i = 0 ;
+            for (const auto & pt : *cloud_tf_4) {
+                x2[i++] = defaulttype::Vector3(pt.x, pt.y, pt.z) ;
+            }
+            helper::WriteAccessor<Data <defaulttype::Vec3dTypes::VecCoord> > xfree2 = l_meca2->write(core::VecCoordId::freePosition());
+            for (i = 0 ; i < xfree2.size() ; i++) {
+                xfree2[i] = x2[i] ;
+            }
+            helper::WriteAccessor<Data <defaulttype::Vec3dTypes::VecCoord> > xrest2 = l_meca2->write(core::VecCoordId::restPosition());
+            for (i = 0 ; i < xrest2.size() ; i++) {
+                xrest2[i] = x2[i] ;
+            }
         }
     }
 

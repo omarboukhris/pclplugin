@@ -14,7 +14,7 @@ class PCLIterativeClosestPointSeveralMO : public core::objectmodel::BaseObject {
 public:
     typedef core::objectmodel::BaseObject Inherit ;
     SOFA_CLASS(PCLIterativeClosestPointSeveralMO, Inherit);
-
+    Data<unsigned int> d_icpDataType;   // 0 - contour processing, 1 - point to point matching
     Data<PointCloudData> d_source ;
     Data<PointCloudData> d_target ;
 
@@ -29,6 +29,12 @@ public:
         component::container::MechanicalObject<defaulttype::Vec3dTypes>,
         BaseLink::FLAG_STOREPATH|BaseLink::FLAG_STRONGLINK
     > l_meca1 ;
+
+    core::objectmodel::SingleLink<
+        PCLIterativeClosestPointSeveralMO,
+        component::container::MechanicalObject<defaulttype::Vec3dTypes>,
+        BaseLink::FLAG_STOREPATH|BaseLink::FLAG_STRONGLINK
+    > l_meca2 ;
 
     PCLIterativeClosestPointSeveralMO();
 
