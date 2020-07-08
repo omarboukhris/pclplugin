@@ -33,39 +33,49 @@ void PCLIterativeClosestPointSeveralMO::init() {
 
 void PCLIterativeClosestPointSeveralMO::updateTransform(const Eigen::Matrix<float, 3, 1> translationVec, const helper::Quater<double> q)
 {
-
-    helper::WriteAccessor<Data <defaulttype::Vec3dTypes::VecCoord> > x = l_meca->write(core::VecCoordId::position());
     defaulttype::Vector3 tr (translationVec(0), translationVec(1), translationVec(2)) ;
-    for (size_t i = 0 ; i < x.size() ; i++) {
-        x[i] = q.rotate(x[i]) + tr ;
+    for (unsigned int i = 0 ; i < l_meca.size() ; i++) {
+        helper::WriteAccessor<Data <defaulttype::Vec3dTypes::VecCoord> > x = l_meca[i]->write(core::VecCoordId::position());
+        helper::WriteAccessor<Data <defaulttype::Vec3dTypes::VecCoord> > xrest = l_meca[i]->write(core::VecCoordId::restPosition());
+        for (size_t i = 0 ; i < x.size() ; i++) {
+            x[i] = q.rotate(x[i]) + tr ;
+        }
+        for (size_t i = 0 ; i < xrest.size() ; i++) {
+            xrest[i] = x[i] ;
+        }
     }
 
-    helper::WriteAccessor<Data <defaulttype::Vec3dTypes::VecCoord> > xrest = l_meca->write(core::VecCoordId::restPosition());
-    for (size_t i = 0 ; i < xrest.size() ; i++) {
-        xrest[i] = x[i] ;
-    }
+//    helper::WriteAccessor<Data <defaulttype::Vec3dTypes::VecCoord> > x = l_meca->write(core::VecCoordId::position());
+//    for (size_t i = 0 ; i < x.size() ; i++) {
+//        x[i] = q.rotate(x[i]) + tr ;
+//    }
+
+//    helper::WriteAccessor<Data <defaulttype::Vec3dTypes::VecCoord> > xrest = l_meca->write(core::VecCoordId::restPosition());
+//    for (size_t i = 0 ; i < xrest.size() ; i++) {
+//        xrest[i] = x[i] ;
+//    }
     
-    helper::WriteAccessor<Data <defaulttype::Vec3dTypes::VecCoord> > x1 = l_meca1->write(core::VecCoordId::position());
-    for (size_t i = 0 ; i < x1.size() ; i++) {
-        x1[i] = q.rotate(x1[i]) + tr ;
-    }
+//    helper::WriteAccessor<Data <defaulttype::Vec3dTypes::VecCoord> > x1 = l_meca1->write(core::VecCoordId::position());
+//    for (size_t i = 0 ; i < x1.size() ; i++) {
+//        x1[i] = q.rotate(x1[i]) + tr ;
+//    }
 
-    helper::WriteAccessor<Data <defaulttype::Vec3dTypes::VecCoord> > xrest1 = l_meca1->write(core::VecCoordId::restPosition());
-    for (size_t i = 0 ; i < xrest1.size() ; i++) {
-        xrest1[i] = x1[i] ;
-    }
+//    helper::WriteAccessor<Data <defaulttype::Vec3dTypes::VecCoord> > xrest1 = l_meca1->write(core::VecCoordId::restPosition());
+//    for (size_t i = 0 ; i < xrest1.size() ; i++) {
+//        xrest1[i] = x1[i] ;
+//    }
 
-    if (l_meca2) {
-        helper::WriteAccessor<Data <defaulttype::Vec3dTypes::VecCoord> > x2 = l_meca2->write(core::VecCoordId::position());
-        for (size_t i = 0 ; i < x2.size() ; i++) {
-            x2[i] = q.rotate(x2[i]) + tr ;
-        }
+//    if (l_meca2) {
+//        helper::WriteAccessor<Data <defaulttype::Vec3dTypes::VecCoord> > x2 = l_meca2->write(core::VecCoordId::position());
+//        for (size_t i = 0 ; i < x2.size() ; i++) {
+//            x2[i] = q.rotate(x2[i]) + tr ;
+//        }
 
-        helper::WriteAccessor<Data <defaulttype::Vec3dTypes::VecCoord> > xrest2 = l_meca2->write(core::VecCoordId::restPosition());
-        for (size_t i = 0 ; i < xrest2.size() ; i++) {
-            xrest2[i] = x2[i] ;
-        }
-    }
+//        helper::WriteAccessor<Data <defaulttype::Vec3dTypes::VecCoord> > xrest2 = l_meca2->write(core::VecCoordId::restPosition());
+//        for (size_t i = 0 ; i < xrest2.size() ; i++) {
+//            xrest2[i] = x2[i] ;
+//        }
+//    }
 }
 
 bool PCLIterativeClosestPointSeveralMO::checkInputData () {
@@ -77,7 +87,8 @@ bool PCLIterativeClosestPointSeveralMO::checkInputData () {
         std::cerr << "(PCLIterativeClosestPoint) target is nullptr" << std::endl ;
         return false ;
     }
-    if (!l_meca) {
+    if (!l_meca.size()) {
+//    if (!l_meca) {
         std::cerr << "(PCLIterativeClosestPoint) link to mechanical object broken" << std::endl ;
         return false ;
     }

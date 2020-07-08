@@ -18,7 +18,7 @@ public:
     Data<PointCloudData> d_source ;
     Data<PointCloudData> d_target ;
 
-    core::objectmodel::SingleLink<
+    core::objectmodel::MultiLink<
         PCLIterativeClosestPointSeveralMO,
         component::container::MechanicalObject<defaulttype::Vec3dTypes>,
         BaseLink::FLAG_STOREPATH|BaseLink::FLAG_STRONGLINK
