@@ -16,9 +16,7 @@ PCLIterativeClosestPointSeveralMO::PCLIterativeClosestPointSeveralMO()
     , d_icpDataType(initData(&d_icpDataType, "dataType", "data type for icp process"))
     , d_source(initData(&d_source, "source", "source point cloud"))
     , d_target(initData(&d_target, "target", "target point cloud"))
-    , l_meca(initLink("mo", "link to mechanical object"))
-    , l_meca1(initLink("mo1", "link to another mechanical object"))
-    , l_meca2(initLink("mo2", "link to third mechanical object"))
+    , l_meca(initLink("mo", "link to mechanical objects"))
     , active_registration(true)
 {
 
@@ -44,38 +42,6 @@ void PCLIterativeClosestPointSeveralMO::updateTransform(const Eigen::Matrix<floa
             xrest[i] = x[i] ;
         }
     }
-
-//    helper::WriteAccessor<Data <defaulttype::Vec3dTypes::VecCoord> > x = l_meca->write(core::VecCoordId::position());
-//    for (size_t i = 0 ; i < x.size() ; i++) {
-//        x[i] = q.rotate(x[i]) + tr ;
-//    }
-
-//    helper::WriteAccessor<Data <defaulttype::Vec3dTypes::VecCoord> > xrest = l_meca->write(core::VecCoordId::restPosition());
-//    for (size_t i = 0 ; i < xrest.size() ; i++) {
-//        xrest[i] = x[i] ;
-//    }
-    
-//    helper::WriteAccessor<Data <defaulttype::Vec3dTypes::VecCoord> > x1 = l_meca1->write(core::VecCoordId::position());
-//    for (size_t i = 0 ; i < x1.size() ; i++) {
-//        x1[i] = q.rotate(x1[i]) + tr ;
-//    }
-
-//    helper::WriteAccessor<Data <defaulttype::Vec3dTypes::VecCoord> > xrest1 = l_meca1->write(core::VecCoordId::restPosition());
-//    for (size_t i = 0 ; i < xrest1.size() ; i++) {
-//        xrest1[i] = x1[i] ;
-//    }
-
-//    if (l_meca2) {
-//        helper::WriteAccessor<Data <defaulttype::Vec3dTypes::VecCoord> > x2 = l_meca2->write(core::VecCoordId::position());
-//        for (size_t i = 0 ; i < x2.size() ; i++) {
-//            x2[i] = q.rotate(x2[i]) + tr ;
-//        }
-
-//        helper::WriteAccessor<Data <defaulttype::Vec3dTypes::VecCoord> > xrest2 = l_meca2->write(core::VecCoordId::restPosition());
-//        for (size_t i = 0 ; i < xrest2.size() ; i++) {
-//            xrest2[i] = x2[i] ;
-//        }
-//    }
 }
 
 bool PCLIterativeClosestPointSeveralMO::checkInputData () {
@@ -88,12 +54,7 @@ bool PCLIterativeClosestPointSeveralMO::checkInputData () {
         return false ;
     }
     if (!l_meca.size()) {
-//    if (!l_meca) {
         std::cerr << "(PCLIterativeClosestPoint) link to mechanical object broken" << std::endl ;
-        return false ;
-    }
-    if (!l_meca1) {
-        std::cerr << "(PCLIterativeClosestPoint) link to mechanical object1 broken" << std::endl ;
         return false ;
     }
     return true ;
@@ -111,10 +72,10 @@ void PCLIterativeClosestPointSeveralMO::computeTransform(Eigen::Matrix<float, 3,
     //std::cout << "ICP parameters: " << icp.getMaxCorrespondenceDistance() << std::endl;
     if (d_icpDataType.getValue() == 1) {
         // parameters for point clouds matching
-        icp.setMaximumIterations(500);
-        icp.setTransformationEpsilon(13);
-        icp.setMaxCorrespondenceDistance(1.0);
-        icp.setEuclideanFitnessEpsilon(10.0);
+        icp.setMaximumIterations(50000);
+        icp.setTransformationEpsilon(1e-9);
+        icp.setMaxCorrespondenceDistance(0.5);
+        icp.setEuclideanFitnessEpsilon(1e-9);
     }
 
     PointCloudData::PointCloud result ;

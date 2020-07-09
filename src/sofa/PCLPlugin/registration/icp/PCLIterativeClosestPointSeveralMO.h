@@ -24,18 +24,6 @@ public:
         BaseLink::FLAG_STOREPATH|BaseLink::FLAG_STRONGLINK
     > l_meca ;
 
-    core::objectmodel::SingleLink<
-        PCLIterativeClosestPointSeveralMO,
-        component::container::MechanicalObject<defaulttype::Vec3dTypes>,
-        BaseLink::FLAG_STOREPATH|BaseLink::FLAG_STRONGLINK
-    > l_meca1 ;
-
-    core::objectmodel::SingleLink<
-        PCLIterativeClosestPointSeveralMO,
-        component::container::MechanicalObject<defaulttype::Vec3dTypes>,
-        BaseLink::FLAG_STOREPATH|BaseLink::FLAG_STRONGLINK
-    > l_meca2 ;
-
     PCLIterativeClosestPointSeveralMO();
 
     void draw(const core::visual::VisualParams * vparams);
