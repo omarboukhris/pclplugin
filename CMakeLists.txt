@@ -32,7 +32,7 @@ file(GLOB_RECURSE DEPRECATED_FILES
 )
 
 
-find_package(PCL 1.8 REQUIRED)
+find_package(PCL 1.9 REQUIRED)
 include_directories(${PCL_INCLUDE_DIRS})
 add_definitions(${PCL_DEFINITIONS})
 
