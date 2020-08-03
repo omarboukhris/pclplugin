@@ -70,7 +70,7 @@ public :
     Data<defaulttype::Vector3> d_initPhi;
     bool m_applyInitial;
 
-    core::objectmodel::SingleLink<
+    core::objectmodel::MultiLink<
         MouseRotationHandler,
         component::container::MechanicalObject<defaulttype::Vec3dTypes>,
         BaseLink::FLAG_STOREPATH|BaseLink::FLAG_STRONGLINK
@@ -112,18 +112,20 @@ public :
         pcl::transformPointCloud(*cloud, *cloud_tf_2, transform);
         //std::cout << transform.matrix() << std::endl << std::endl;
 
-        helper::WriteAccessor<Data <defaulttype::Vec3dTypes::VecCoord> > x = l_meca->write(core::VecCoordId::position());
-        size_t i = 0 ;
-        for (const auto & pt : *cloud_tf_2) {
-            x[i++] = defaulttype::Vector3(pt.x, pt.y, pt.z) ;
-        }
-        helper::WriteAccessor<Data <defaulttype::Vec3dTypes::VecCoord> > xfree = l_meca->write(core::VecCoordId::freePosition());
-        for (i = 0 ; i < xfree.size() ; i++) {
-            xfree[i] = x[i] ;
-        }
-        helper::WriteAccessor<Data <defaulttype::Vec3dTypes::VecCoord> > xrest = l_meca->write(core::VecCoordId::freePosition());
-        for (i = 0 ; i < xrest.size() ; i++) {
-            xrest[i] = x[i] ;
+        for (unsigned int i = 0 ; i < l_meca.size() ; i++) {
+            helper::WriteAccessor<Data <defaulttype::Vec3dTypes::VecCoord> > x = l_meca[i]->write(core::VecCoordId::position());
+            helper::WriteAccessor<Data <defaulttype::Vec3dTypes::VecCoord> > xrest = l_meca[i]->write(core::VecCoordId::restPosition());
+            helper::WriteAccessor<Data <defaulttype::Vec3dTypes::VecCoord> > xfree = l_meca[i]->write(core::VecCoordId::freePosition());
+            size_t k = 0 ;
+            for (const auto & pt : *cloud_tf_2) {
+                x[k++] = defaulttype::Vector3(pt.x, pt.y, pt.z) ;
+            }
+            for (k = 0 ; k < xfree.size() ; k++) {
+                xfree[k] = x[i] ;
+            }
+            for (k = 0 ; k < xrest.size() ; k++) {
+                xrest[k] = x[k] ;
+            }
         }
     }
 
