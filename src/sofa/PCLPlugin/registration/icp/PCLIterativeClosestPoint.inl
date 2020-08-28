@@ -22,38 +22,41 @@ PCLIterativeClosestPoint::PCLIterativeClosestPoint()
     this->f_listening.setValue(true);
 }
 
-void PCLIterativeClosestPoint::draw(const core::visual::VisualParams * vparams) {
-}
+//void PCLIterativeClosestPoint::draw(const core::visual::VisualParams * vparams) {
+//}
 
-void PCLIterativeClosestPoint::init() {
-}
+//void PCLIterativeClosestPoint::init() {
+//}
 
+/*!
+ * \brief PCLIterativeClosestPoint::updateTransform
+ * apply transform (translatioVec, q) to mecanichal object
+ * \param translationVec
+ * \param q
+ */
 void PCLIterativeClosestPoint::updateTransform(const Eigen::Matrix<float, 3, 1> translationVec, const helper::Quater<double> q)
 {
     defaulttype::Vector3 tr (translationVec(0), translationVec(1), translationVec(2)) ;
     for (unsigned int i = 0 ; i < l_meca.size() ; i++) {
         helper::WriteAccessor<Data <defaulttype::Vec3dTypes::VecCoord> > x = l_meca[i]->write(core::VecCoordId::position());
         helper::WriteAccessor<Data <defaulttype::Vec3dTypes::VecCoord> > xrest = l_meca[i]->write(core::VecCoordId::restPosition());
+        helper::WriteAccessor<Data <defaulttype::Vec3dTypes::VecCoord> > xfree = l_meca[i]->write(core::VecCoordId::freePosition());
         for (size_t i = 0 ; i < x.size() ; i++) {
             x[i] = q.rotate(x[i]) + tr ;
         }
         for (size_t i = 0 ; i < xrest.size() ; i++) {
             xrest[i] = x[i] ;
         }
+        for (size_t i = 0 ; i < xfree.size() ; i++) {
+            xfree[i] = x[i] ;
+        }
     }
-
-//    helper::WriteAccessor<Data <defaulttype::Vec3dTypes::VecCoord> > x = l_meca->write(core::VecCoordId::position());
-//    defaulttype::Vector3 tr (translationVec(0), translationVec(1), translationVec(2)) ;
-//    for (size_t i = 0 ; i < x.size() ; i++) {
-//        x[i] = q.rotate(x[i]) + tr ;
-//    }
-
-//    helper::WriteAccessor<Data <defaulttype::Vec3dTypes::VecCoord> > xrest = l_meca->write(core::VecCoordId::restPosition());
-//    for (size_t i = 0 ; i < xrest.size() ; i++) {
-//        xrest[i] = x[i] ;
-//    }
 }
 
+/*!
+ * \brief PCLIterativeClosestPoint::checkInputData
+ * \return true if input data checks out, false otherwise
+ */
 bool PCLIterativeClosestPoint::checkInputData () {
     if (d_source.getValue().getPointCloud() == nullptr) {
         std::cerr << "(PCLIterativeClosestPoint) source is nullptr" << std::endl ;
@@ -64,13 +67,18 @@ bool PCLIterativeClosestPoint::checkInputData () {
         return false ;
     }
     if (!l_meca.size()) {
-//    if (!l_meca) {
         std::cerr << "(PCLIterativeClosestPoint) link to mechanical object broken" << std::endl ;
         return false ;
     }
     return true ;
 }
 
+/*!
+ * \brief PCLIterativeClosestPoint::computeTransform
+ * computes transform and store results in translationVec (vec3) and q (quaternion)
+ * \param translationVec
+ * \param q
+ */
 void PCLIterativeClosestPoint::computeTransform(Eigen::Matrix<float, 3, 1> & translationVec, helper::Quater<double> & q) {
     // !!!! computes accumulated transforms in accMat/accVec
     pcl::IterativeClosestPoint<PointCloudData::PointType, PointCloudData::PointType> icp ;
@@ -105,14 +113,16 @@ void PCLIterativeClosestPoint::register_pcl() {
     }
 }
 
+/*!
+ * \brief PCLIterativeClosestPoint::handleEvent
+ * Press "1" to register pointcloud
+ * \param event
+ */
 void PCLIterativeClosestPoint::handleEvent(core::objectmodel::Event *event) {
     if (simulation::AnimateBeginEvent * ev = dynamic_cast<simulation::AnimateBeginEvent*>(event)) {
-//        if (active_registration)
-//            register_pcl();
     } else if (sofa::core::objectmodel::KeyreleasedEvent * ev = dynamic_cast<core::objectmodel::KeyreleasedEvent*>(event)) {
-        if (ev->getKey() == '1') { // || ev->getKey() == 'M') {
+        if (ev->getKey() == '1') {
             register_pcl();
-//            active_registration = !active_registration ;
         }
     }
 }

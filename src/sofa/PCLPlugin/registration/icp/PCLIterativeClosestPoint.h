@@ -10,6 +10,10 @@ namespace sofa {
 
 namespace pointcloud {
 
+/*!
+ * \brief The PCLIterativeClosestPoint class
+ * wrapper for pcl iterative closest point method
+ */
 class PCLIterativeClosestPoint : public core::objectmodel::BaseObject {
 public:
     typedef core::objectmodel::BaseObject Inherit ;
@@ -26,9 +30,9 @@ public:
 
     PCLIterativeClosestPoint();
 
-    void draw(const core::visual::VisualParams * vparams);
+//    void draw(const core::visual::VisualParams * vparams);
 
-    void init() override;
+//    void init() override;
 
     void handleEvent(sofa::core::objectmodel::Event* event) override ;
 

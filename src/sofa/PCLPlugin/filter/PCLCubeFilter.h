@@ -43,13 +43,15 @@ namespace sofa
 
 namespace pointcloud
 {
-/// /!\ See https://github.com/IntelRealSense/librealsense/blob/master/wrappers/opencv/grabcuts/rs-grabcuts.cpp
-/// for implementation details
 
 using namespace core::objectmodel ;
 typedef pcl::PointXYZ PointType ;
 typedef pcl::PointCloud<PointType> PointCloud ;
 
+/*!
+ * \brief The PCLCubeFilter class
+ * filters points  outside a cube centered at (0, 0, 0)
+ */
 class PCLCubeFilter : public core::objectmodel::BaseObject {
 public :
     SOFA_CLASS( PCLCubeFilter, core::objectmodel::BaseObject);

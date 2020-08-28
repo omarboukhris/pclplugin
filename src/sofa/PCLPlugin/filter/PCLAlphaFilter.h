@@ -83,9 +83,11 @@ PointType stdev  (const PointCloud & pointset, const PointType & mu) {
     return out ;
 }
 
-/// /!\ See https://github.com/IntelRealSense/librealsense/blob/master/wrappers/opencv/grabcuts/rs-grabcuts.cpp
-/// for implementation details
 
+/*!
+ * \brief The PCLAlphaFilter class
+ * filters points in pointcloud within [mu - alpha*stdev, mu + alpha*stdev]
+ */
 class PCLAlphaFilter : public core::objectmodel::BaseObject {
 public :
     SOFA_CLASS( PCLAlphaFilter, core::objectmodel::BaseObject);

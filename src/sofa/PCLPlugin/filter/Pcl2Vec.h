@@ -52,6 +52,10 @@ using namespace core::objectmodel ;
 typedef pcl::PointXYZ PointType ;
 typedef pcl::PointCloud<PointType> PointCloud ;
 
+/*!
+ * \brief The Pcl2Vec class
+ * Transforms pcl pointcloud data to sofa vector list
+ */
 class Pcl2Vec : public core::objectmodel::BaseObject {
 public :
     SOFA_CLASS( Pcl2Vec, core::objectmodel::BaseObject);
@@ -103,6 +107,10 @@ public :
 
 } ;
 
+/*!
+ * \brief The Vec2Pcl
+ * Transforms a list of sofa vectors to pcl pointcloud data
+ */
 class Vec2Pcl : public core::objectmodel::BaseObject {
 public :
     SOFA_CLASS( Vec2Pcl, core::objectmodel::BaseObject);

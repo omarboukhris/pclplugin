@@ -61,6 +61,10 @@ namespace pointcloud
 typedef pcl::PointXYZ PointType ;
 typedef pcl::PointCloud<PointType> PointCloud ;
 
+/*!
+ * \brief The MouseRotationHandler
+ * (left/right/middle) click + drag = centered rotation around (x/y/z)
+ */
 class MouseRotationHandler : public core::objectmodel::BaseObject {
 public :
     SOFA_CLASS( MouseRotationHandler, core::objectmodel::BaseObject);
@@ -86,6 +90,10 @@ public :
         m_applyInitial = true;
     }
 
+    /*!
+     * \brief applyTransform : applies centered rotation depending on rotation vector phi
+     * \param phi
+     */
     void applyTransform(const defaulttype::Vector3 & phi) {
         PointCloud::Ptr
             cloud (d_in.getValue().getPointCloud()),
@@ -121,7 +129,7 @@ public :
                 x[k++] = defaulttype::Vector3(pt.x, pt.y, pt.z) ;
             }
             for (k = 0 ; k < xfree.size() ; k++) {
-                xfree[k] = x[i] ;
+                xfree[k] = x[k] ;
             }
             for (k = 0 ; k < xrest.size() ; k++) {
                 xrest[k] = x[k] ;
@@ -129,6 +137,11 @@ public :
         }
     }
 
+    /*!
+     * \brief handleEvent (left/right/middle) click + drag = centered rotation around (x/y/z)
+     * \param event
+     * calculate the rotation vector phi
+     */
     void handleEvent(sofa::core::objectmodel::Event* event) override {
         if (sofa::core::objectmodel::MouseEvent * ev = dynamic_cast<sofa::core::objectmodel::MouseEvent*>(event)){
             if (m_applyInitial == true) {
@@ -170,6 +183,9 @@ public :
                     else if ((int)phi[selected_dim] < -180)
                         phi[selected_dim] = -180.f ;
                 }
+            }
+            else if (ev->getState() == core::objectmodel::MouseEvent::Wheel){
+                std::cout << ev->getWheelDelta() << std::endl ;
             }
             applyTransform(phi);
         }
