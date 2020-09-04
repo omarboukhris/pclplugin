@@ -49,6 +49,46 @@ protected:
     PointCloud::Ptr m_pointcloud ;
 };
 
+class NPointCloudData {
+public :
+    typedef pcl::Normal PointType ;
+    typedef pcl::PointCloud<PointType> PointCloud ;
+    typedef unsigned char T ;
+
+    NPointCloudData () {}
+    NPointCloudData (PointCloud::Ptr m)
+        : m_pointcloud(m)
+    {}
+
+    PointCloud::Ptr & getPointCloud() {
+        return m_pointcloud;
+    }
+
+    operator PointCloud::Ptr&() {
+        return getPointCloud();
+    }
+
+    const PointCloud::Ptr & getPointCloud() const {
+        return m_pointcloud;
+    }
+
+    operator const PointCloud::Ptr&() const {
+        return getPointCloud();
+    }
+
+    friend std::istream& operator >> ( std::istream& in, NPointCloudData &  )
+    {
+        return in;
+    }
+
+    friend std::ostream& operator << ( std::ostream& out, const NPointCloudData &  )
+    {
+        return out;
+    }
+protected:
+    PointCloud::Ptr m_pointcloud ;
+};
+
 } // namespace pointcloud
 
 namespace defaulttype {
@@ -121,6 +161,12 @@ template<>
 struct DataTypeInfo< pointcloud::PointCloudData > : public PointCloudTypeInfo< pointcloud::PointCloudData >
 {
     static std::string name() { std::ostringstream o; o << "PointCloudData<>"; return o.str(); }
+};
+
+template<>
+struct DataTypeInfo< pointcloud::NPointCloudData > : public PointCloudTypeInfo< pointcloud::NPointCloudData >
+{
+    static std::string name() { std::ostringstream o; o << "NPointCloudData<>"; return o.str(); }
 };
 
 } // namespace defaulttype

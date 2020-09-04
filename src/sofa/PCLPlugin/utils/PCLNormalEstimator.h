@@ -60,7 +60,7 @@ public :
     typedef core::objectmodel::BaseObject Inherited;
 
     Data<PointCloudData> d_in ;
-    Data<helper::vector<defaulttype::Vector3> >  d_out ;
+    Data<NPointCloudData>  d_out ;
     Data<bool> d_draw_pcl ;
 
     DataCallback c_in ;
@@ -80,9 +80,9 @@ public :
             return ;
         }
 
-        for (const auto & point : d_out.getValue()) {
+        for (const auto & point : *d_in.getValue().getPointCloud()) {
             vparams->drawTool()->drawPoint(
-                point,
+                defaulttype::Vector3(point.x, point.y, point.z),
                 sofa::defaulttype::Vector4 (0, 255, 0, 0)
             );
         }
@@ -106,6 +106,7 @@ public :
 
         // Compute the features
         normals.compute (*cloud_normals);
+        d_out.setValue(cloud_normals) ;
     }
 } ;
 

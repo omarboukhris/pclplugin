@@ -84,13 +84,13 @@ void PCLIterativeClosestPoint::computeTransform(Eigen::Matrix<float, 3, 1> & tra
     pcl::IterativeClosestPoint<PointCloudData::PointType, PointCloudData::PointType> icp ;
     icp.setInputSource(d_source.getValue().getPointCloud());
     icp.setInputTarget(d_target.getValue().getPointCloud());
-
+    icp.setMaximumIterations(50) ;
     PointCloudData::PointCloud result ;
     icp.align(result);
 
     Eigen::Matrix<float, 3, 3> rotationMat = icp.getFinalTransformation().block<3,3>(0,0) ;
     translationVec = icp.getFinalTransformation().block<3,1>(0,3) ;
-//    std::cout << this->getTime() << " " << icp.hasConverged() << " score " << icp.getFitnessScore() << std::endl
+    std::cout << this->getTime() << " " << icp.hasConverged() << " score " << icp.getFitnessScore() << std::endl ;
 //              << rotationMat << std::endl << translationVec << std::endl ;
 
     defaulttype::Mat3x3 mat (
