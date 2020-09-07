@@ -51,10 +51,14 @@ target_link_libraries(
 	SofaBaseMechanics
 	SofaBaseLinearSolver
 	SofaBaseVisual SofaHelper SofaOpenglVisual
-        SofaSimulationTree SofaUserInteraction
+	SofaSimulationTree SofaUserInteraction
 	ConstraintGeometry ${PCL_LIBRARIES}
 )
 #target_link_libraries(${PROJECT_NAME} SofaFramework SofaBase SofaSimulation SofaGeneral ConstraintGeometry NeedleConstraint)
 
-sofa_create_package_with_targets(PACKAGE_NAME ${PROJECT_NAME} PACKAGE_VERSION 0.1 TARGETS ${PROJECT_NAME} INCLUDE_INSTALL_DIR ${${PROJECT_NAME}_INCLUDE_DIRS})
+sofa_create_package_with_targets(
+	PACKAGE_NAME ${PROJECT_NAME}
+	PACKAGE_VERSION 0.1
+	TARGETS ${PROJECT_NAME}
+	INCLUDE_INSTALL_DIR ${${PROJECT_NAME}_INCLUDE_DIRS})
 
