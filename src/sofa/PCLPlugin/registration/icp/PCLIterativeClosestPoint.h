@@ -21,6 +21,10 @@ public:
 
     Data<PointCloudData> d_source ;
     Data<PointCloudData> d_target ;
+    Data<bool> d_verbose ;
+
+    Data<defaulttype::Mat3x3> d_rotation ;
+    Data<defaulttype::Vector3> d_translation ;
 
     core::objectmodel::MultiLink<
         PCLIterativeClosestPoint,
