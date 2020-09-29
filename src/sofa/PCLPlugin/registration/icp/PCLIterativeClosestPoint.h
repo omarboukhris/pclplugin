@@ -22,6 +22,10 @@ public:
     Data<PointCloudData> d_source ;
     Data<PointCloudData> d_target ;
 
+    Data<defaulttype::Mat3x3> d_rotation ;
+    Data<defaulttype::Vector3> d_translation ;
+    Data<bool> d_verbose ;
+
     core::objectmodel::MultiLink<
         PCLIterativeClosestPoint,
         component::container::MechanicalObject<defaulttype::Vec3dTypes>,
