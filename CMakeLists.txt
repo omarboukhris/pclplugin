@@ -4,7 +4,7 @@ project(PCLPlugin)
 if(COMMAND setupGitInfo)
         setupGitInfo(PLUGIN_GIT_INFO)
 endif()
-
+ 
 file(GLOB_RECURSE HEADER_FILES
     "src/*.h"
     "src/*.inl"
