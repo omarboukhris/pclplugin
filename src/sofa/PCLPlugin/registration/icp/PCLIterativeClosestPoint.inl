@@ -114,7 +114,7 @@ void PCLIterativeClosestPoint::computeTransform(Eigen::Matrix<float, 3, 1> & tra
         defaulttype::Vector3(rotationMat(2,0), rotationMat(2,1), rotationMat(2,2))
     ) ;
     d_rotation.setValue(mat);
-    d_translation.setValue(defaulttype::Vector3(translationVec[0], translationVec[1], translationVec[2]));
+    d_translation.setValue(defaulttype::Vector3(translationVec[0],translationVec[1],translationVec[2]));
     q.fromMatrix(mat);
 }
 
