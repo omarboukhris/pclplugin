@@ -160,6 +160,61 @@ public :
 
 } ;
 
+
+/*!
+ * \brief The PointCloudMerge
+ * merges two point clouds
+ */
+class PointCloudMerge : public core::objectmodel::BaseObject {
+public :
+    SOFA_CLASS( PointCloudMerge, core::objectmodel::BaseObject);
+    typedef core::objectmodel::BaseObject Inherited;
+
+    Data<helper::vector<defaulttype::Vector3> > d_in1 ;
+    Data<helper::vector<defaulttype::Vector3> > d_in2 ;
+    Data<helper::vector<defaulttype::Vector3> > d_out ;
+    Data<bool> d_draw_pcl ;
+
+    DataCallback c_in ;
+
+    PointCloudMerge()
+        : Inherited ()
+        , d_in1 (initData(&d_in1, "pcl1", "input point cloud"))
+        , d_in2 (initData(&d_in2, "pcl2", "input point cloud"))
+        , d_out(initData(&d_out, "output", "output point cloud"))
+        , d_draw_pcl(initData(&d_draw_pcl, "draw_pcl", "True to draw point cloud in viewer"))
+    {
+        c_in.addInputs({&d_in1}) ;
+        c_in.addCallback(std::bind(&PointCloudMerge::filter, this));
+    }
+
+    void draw(const core::visual::VisualParams* vparams) {
+        if (!d_draw_pcl.getValue()) {
+            return ;
+        }
+
+        for (const auto & point : d_out.getValue()) {
+            vparams->drawTool()->drawPoint(
+                point,
+                sofa::defaulttype::Vector4 (0, 255, 0, 0)
+            );
+        }
+    }
+
+    // here we merge
+    void filter () {
+        helper::vector<defaulttype::Vector3>
+            in1 = d_in1.getValue() ,
+            in2 = d_in2.getValue() ,
+            out ; // output
+        out.insert( out.end(), in1.begin(), in1.end() );
+        out.insert( out.end(), in2.begin(), in2.end() );
+        d_out.setValue(out);
+    }
+
+} ;
+
+
 }
 
 }
