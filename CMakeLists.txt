@@ -1,9 +1,9 @@
 cmake_minimum_required(VERSION 3.1)
 project(PCLPlugin)
 
-if(COMMAND setupGitInfo)
-        setupGitInfo(PLUGIN_GIT_INFO)
-endif()
+#if(COMMAND setupGitInfo)
+#        setupGitInfo(PLUGIN_GIT_INFO)
+#endif()
  
 file(GLOB_RECURSE HEADER_FILES
     "src/*.h"
