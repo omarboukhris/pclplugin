@@ -72,6 +72,7 @@ public :
 
     Data<PointCloudData> d_in ;
     Data<defaulttype::Vector3> d_initPhi;
+    Data<bool> d_tr ;
     bool m_applyInitial;
 
     core::objectmodel::MultiLink<
@@ -83,6 +84,7 @@ public :
     MouseRotationHandler()
         : Inherited()
         , d_in (initData(&d_in, "input", "input pcl pointcloud data"))
+        , d_tr (initData(&d_tr, false, "tr", "true for translation, false for rotation"))
         , l_meca(initLink("mo", "link to mechanical object"))
         , d_initPhi(initData(&d_initPhi, defaulttype::Vector3(0.0, 0.0, 0.0), "initPhi", "initial rotation angle"))
     {
@@ -143,6 +145,11 @@ public :
      * calculate the rotation vector phi
      */
     void handleEvent(sofa::core::objectmodel::Event* event) override {
+        if (sofa::core::objectmodel::KeypressedEvent * ev = dynamic_cast<sofa::core::objectmodel::KeypressedEvent*>(event)){
+            if (ev->getKey() == 'T') {
+                d_tr.setValue(!d_tr.getValue()) ;
+            }
+        }
         if (sofa::core::objectmodel::MouseEvent * ev = dynamic_cast<sofa::core::objectmodel::MouseEvent*>(event)){
             if (m_applyInitial == true) {
                 applyTransform(d_initPhi.getValue());
@@ -187,7 +194,29 @@ public :
             else if (ev->getState() == core::objectmodel::MouseEvent::Wheel){
                 std::cout << ev->getWheelDelta() << std::endl ;
             }
-            applyTransform(phi);
+            if (!d_tr.getValue()) {
+                applyTransform(phi);
+            } else {
+                translate(phi) ;
+            }
+        }
+    }
+
+    void translate (const defaulttype::Vector3 & phi) {
+        for (unsigned int i = 0 ; i < l_meca.size() ; i++) {
+            helper::WriteAccessor<Data <defaulttype::Vec3dTypes::VecCoord> > x = l_meca[i]->write(core::VecCoordId::position());
+            helper::WriteAccessor<Data <defaulttype::Vec3dTypes::VecCoord> > xrest = l_meca[i]->write(core::VecCoordId::restPosition());
+            helper::WriteAccessor<Data <defaulttype::Vec3dTypes::VecCoord> > xfree = l_meca[i]->write(core::VecCoordId::freePosition());
+            size_t k = 0 ;
+            for (k = 0 ; k < x.size() ; k++) {
+                x[k] = x[k] + phi/1.e3 ;
+            }
+            for (k = 0 ; k < xfree.size() ; k++) {
+                xfree[k] = x[k] ;
+            }
+            for (k = 0 ; k < xrest.size() ; k++) {
+                xrest[k] = x[k] ;
+            }
         }
     }
 private :

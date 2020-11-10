@@ -45,6 +45,12 @@ int Vec2PclClass = core::RegisterObject ( "vector<Vector3> to PCL::PointCloud" )
 .add<Vec2Pcl>(true)
 ;
 
+SOFA_DECL_CLASS (PointCloudMerge)
+
+int PointCloudMergeClass = core::RegisterObject ( "PointCloudMerge merges two point clouds" )
+.add<PointCloudMerge>(true)
+;
+
 } // namespace pointcloud
 
 } // namespace sofa
