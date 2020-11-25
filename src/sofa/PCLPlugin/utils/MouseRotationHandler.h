@@ -70,8 +70,11 @@ public :
     SOFA_CLASS( MouseRotationHandler, core::objectmodel::BaseObject);
     typedef core::objectmodel::BaseObject Inherited;
 
+    /// \brief input point cloud
     Data<PointCloudData> d_in ;
+    /// \brief initial rotation angle
     Data<defaulttype::Vector3> d_initPhi;
+    /// \brief set true for translation
     Data<bool> d_tr ;
     bool m_applyInitial;
 
@@ -202,6 +205,10 @@ public :
         }
     }
 
+    /*!
+     * \brief translate applies translation on mechanical object
+     * \param phi
+     */
     void translate (const defaulttype::Vector3 & phi) {
         for (unsigned int i = 0 ; i < l_meca.size() ; i++) {
             helper::WriteAccessor<Data <defaulttype::Vec3dTypes::VecCoord> > x = l_meca[i]->write(core::VecCoordId::position());

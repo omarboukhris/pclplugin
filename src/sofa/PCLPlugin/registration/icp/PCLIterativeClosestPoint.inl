@@ -118,6 +118,10 @@ void PCLIterativeClosestPoint::computeTransform(Eigen::Matrix<float, 3, 1> & tra
     q.fromMatrix(mat);
 }
 
+/*!
+ * \brief PCLIterativeClosestPoint::register_pcl
+ * registers source and target pointclouds and stores estimation in appropriate data
+ */
 void PCLIterativeClosestPoint::register_pcl() {
     if (!checkInputData()) return ;
 

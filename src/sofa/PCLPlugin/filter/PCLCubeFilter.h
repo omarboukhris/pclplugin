@@ -57,11 +57,16 @@ public :
     SOFA_CLASS( PCLCubeFilter, core::objectmodel::BaseObject);
     typedef core::objectmodel::BaseObject Inherited;
 
+    /// \brief input pointcloud
     Data<PointCloudData> d_in ;
+    /// \brief output filtered pointcloud
     Data<PointCloudData>  d_out ;
+    /// \brief alpha parameter for filtering
     Data<double> d_alpha ;
+    /// \brief set to true to draw output in viewer
     Data<bool> d_draw_pcl ;
 
+    /// \brief callback on input pointcloud
     DataCallback c_in ;
 
     PCLCubeFilter()
@@ -75,6 +80,10 @@ public :
         c_in.addCallback(std::bind(&PCLCubeFilter::filter, this));
     }
 
+    /*!
+     * \brief draw draws output pointcloud if needed
+     * \param vparams
+     */
     void draw(const core::visual::VisualParams* vparams) {
         if (!d_draw_pcl.getValue()) {
             return ;
@@ -88,6 +97,9 @@ public :
         }
     }
 
+    /*!
+     * \brief filter filtering function
+     */
     void filter () {
         PointCloud::Ptr in = d_in.getValue().getPointCloud() ;
         if (in == nullptr) {
@@ -102,6 +114,11 @@ public :
         d_out.setValue(out);
     }
 
+    /*!
+     * \brief point_in checks if point's inside the cube
+     * \param v point to filter
+     * \return true if v is in [alpha]**3
+     */
     bool point_in (const PointType & v) {
         double alpha = d_alpha.getValue() ;
         if (v.x >= alpha || v.x <= -alpha ||

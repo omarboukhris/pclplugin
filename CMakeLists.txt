@@ -12,12 +12,14 @@ file(GLOB_RECURSE HEADER_FILES
 	"src/sofa/PCLPlugin/registration/*.inl"
 	"src/sofa/PCLPlugin/utils/*.h"
 	"src/sofa/PCLPlugin/utils/*.inl"
+	"src/sofa/PCLPlugin/PointCloudData.h"
 )
 
 file(GLOB_RECURSE SOURCE_FILES
 	"src/sofa/PCLPlugin/filter/*.cpp"
 	"src/sofa/PCLPlugin/registration/*.cpp"
 	"src/sofa/PCLPlugin/utils/*.cpp"
+	"src/sofa/PCLPlugin/initPlugin.cpp"
 )
 
 file(GLOB_RECURSE SCENES_FILES

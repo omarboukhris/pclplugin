@@ -19,18 +19,23 @@ public:
     typedef core::objectmodel::BaseObject Inherit ;
     SOFA_CLASS(PCLIterativeClosestPoint, Inherit);
 
+    /// \brief source pointcloud
     Data<PointCloudData> d_source ;
+    /// \brief target pointcloud
     Data<PointCloudData> d_target ;
+    /// \brief set to true to display the resulting transform
     Data<bool> d_verbose ;
 
-    Data<defaulttype::Mat3x3> d_rotation ;
-    Data<defaulttype::Vector3> d_translation ;
-
+    /// \brief link to the mechanical object to transform
     core::objectmodel::MultiLink<
         PCLIterativeClosestPoint,
         component::container::MechanicalObject<defaulttype::Vec3dTypes>,
         BaseLink::FLAG_STOREPATH|BaseLink::FLAG_STRONGLINK
     > l_meca ;
+    /// \brief output rotation
+    Data<defaulttype::Mat3x3> d_rotation ;
+    /// \brief output translation
+    Data<defaulttype::Vector3> d_translation ;
 
     PCLIterativeClosestPoint();
 

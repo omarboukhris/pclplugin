@@ -58,12 +58,11 @@ void PCLSuccessiveICP::register_pcl() {
     PointCloudData::PointCloud result ;
     icp.align(result);
 
-    std::ofstream myfile;
-    myfile.open ("/home/omar/Data/SergeiExp/EXP1/projection.txt",
-                 std::ios::out | std::ios::app);
-    myfile << this->getTime() << " " << icp.hasConverged() << " score " << icp.getFitnessScore() << std::endl
-              << icp.getFinalTransformation() << std::endl ;
-    myfile.close();
+//    std::ofstream myfile;
+//    myfile.open ("projection.txt", std::ios::out | std::ios::app);
+//    myfile << this->getTime() << " " << icp.hasConverged() << " score " << icp.getFitnessScore() << std::endl
+//              << icp.getFinalTransformation() << std::endl ;
+//    myfile.close();
     std::cout << this->getTime() << " " << icp.hasConverged() << " score " << icp.getFitnessScore() << std::endl
               << icp.getFinalTransformation() << std::endl ;
     pcl::copyPointCloud(*target, *source) ;

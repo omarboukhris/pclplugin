@@ -52,6 +52,11 @@ using namespace core::objectmodel ;
 typedef pcl::PointXYZ PointType ;
 typedef pcl::PointCloud<PointType> PointCloud ;
 
+/*!
+ * \brief bary computes barycenter value of a pointcloud
+ * \param pointset input pointcloud
+ * \return barycenter
+ */
 PointType bary (const PointCloud & pointset) {
     PointType out (0., 0., 0.) ;
     for (const auto & point : pointset) {
@@ -65,6 +70,12 @@ PointType bary (const PointCloud & pointset) {
     return out ;
 }
 
+/*!
+ * \brief stdev computes 3D std deviation
+ * \param pointset input pointcloud
+ * \param mu 3D mean value
+ * \return input's stdev
+ */
 PointType stdev  (const PointCloud & pointset, const PointType & mu) {
     PointType out (0., 0., 0.) ;
     PointType mu_sqr (
@@ -124,7 +135,7 @@ public :
         }
     }
 
-    // filter with mu +/- sigma*alpha
+    /// \brief filters with mu +/- sigma*alpha
     void filter () {
         PointCloud::Ptr in = d_in.getValue().getPointCloud() ;
         if (in == nullptr) {
@@ -146,6 +157,13 @@ public :
         d_out.setValue(out);
     }
 
+    /*!
+     * \brief point_in_sigma_mu actual filtering function
+     * \param v 3D point to filter
+     * \param sigma computed std deviation
+     * \param mu computed mean value
+     * \return true if v \in [mu -/+ alpha*sigma] else false
+     */
     bool point_in_sigma_mu (const PointType & v, const PointType & sigma, const PointType & mu) {
         double alpha = d_alpha.getValue() ;
         PointType threshold (
