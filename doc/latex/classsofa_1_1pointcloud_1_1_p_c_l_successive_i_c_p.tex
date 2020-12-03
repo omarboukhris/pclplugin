@@ -1,0 +1,79 @@
+\hypertarget{classsofa_1_1pointcloud_1_1_p_c_l_successive_i_c_p}{}\doxysection{sofa\+::pointcloud\+::PCLSuccessive\+ICP Class Reference}
+\label{classsofa_1_1pointcloud_1_1_p_c_l_successive_i_c_p}\index{sofa::pointcloud::PCLSuccessiveICP@{sofa::pointcloud::PCLSuccessiveICP}}
+
+
+The \mbox{\hyperlink{classsofa_1_1pointcloud_1_1_p_c_l_successive_i_c_p}{PCLSuccessive\+ICP}} class estimates transformation using ICP between successive frames used for static SLAM.  
+
+
+
+
+{\ttfamily \#include $<$PCLSuccessive\+ICP.\+h$>$}
+
+Inheritance diagram for sofa\+::pointcloud\+::PCLSuccessive\+ICP\+:\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=2.000000cm]{classsofa_1_1pointcloud_1_1_p_c_l_successive_i_c_p}
+\end{center}
+\end{figure}
+\doxysubsection*{Public Types}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{classsofa_1_1pointcloud_1_1_p_c_l_successive_i_c_p_a04d89c9e5648790e567bf313a091115f}\label{classsofa_1_1pointcloud_1_1_p_c_l_successive_i_c_p_a04d89c9e5648790e567bf313a091115f}} 
+typedef core\+::objectmodel\+::\+Base\+Object {\bfseries Inherit}
+\end{DoxyCompactItemize}
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{classsofa_1_1pointcloud_1_1_p_c_l_successive_i_c_p_a022096d51a3b788f6c36d10b72b515c9}\label{classsofa_1_1pointcloud_1_1_p_c_l_successive_i_c_p_a022096d51a3b788f6c36d10b72b515c9}} 
+{\bfseries SOFA\+\_\+\+CLASS} (\mbox{\hyperlink{classsofa_1_1pointcloud_1_1_p_c_l_successive_i_c_p}{PCLSuccessive\+ICP}}, Inherit)
+\item 
+void \mbox{\hyperlink{classsofa_1_1pointcloud_1_1_p_c_l_successive_i_c_p_aaa5ab3401017f3a4bac8cbb9de0a7d84}{draw}} (const core\+::visual\+::\+Visual\+Params $\ast$vparams)
+\begin{DoxyCompactList}\small\item\em draw draws pointcloud if needed \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{classsofa_1_1pointcloud_1_1_p_c_l_successive_i_c_p_a89fe6fd5a0993f0daff705b1333069d5}\label{classsofa_1_1pointcloud_1_1_p_c_l_successive_i_c_p_a89fe6fd5a0993f0daff705b1333069d5}} 
+void {\bfseries init} () override
+\item 
+\mbox{\Hypertarget{classsofa_1_1pointcloud_1_1_p_c_l_successive_i_c_p_ac6d2f8d01912684985c83569d246a8d2}\label{classsofa_1_1pointcloud_1_1_p_c_l_successive_i_c_p_ac6d2f8d01912684985c83569d246a8d2}} 
+void \mbox{\hyperlink{classsofa_1_1pointcloud_1_1_p_c_l_successive_i_c_p_ac6d2f8d01912684985c83569d246a8d2}{register\+\_\+pcl}} ()
+\begin{DoxyCompactList}\small\item\em register\+\_\+pcl registers pointclouds from successive frames \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{classsofa_1_1pointcloud_1_1_p_c_l_successive_i_c_p_a29c72467788d279f8fa77f84f4035a5d}\label{classsofa_1_1pointcloud_1_1_p_c_l_successive_i_c_p_a29c72467788d279f8fa77f84f4035a5d}} 
+Data$<$ \mbox{\hyperlink{classsofa_1_1pointcloud_1_1_point_cloud_data}{Point\+Cloud\+Data}} $>$ \mbox{\hyperlink{classsofa_1_1pointcloud_1_1_p_c_l_successive_i_c_p_a29c72467788d279f8fa77f84f4035a5d}{d\+\_\+pcloud}}
+\begin{DoxyCompactList}\small\item\em input point cloud \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{classsofa_1_1pointcloud_1_1_p_c_l_successive_i_c_p_a4c4402d6234c52aa08e0316ab130c1d2}\label{classsofa_1_1pointcloud_1_1_p_c_l_successive_i_c_p_a4c4402d6234c52aa08e0316ab130c1d2}} 
+core\+::objectmodel\+::\+Data\+Callback \mbox{\hyperlink{classsofa_1_1pointcloud_1_1_p_c_l_successive_i_c_p_a4c4402d6234c52aa08e0316ab130c1d2}{c\+\_\+pcl}}
+\begin{DoxyCompactList}\small\item\em callback on input \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{classsofa_1_1pointcloud_1_1_p_c_l_successive_i_c_p_ae52f26fa1e7cb710564ee22a0a7a53ea}\label{classsofa_1_1pointcloud_1_1_p_c_l_successive_i_c_p_ae52f26fa1e7cb710564ee22a0a7a53ea}} 
+Data$<$ defaulttype\+::\+Mat3x3 $>$ \mbox{\hyperlink{classsofa_1_1pointcloud_1_1_p_c_l_successive_i_c_p_ae52f26fa1e7cb710564ee22a0a7a53ea}{d\+\_\+rotation}}
+\begin{DoxyCompactList}\small\item\em output rotation matrix \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{classsofa_1_1pointcloud_1_1_p_c_l_successive_i_c_p_aa1d0a871b19ab192f74c32475e176bd8}\label{classsofa_1_1pointcloud_1_1_p_c_l_successive_i_c_p_aa1d0a871b19ab192f74c32475e176bd8}} 
+Data$<$ defaulttype\+::\+Vector3 $>$ \mbox{\hyperlink{classsofa_1_1pointcloud_1_1_p_c_l_successive_i_c_p_aa1d0a871b19ab192f74c32475e176bd8}{d\+\_\+translation}}
+\begin{DoxyCompactList}\small\item\em output translation vector \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+The \mbox{\hyperlink{classsofa_1_1pointcloud_1_1_p_c_l_successive_i_c_p}{PCLSuccessive\+ICP}} class estimates transformation using ICP between successive frames used for static SLAM. 
+
+\doxysubsection{Member Function Documentation}
+\mbox{\Hypertarget{classsofa_1_1pointcloud_1_1_p_c_l_successive_i_c_p_aaa5ab3401017f3a4bac8cbb9de0a7d84}\label{classsofa_1_1pointcloud_1_1_p_c_l_successive_i_c_p_aaa5ab3401017f3a4bac8cbb9de0a7d84}} 
+\index{sofa::pointcloud::PCLSuccessiveICP@{sofa::pointcloud::PCLSuccessiveICP}!draw@{draw}}
+\index{draw@{draw}!sofa::pointcloud::PCLSuccessiveICP@{sofa::pointcloud::PCLSuccessiveICP}}
+\doxysubsubsection{\texorpdfstring{draw()}{draw()}}
+{\footnotesize\ttfamily void sofa\+::pointcloud\+::\+PCLSuccessive\+ICP\+::draw (\begin{DoxyParamCaption}\item[{const core\+::visual\+::\+Visual\+Params $\ast$}]{vparams }\end{DoxyParamCaption})}
+
+
+
+draw draws pointcloud if needed 
+
+
+\begin{DoxyParams}{Parameters}
+{\em vparams} & \\
+\hline
+\end{DoxyParams}
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+src/sofa/\+PCLPlugin/registration/icp/PCLSuccessive\+ICP.\+h\item 
+src/sofa/\+PCLPlugin/registration/icp/PCLSuccessive\+ICP.\+inl\end{DoxyCompactItemize}

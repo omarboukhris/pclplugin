@@ -1,0 +1,75 @@
+\hypertarget{classsofa_1_1pointcloud_1_1_p_c_l_normal_estimator}{}\doxysection{sofa\+::pointcloud\+::PCLNormal\+Estimator Class Reference}
+\label{classsofa_1_1pointcloud_1_1_p_c_l_normal_estimator}\index{sofa::pointcloud::PCLNormalEstimator@{sofa::pointcloud::PCLNormalEstimator}}
+
+
+The \mbox{\hyperlink{classsofa_1_1pointcloud_1_1_p_c_l_normal_estimator}{PCLNormal\+Estimator}} class is used for estimating the normals of an input pointcloud.  
+
+
+
+
+{\ttfamily \#include $<$PCLNormal\+Estimator.\+h$>$}
+
+Inheritance diagram for sofa\+::pointcloud\+::PCLNormal\+Estimator\+:\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=2.000000cm]{classsofa_1_1pointcloud_1_1_p_c_l_normal_estimator}
+\end{center}
+\end{figure}
+\doxysubsection*{Public Types}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{classsofa_1_1pointcloud_1_1_p_c_l_normal_estimator_a7be5357a25104c231f27e78ffccb3e62}\label{classsofa_1_1pointcloud_1_1_p_c_l_normal_estimator_a7be5357a25104c231f27e78ffccb3e62}} 
+typedef core\+::objectmodel\+::\+Base\+Object {\bfseries Inherited}
+\end{DoxyCompactItemize}
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{classsofa_1_1pointcloud_1_1_p_c_l_normal_estimator_a88d1488b489bd4483bccf51242026190}\label{classsofa_1_1pointcloud_1_1_p_c_l_normal_estimator_a88d1488b489bd4483bccf51242026190}} 
+{\bfseries SOFA\+\_\+\+CLASS} (\mbox{\hyperlink{classsofa_1_1pointcloud_1_1_p_c_l_normal_estimator}{PCLNormal\+Estimator}}, core\+::objectmodel\+::\+Base\+Object)
+\item 
+void \mbox{\hyperlink{classsofa_1_1pointcloud_1_1_p_c_l_normal_estimator_aa3dbe583fe7f41d9ae8fb56336380ea7}{draw}} (const core\+::visual\+::\+Visual\+Params $\ast$vparams)
+\begin{DoxyCompactList}\small\item\em draw draws pointcloud if \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{classsofa_1_1pointcloud_1_1_p_c_l_normal_estimator_ac875ef91ad73641c65d31c5c0fa18e1d}\label{classsofa_1_1pointcloud_1_1_p_c_l_normal_estimator_ac875ef91ad73641c65d31c5c0fa18e1d}} 
+void \mbox{\hyperlink{classsofa_1_1pointcloud_1_1_p_c_l_normal_estimator_ac875ef91ad73641c65d31c5c0fa18e1d}{get\+\_\+normals}} ()
+\begin{DoxyCompactList}\small\item\em get\+\_\+normals computes normals using pcl for estimation \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{classsofa_1_1pointcloud_1_1_p_c_l_normal_estimator_a86304ac871f2ff9fe22c22415d770285}\label{classsofa_1_1pointcloud_1_1_p_c_l_normal_estimator_a86304ac871f2ff9fe22c22415d770285}} 
+Data$<$ \mbox{\hyperlink{classsofa_1_1pointcloud_1_1_point_cloud_data}{Point\+Cloud\+Data}} $>$ {\bfseries d\+\_\+in}
+\item 
+\mbox{\Hypertarget{classsofa_1_1pointcloud_1_1_p_c_l_normal_estimator_a08f8f14c203bcb80eab263085ba0dc00}\label{classsofa_1_1pointcloud_1_1_p_c_l_normal_estimator_a08f8f14c203bcb80eab263085ba0dc00}} 
+Data$<$ \mbox{\hyperlink{classsofa_1_1pointcloud_1_1_n_point_cloud_data}{NPoint\+Cloud\+Data}} $>$ {\bfseries d\+\_\+out}
+\item 
+\mbox{\Hypertarget{classsofa_1_1pointcloud_1_1_p_c_l_normal_estimator_abfe112fd1c88b67cf73bcb9bdc4f7439}\label{classsofa_1_1pointcloud_1_1_p_c_l_normal_estimator_abfe112fd1c88b67cf73bcb9bdc4f7439}} 
+Data$<$ bool $>$ {\bfseries d\+\_\+draw\+\_\+pcl}
+\item 
+\mbox{\Hypertarget{classsofa_1_1pointcloud_1_1_p_c_l_normal_estimator_ac81ba55233cbe103292435cb5c2c03be}\label{classsofa_1_1pointcloud_1_1_p_c_l_normal_estimator_ac81ba55233cbe103292435cb5c2c03be}} 
+Data\+Callback {\bfseries c\+\_\+in}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+The \mbox{\hyperlink{classsofa_1_1pointcloud_1_1_p_c_l_normal_estimator}{PCLNormal\+Estimator}} class is used for estimating the normals of an input pointcloud. 
+
+\doxysubsection{Member Function Documentation}
+\mbox{\Hypertarget{classsofa_1_1pointcloud_1_1_p_c_l_normal_estimator_aa3dbe583fe7f41d9ae8fb56336380ea7}\label{classsofa_1_1pointcloud_1_1_p_c_l_normal_estimator_aa3dbe583fe7f41d9ae8fb56336380ea7}} 
+\index{sofa::pointcloud::PCLNormalEstimator@{sofa::pointcloud::PCLNormalEstimator}!draw@{draw}}
+\index{draw@{draw}!sofa::pointcloud::PCLNormalEstimator@{sofa::pointcloud::PCLNormalEstimator}}
+\doxysubsubsection{\texorpdfstring{draw()}{draw()}}
+{\footnotesize\ttfamily void sofa\+::pointcloud\+::\+PCLNormal\+Estimator\+::draw (\begin{DoxyParamCaption}\item[{const core\+::visual\+::\+Visual\+Params $\ast$}]{vparams }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+draw draws pointcloud if 
+
+
+\begin{DoxyParams}{Parameters}
+{\em vparams} & \\
+\hline
+\end{DoxyParams}
+
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+src/sofa/\+PCLPlugin/utils/PCLNormal\+Estimator.\+h\end{DoxyCompactItemize}

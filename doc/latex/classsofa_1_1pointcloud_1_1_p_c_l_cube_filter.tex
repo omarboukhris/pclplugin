@@ -1,0 +1,98 @@
+\hypertarget{classsofa_1_1pointcloud_1_1_p_c_l_cube_filter}{}\doxysection{sofa\+::pointcloud\+::PCLCube\+Filter Class Reference}
+\label{classsofa_1_1pointcloud_1_1_p_c_l_cube_filter}\index{sofa::pointcloud::PCLCubeFilter@{sofa::pointcloud::PCLCubeFilter}}
+
+
+The \mbox{\hyperlink{classsofa_1_1pointcloud_1_1_p_c_l_cube_filter}{PCLCube\+Filter}} class filters points outside a cube centered at (0, 0, 0)  
+
+
+
+
+{\ttfamily \#include $<$PCLCube\+Filter.\+h$>$}
+
+Inheritance diagram for sofa\+::pointcloud\+::PCLCube\+Filter\+:\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=2.000000cm]{classsofa_1_1pointcloud_1_1_p_c_l_cube_filter}
+\end{center}
+\end{figure}
+\doxysubsection*{Public Types}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{classsofa_1_1pointcloud_1_1_p_c_l_cube_filter_a4d20145509455bfa5fd9a513fa719f59}\label{classsofa_1_1pointcloud_1_1_p_c_l_cube_filter_a4d20145509455bfa5fd9a513fa719f59}} 
+typedef core\+::objectmodel\+::\+Base\+Object {\bfseries Inherited}
+\end{DoxyCompactItemize}
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{classsofa_1_1pointcloud_1_1_p_c_l_cube_filter_a8ba91a62ad21f57b1afaf9179b40ef74}\label{classsofa_1_1pointcloud_1_1_p_c_l_cube_filter_a8ba91a62ad21f57b1afaf9179b40ef74}} 
+{\bfseries SOFA\+\_\+\+CLASS} (\mbox{\hyperlink{classsofa_1_1pointcloud_1_1_p_c_l_cube_filter}{PCLCube\+Filter}}, core\+::objectmodel\+::\+Base\+Object)
+\item 
+void \mbox{\hyperlink{classsofa_1_1pointcloud_1_1_p_c_l_cube_filter_a0de541c4334cd415e832c89268ab16e8}{draw}} (const core\+::visual\+::\+Visual\+Params $\ast$vparams)
+\begin{DoxyCompactList}\small\item\em draw draws output pointcloud if needed \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{classsofa_1_1pointcloud_1_1_p_c_l_cube_filter_a746ac3ded37d1806fd97a6c635514f58}\label{classsofa_1_1pointcloud_1_1_p_c_l_cube_filter_a746ac3ded37d1806fd97a6c635514f58}} 
+void \mbox{\hyperlink{classsofa_1_1pointcloud_1_1_p_c_l_cube_filter_a746ac3ded37d1806fd97a6c635514f58}{filter}} ()
+\begin{DoxyCompactList}\small\item\em filter filtering function \end{DoxyCompactList}\item 
+bool \mbox{\hyperlink{classsofa_1_1pointcloud_1_1_p_c_l_cube_filter_a1423a798d56d58a2b1bc2e7c039ea0e1}{point\+\_\+in}} (const Point\+Type \&v)
+\begin{DoxyCompactList}\small\item\em point\+\_\+in checks if point\textquotesingle{}s inside the cube \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{classsofa_1_1pointcloud_1_1_p_c_l_cube_filter_aec1401c7e65cfbb8ac37276146186fe7}\label{classsofa_1_1pointcloud_1_1_p_c_l_cube_filter_aec1401c7e65cfbb8ac37276146186fe7}} 
+Data$<$ \mbox{\hyperlink{classsofa_1_1pointcloud_1_1_point_cloud_data}{Point\+Cloud\+Data}} $>$ \mbox{\hyperlink{classsofa_1_1pointcloud_1_1_p_c_l_cube_filter_aec1401c7e65cfbb8ac37276146186fe7}{d\+\_\+in}}
+\begin{DoxyCompactList}\small\item\em input pointcloud \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{classsofa_1_1pointcloud_1_1_p_c_l_cube_filter_a3085e278366de0029100e5fbbc0b8681}\label{classsofa_1_1pointcloud_1_1_p_c_l_cube_filter_a3085e278366de0029100e5fbbc0b8681}} 
+Data$<$ \mbox{\hyperlink{classsofa_1_1pointcloud_1_1_point_cloud_data}{Point\+Cloud\+Data}} $>$ \mbox{\hyperlink{classsofa_1_1pointcloud_1_1_p_c_l_cube_filter_a3085e278366de0029100e5fbbc0b8681}{d\+\_\+out}}
+\begin{DoxyCompactList}\small\item\em output filtered pointcloud \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{classsofa_1_1pointcloud_1_1_p_c_l_cube_filter_ade1894de0a764da82940715b26f72ceb}\label{classsofa_1_1pointcloud_1_1_p_c_l_cube_filter_ade1894de0a764da82940715b26f72ceb}} 
+Data$<$ double $>$ \mbox{\hyperlink{classsofa_1_1pointcloud_1_1_p_c_l_cube_filter_ade1894de0a764da82940715b26f72ceb}{d\+\_\+alpha}}
+\begin{DoxyCompactList}\small\item\em alpha parameter for filtering \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{classsofa_1_1pointcloud_1_1_p_c_l_cube_filter_a0f364686f8ea72636ededea761b1d974}\label{classsofa_1_1pointcloud_1_1_p_c_l_cube_filter_a0f364686f8ea72636ededea761b1d974}} 
+Data$<$ bool $>$ \mbox{\hyperlink{classsofa_1_1pointcloud_1_1_p_c_l_cube_filter_a0f364686f8ea72636ededea761b1d974}{d\+\_\+draw\+\_\+pcl}}
+\begin{DoxyCompactList}\small\item\em set to true to draw output in viewer \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{classsofa_1_1pointcloud_1_1_p_c_l_cube_filter_aece637083a07bd0a27d4ca3b67905c2e}\label{classsofa_1_1pointcloud_1_1_p_c_l_cube_filter_aece637083a07bd0a27d4ca3b67905c2e}} 
+Data\+Callback \mbox{\hyperlink{classsofa_1_1pointcloud_1_1_p_c_l_cube_filter_aece637083a07bd0a27d4ca3b67905c2e}{c\+\_\+in}}
+\begin{DoxyCompactList}\small\item\em callback on input pointcloud \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+The \mbox{\hyperlink{classsofa_1_1pointcloud_1_1_p_c_l_cube_filter}{PCLCube\+Filter}} class filters points outside a cube centered at (0, 0, 0) 
+
+\doxysubsection{Member Function Documentation}
+\mbox{\Hypertarget{classsofa_1_1pointcloud_1_1_p_c_l_cube_filter_a0de541c4334cd415e832c89268ab16e8}\label{classsofa_1_1pointcloud_1_1_p_c_l_cube_filter_a0de541c4334cd415e832c89268ab16e8}} 
+\index{sofa::pointcloud::PCLCubeFilter@{sofa::pointcloud::PCLCubeFilter}!draw@{draw}}
+\index{draw@{draw}!sofa::pointcloud::PCLCubeFilter@{sofa::pointcloud::PCLCubeFilter}}
+\doxysubsubsection{\texorpdfstring{draw()}{draw()}}
+{\footnotesize\ttfamily void sofa\+::pointcloud\+::\+PCLCube\+Filter\+::draw (\begin{DoxyParamCaption}\item[{const core\+::visual\+::\+Visual\+Params $\ast$}]{vparams }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+draw draws output pointcloud if needed 
+
+
+\begin{DoxyParams}{Parameters}
+{\em vparams} & \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classsofa_1_1pointcloud_1_1_p_c_l_cube_filter_a1423a798d56d58a2b1bc2e7c039ea0e1}\label{classsofa_1_1pointcloud_1_1_p_c_l_cube_filter_a1423a798d56d58a2b1bc2e7c039ea0e1}} 
+\index{sofa::pointcloud::PCLCubeFilter@{sofa::pointcloud::PCLCubeFilter}!point\_in@{point\_in}}
+\index{point\_in@{point\_in}!sofa::pointcloud::PCLCubeFilter@{sofa::pointcloud::PCLCubeFilter}}
+\doxysubsubsection{\texorpdfstring{point\_in()}{point\_in()}}
+{\footnotesize\ttfamily bool sofa\+::pointcloud\+::\+PCLCube\+Filter\+::point\+\_\+in (\begin{DoxyParamCaption}\item[{const Point\+Type \&}]{v }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+point\+\_\+in checks if point\textquotesingle{}s inside the cube 
+
+
+\begin{DoxyParams}{Parameters}
+{\em v} & point to filter \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+true if v is in \mbox{[}alpha\mbox{]}$\ast$$\ast$3 
+\end{DoxyReturn}
+
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+src/sofa/\+PCLPlugin/filter/PCLCube\+Filter.\+h\end{DoxyCompactItemize}

@@ -1,0 +1,109 @@
+\hypertarget{classsofa_1_1pointcloud_1_1_mouse_rotation_handler}{}\doxysection{sofa\+::pointcloud\+::Mouse\+Rotation\+Handler Class Reference}
+\label{classsofa_1_1pointcloud_1_1_mouse_rotation_handler}\index{sofa::pointcloud::MouseRotationHandler@{sofa::pointcloud::MouseRotationHandler}}
+
+
+The \mbox{\hyperlink{classsofa_1_1pointcloud_1_1_mouse_rotation_handler}{Mouse\+Rotation\+Handler}} (left/right/middle) click + drag = centered rotation around (x/y/z)  
+
+
+
+
+{\ttfamily \#include $<$Mouse\+Rotation\+Handler.\+h$>$}
+
+Inheritance diagram for sofa\+::pointcloud\+::Mouse\+Rotation\+Handler\+:\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=2.000000cm]{classsofa_1_1pointcloud_1_1_mouse_rotation_handler}
+\end{center}
+\end{figure}
+\doxysubsection*{Public Types}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{classsofa_1_1pointcloud_1_1_mouse_rotation_handler_a0b8a61b34d95429bddfe8489a4a0032b}\label{classsofa_1_1pointcloud_1_1_mouse_rotation_handler_a0b8a61b34d95429bddfe8489a4a0032b}} 
+typedef core\+::objectmodel\+::\+Base\+Object {\bfseries Inherited}
+\end{DoxyCompactItemize}
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{classsofa_1_1pointcloud_1_1_mouse_rotation_handler_a26300a3269aea66eb9cecb4ef59a016e}\label{classsofa_1_1pointcloud_1_1_mouse_rotation_handler_a26300a3269aea66eb9cecb4ef59a016e}} 
+{\bfseries SOFA\+\_\+\+CLASS} (\mbox{\hyperlink{classsofa_1_1pointcloud_1_1_mouse_rotation_handler}{Mouse\+Rotation\+Handler}}, core\+::objectmodel\+::\+Base\+Object)
+\item 
+void \mbox{\hyperlink{classsofa_1_1pointcloud_1_1_mouse_rotation_handler_a941d02f0266c0a3cfc67ce53f4589e20}{apply\+Transform}} (const defaulttype\+::\+Vector3 \&phi)
+\begin{DoxyCompactList}\small\item\em apply\+Transform \+: applies centered rotation depending on rotation vector phi \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classsofa_1_1pointcloud_1_1_mouse_rotation_handler_a4ac8c1907ef4fbd772fda10908cff02a}{handle\+Event}} (sofa\+::core\+::objectmodel\+::\+Event $\ast$event) override
+\begin{DoxyCompactList}\small\item\em handle\+Event (left/right/middle) click + drag = centered rotation around (x/y/z) \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classsofa_1_1pointcloud_1_1_mouse_rotation_handler_a15512f93e5b3459bbce057c27212d9a1}{translate}} (const defaulttype\+::\+Vector3 \&phi)
+\begin{DoxyCompactList}\small\item\em translate applies translation on mechanical object \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{classsofa_1_1pointcloud_1_1_mouse_rotation_handler_a4da4eafdd3f46b14b8d4890be09548c9}\label{classsofa_1_1pointcloud_1_1_mouse_rotation_handler_a4da4eafdd3f46b14b8d4890be09548c9}} 
+Data$<$ \mbox{\hyperlink{classsofa_1_1pointcloud_1_1_point_cloud_data}{Point\+Cloud\+Data}} $>$ \mbox{\hyperlink{classsofa_1_1pointcloud_1_1_mouse_rotation_handler_a4da4eafdd3f46b14b8d4890be09548c9}{d\+\_\+in}}
+\begin{DoxyCompactList}\small\item\em input point cloud \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{classsofa_1_1pointcloud_1_1_mouse_rotation_handler_a10cf1a896abe73120ef3622a971f6cba}\label{classsofa_1_1pointcloud_1_1_mouse_rotation_handler_a10cf1a896abe73120ef3622a971f6cba}} 
+Data$<$ defaulttype\+::\+Vector3 $>$ \mbox{\hyperlink{classsofa_1_1pointcloud_1_1_mouse_rotation_handler_a10cf1a896abe73120ef3622a971f6cba}{d\+\_\+init\+Phi}}
+\begin{DoxyCompactList}\small\item\em initial rotation angle \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{classsofa_1_1pointcloud_1_1_mouse_rotation_handler_a2b20156efc583313a7152a45fc08864a}\label{classsofa_1_1pointcloud_1_1_mouse_rotation_handler_a2b20156efc583313a7152a45fc08864a}} 
+Data$<$ bool $>$ \mbox{\hyperlink{classsofa_1_1pointcloud_1_1_mouse_rotation_handler_a2b20156efc583313a7152a45fc08864a}{d\+\_\+tr}}
+\begin{DoxyCompactList}\small\item\em set true for translation \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{classsofa_1_1pointcloud_1_1_mouse_rotation_handler_a3cc6b1cdecafdeb3afc87ed898e9a945}\label{classsofa_1_1pointcloud_1_1_mouse_rotation_handler_a3cc6b1cdecafdeb3afc87ed898e9a945}} 
+bool {\bfseries m\+\_\+apply\+Initial}
+\item 
+\mbox{\Hypertarget{classsofa_1_1pointcloud_1_1_mouse_rotation_handler_aa7dfd67c32a1bb30400fc6549b0c07eb}\label{classsofa_1_1pointcloud_1_1_mouse_rotation_handler_aa7dfd67c32a1bb30400fc6549b0c07eb}} 
+core\+::objectmodel\+::\+Multi\+Link$<$ \mbox{\hyperlink{classsofa_1_1pointcloud_1_1_mouse_rotation_handler}{Mouse\+Rotation\+Handler}}, component\+::container\+::\+Mechanical\+Object$<$ defaulttype\+::\+Vec3d\+Types $>$, Base\+Link\+::\+FLAG\+\_\+\+STOREPATH$\vert$Base\+Link\+::\+FLAG\+\_\+\+STRONGLINK $>$ {\bfseries l\+\_\+meca}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+The \mbox{\hyperlink{classsofa_1_1pointcloud_1_1_mouse_rotation_handler}{Mouse\+Rotation\+Handler}} (left/right/middle) click + drag = centered rotation around (x/y/z) 
+
+\doxysubsection{Member Function Documentation}
+\mbox{\Hypertarget{classsofa_1_1pointcloud_1_1_mouse_rotation_handler_a941d02f0266c0a3cfc67ce53f4589e20}\label{classsofa_1_1pointcloud_1_1_mouse_rotation_handler_a941d02f0266c0a3cfc67ce53f4589e20}} 
+\index{sofa::pointcloud::MouseRotationHandler@{sofa::pointcloud::MouseRotationHandler}!applyTransform@{applyTransform}}
+\index{applyTransform@{applyTransform}!sofa::pointcloud::MouseRotationHandler@{sofa::pointcloud::MouseRotationHandler}}
+\doxysubsubsection{\texorpdfstring{applyTransform()}{applyTransform()}}
+{\footnotesize\ttfamily void sofa\+::pointcloud\+::\+Mouse\+Rotation\+Handler\+::apply\+Transform (\begin{DoxyParamCaption}\item[{const defaulttype\+::\+Vector3 \&}]{phi }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+apply\+Transform \+: applies centered rotation depending on rotation vector phi 
+
+
+\begin{DoxyParams}{Parameters}
+{\em phi} & \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classsofa_1_1pointcloud_1_1_mouse_rotation_handler_a4ac8c1907ef4fbd772fda10908cff02a}\label{classsofa_1_1pointcloud_1_1_mouse_rotation_handler_a4ac8c1907ef4fbd772fda10908cff02a}} 
+\index{sofa::pointcloud::MouseRotationHandler@{sofa::pointcloud::MouseRotationHandler}!handleEvent@{handleEvent}}
+\index{handleEvent@{handleEvent}!sofa::pointcloud::MouseRotationHandler@{sofa::pointcloud::MouseRotationHandler}}
+\doxysubsubsection{\texorpdfstring{handleEvent()}{handleEvent()}}
+{\footnotesize\ttfamily void sofa\+::pointcloud\+::\+Mouse\+Rotation\+Handler\+::handle\+Event (\begin{DoxyParamCaption}\item[{sofa\+::core\+::objectmodel\+::\+Event $\ast$}]{event }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [override]}}
+
+
+
+handle\+Event (left/right/middle) click + drag = centered rotation around (x/y/z) 
+
+
+\begin{DoxyParams}{Parameters}
+{\em event} & calculate the rotation vector phi \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classsofa_1_1pointcloud_1_1_mouse_rotation_handler_a15512f93e5b3459bbce057c27212d9a1}\label{classsofa_1_1pointcloud_1_1_mouse_rotation_handler_a15512f93e5b3459bbce057c27212d9a1}} 
+\index{sofa::pointcloud::MouseRotationHandler@{sofa::pointcloud::MouseRotationHandler}!translate@{translate}}
+\index{translate@{translate}!sofa::pointcloud::MouseRotationHandler@{sofa::pointcloud::MouseRotationHandler}}
+\doxysubsubsection{\texorpdfstring{translate()}{translate()}}
+{\footnotesize\ttfamily void sofa\+::pointcloud\+::\+Mouse\+Rotation\+Handler\+::translate (\begin{DoxyParamCaption}\item[{const defaulttype\+::\+Vector3 \&}]{phi }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+translate applies translation on mechanical object 
+
+
+\begin{DoxyParams}{Parameters}
+{\em phi} & \\
+\hline
+\end{DoxyParams}
+
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+src/sofa/\+PCLPlugin/utils/Mouse\+Rotation\+Handler.\+h\end{DoxyCompactItemize}

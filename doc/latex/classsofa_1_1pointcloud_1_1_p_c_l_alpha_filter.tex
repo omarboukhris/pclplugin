@@ -1,0 +1,88 @@
+\hypertarget{classsofa_1_1pointcloud_1_1_p_c_l_alpha_filter}{}\doxysection{sofa\+::pointcloud\+::PCLAlpha\+Filter Class Reference}
+\label{classsofa_1_1pointcloud_1_1_p_c_l_alpha_filter}\index{sofa::pointcloud::PCLAlphaFilter@{sofa::pointcloud::PCLAlphaFilter}}
+
+
+The \mbox{\hyperlink{classsofa_1_1pointcloud_1_1_p_c_l_alpha_filter}{PCLAlpha\+Filter}} class filters points in pointcloud within \mbox{[}mu -\/ alpha$\ast$stdev, mu + alpha$\ast$stdev\mbox{]}.  
+
+
+
+
+{\ttfamily \#include $<$PCLAlpha\+Filter.\+h$>$}
+
+Inheritance diagram for sofa\+::pointcloud\+::PCLAlpha\+Filter\+:\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=2.000000cm]{classsofa_1_1pointcloud_1_1_p_c_l_alpha_filter}
+\end{center}
+\end{figure}
+\doxysubsection*{Public Types}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{classsofa_1_1pointcloud_1_1_p_c_l_alpha_filter_a888082c5044ccbc15a0cb7605771f125}\label{classsofa_1_1pointcloud_1_1_p_c_l_alpha_filter_a888082c5044ccbc15a0cb7605771f125}} 
+typedef core\+::objectmodel\+::\+Base\+Object {\bfseries Inherited}
+\end{DoxyCompactItemize}
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{classsofa_1_1pointcloud_1_1_p_c_l_alpha_filter_a218bc3e55d4941e4900989a9fb655ad8}\label{classsofa_1_1pointcloud_1_1_p_c_l_alpha_filter_a218bc3e55d4941e4900989a9fb655ad8}} 
+{\bfseries SOFA\+\_\+\+CLASS} (\mbox{\hyperlink{classsofa_1_1pointcloud_1_1_p_c_l_alpha_filter}{PCLAlpha\+Filter}}, core\+::objectmodel\+::\+Base\+Object)
+\item 
+\mbox{\Hypertarget{classsofa_1_1pointcloud_1_1_p_c_l_alpha_filter_a69f6ff292207716481a70598c9750f9e}\label{classsofa_1_1pointcloud_1_1_p_c_l_alpha_filter_a69f6ff292207716481a70598c9750f9e}} 
+void {\bfseries draw} (const core\+::visual\+::\+Visual\+Params $\ast$vparams)
+\item 
+\mbox{\Hypertarget{classsofa_1_1pointcloud_1_1_p_c_l_alpha_filter_adccbbf95c3b006be33bee1d428afa4ff}\label{classsofa_1_1pointcloud_1_1_p_c_l_alpha_filter_adccbbf95c3b006be33bee1d428afa4ff}} 
+void \mbox{\hyperlink{classsofa_1_1pointcloud_1_1_p_c_l_alpha_filter_adccbbf95c3b006be33bee1d428afa4ff}{filter}} ()
+\begin{DoxyCompactList}\small\item\em filters with mu +/-\/ sigma$\ast$alpha \end{DoxyCompactList}\item 
+bool \mbox{\hyperlink{classsofa_1_1pointcloud_1_1_p_c_l_alpha_filter_a0a797cb58a5234553fbe190b88d419b3}{point\+\_\+in\+\_\+sigma\+\_\+mu}} (const Point\+Type \&v, const Point\+Type \&sigma, const Point\+Type \&mu)
+\begin{DoxyCompactList}\small\item\em point\+\_\+in\+\_\+sigma\+\_\+mu actual filtering function \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{classsofa_1_1pointcloud_1_1_p_c_l_alpha_filter_a9beb9582a8fd159d8cf9830e7a07f7e1}\label{classsofa_1_1pointcloud_1_1_p_c_l_alpha_filter_a9beb9582a8fd159d8cf9830e7a07f7e1}} 
+Data$<$ \mbox{\hyperlink{classsofa_1_1pointcloud_1_1_point_cloud_data}{Point\+Cloud\+Data}} $>$ {\bfseries d\+\_\+in}
+\item 
+\mbox{\Hypertarget{classsofa_1_1pointcloud_1_1_p_c_l_alpha_filter_a0014d0a58a61ad653eeb4e51c093c300}\label{classsofa_1_1pointcloud_1_1_p_c_l_alpha_filter_a0014d0a58a61ad653eeb4e51c093c300}} 
+Data$<$ \mbox{\hyperlink{classsofa_1_1pointcloud_1_1_point_cloud_data}{Point\+Cloud\+Data}} $>$ {\bfseries d\+\_\+out}
+\item 
+\mbox{\Hypertarget{classsofa_1_1pointcloud_1_1_p_c_l_alpha_filter_a6e3aab37072fe668eeaace9fecfa894d}\label{classsofa_1_1pointcloud_1_1_p_c_l_alpha_filter_a6e3aab37072fe668eeaace9fecfa894d}} 
+Data$<$ double $>$ {\bfseries d\+\_\+alpha}
+\item 
+\mbox{\Hypertarget{classsofa_1_1pointcloud_1_1_p_c_l_alpha_filter_af4b57bfb779319abd52303bd668a9b2d}\label{classsofa_1_1pointcloud_1_1_p_c_l_alpha_filter_af4b57bfb779319abd52303bd668a9b2d}} 
+Data$<$ bool $>$ {\bfseries d\+\_\+draw\+\_\+pcl}
+\item 
+\mbox{\Hypertarget{classsofa_1_1pointcloud_1_1_p_c_l_alpha_filter_a91d538d172f2e1bf508533e080d44492}\label{classsofa_1_1pointcloud_1_1_p_c_l_alpha_filter_a91d538d172f2e1bf508533e080d44492}} 
+Data\+Callback {\bfseries c\+\_\+in}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+The \mbox{\hyperlink{classsofa_1_1pointcloud_1_1_p_c_l_alpha_filter}{PCLAlpha\+Filter}} class filters points in pointcloud within \mbox{[}mu -\/ alpha$\ast$stdev, mu + alpha$\ast$stdev\mbox{]}. 
+
+\doxysubsection{Member Function Documentation}
+\mbox{\Hypertarget{classsofa_1_1pointcloud_1_1_p_c_l_alpha_filter_a0a797cb58a5234553fbe190b88d419b3}\label{classsofa_1_1pointcloud_1_1_p_c_l_alpha_filter_a0a797cb58a5234553fbe190b88d419b3}} 
+\index{sofa::pointcloud::PCLAlphaFilter@{sofa::pointcloud::PCLAlphaFilter}!point\_in\_sigma\_mu@{point\_in\_sigma\_mu}}
+\index{point\_in\_sigma\_mu@{point\_in\_sigma\_mu}!sofa::pointcloud::PCLAlphaFilter@{sofa::pointcloud::PCLAlphaFilter}}
+\doxysubsubsection{\texorpdfstring{point\_in\_sigma\_mu()}{point\_in\_sigma\_mu()}}
+{\footnotesize\ttfamily bool sofa\+::pointcloud\+::\+PCLAlpha\+Filter\+::point\+\_\+in\+\_\+sigma\+\_\+mu (\begin{DoxyParamCaption}\item[{const Point\+Type \&}]{v,  }\item[{const Point\+Type \&}]{sigma,  }\item[{const Point\+Type \&}]{mu }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+point\+\_\+in\+\_\+sigma\+\_\+mu actual filtering function 
+
+
+\begin{DoxyParams}{Parameters}
+{\em v} & 3D point to filter \\
+\hline
+{\em sigma} & computed std deviation \\
+\hline
+{\em mu} & computed mean value \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+true if v \textbackslash{}in \mbox{[}mu -\//+ alpha$\ast$sigma\mbox{]} else false 
+\end{DoxyReturn}
+
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+src/sofa/\+PCLPlugin/filter/PCLAlpha\+Filter.\+h\end{DoxyCompactItemize}

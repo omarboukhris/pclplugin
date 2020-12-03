@@ -41,8 +41,9 @@ public :
         return in;
     }
 
-    friend std::ostream& operator << ( std::ostream& out, const PointCloudData &  )
+    friend std::ostream& operator << ( std::ostream& out, const PointCloudData & p )
     {
+        out << "pointcloud size : " << p.m_pointcloud->size() ;
         return out;
     }
 protected:

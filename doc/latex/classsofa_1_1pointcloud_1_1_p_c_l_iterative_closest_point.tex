@@ -1,0 +1,138 @@
+\hypertarget{classsofa_1_1pointcloud_1_1_p_c_l_iterative_closest_point}{}\doxysection{sofa\+::pointcloud\+::PCLIterative\+Closest\+Point Class Reference}
+\label{classsofa_1_1pointcloud_1_1_p_c_l_iterative_closest_point}\index{sofa::pointcloud::PCLIterativeClosestPoint@{sofa::pointcloud::PCLIterativeClosestPoint}}
+
+
+The \mbox{\hyperlink{classsofa_1_1pointcloud_1_1_p_c_l_iterative_closest_point}{PCLIterative\+Closest\+Point}} class wrapper for pcl iterative closest point method.  
+
+
+
+
+{\ttfamily \#include $<$PCLIterative\+Closest\+Point.\+h$>$}
+
+Inheritance diagram for sofa\+::pointcloud\+::PCLIterative\+Closest\+Point\+:\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=2.000000cm]{classsofa_1_1pointcloud_1_1_p_c_l_iterative_closest_point}
+\end{center}
+\end{figure}
+\doxysubsection*{Public Types}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{classsofa_1_1pointcloud_1_1_p_c_l_iterative_closest_point_ae3671dedd07c6f6501725e0bda669bb8}\label{classsofa_1_1pointcloud_1_1_p_c_l_iterative_closest_point_ae3671dedd07c6f6501725e0bda669bb8}} 
+typedef core\+::objectmodel\+::\+Base\+Object {\bfseries Inherit}
+\end{DoxyCompactItemize}
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{classsofa_1_1pointcloud_1_1_p_c_l_iterative_closest_point_ad3ddaa95dac194b9a81f5973cda0fb98}\label{classsofa_1_1pointcloud_1_1_p_c_l_iterative_closest_point_ad3ddaa95dac194b9a81f5973cda0fb98}} 
+{\bfseries SOFA\+\_\+\+CLASS} (\mbox{\hyperlink{classsofa_1_1pointcloud_1_1_p_c_l_iterative_closest_point}{PCLIterative\+Closest\+Point}}, Inherit)
+\item 
+void \mbox{\hyperlink{classsofa_1_1pointcloud_1_1_p_c_l_iterative_closest_point_a05d1375ce162ccecebb76300d8be664a}{handle\+Event}} (sofa\+::core\+::objectmodel\+::\+Event $\ast$event) override
+\begin{DoxyCompactList}\small\item\em \mbox{\hyperlink{classsofa_1_1pointcloud_1_1_p_c_l_iterative_closest_point_a05d1375ce162ccecebb76300d8be664a}{PCLIterative\+Closest\+Point\+::handle\+Event}} Press \char`\"{}1\char`\"{} to register pointcloud. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{classsofa_1_1pointcloud_1_1_p_c_l_iterative_closest_point_aeeefe16285729ccdcdcf54eb472a76bc}\label{classsofa_1_1pointcloud_1_1_p_c_l_iterative_closest_point_aeeefe16285729ccdcdcf54eb472a76bc}} 
+Data$<$ \mbox{\hyperlink{classsofa_1_1pointcloud_1_1_point_cloud_data}{Point\+Cloud\+Data}} $>$ \mbox{\hyperlink{classsofa_1_1pointcloud_1_1_p_c_l_iterative_closest_point_aeeefe16285729ccdcdcf54eb472a76bc}{d\+\_\+source}}
+\begin{DoxyCompactList}\small\item\em source pointcloud \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{classsofa_1_1pointcloud_1_1_p_c_l_iterative_closest_point_a22b39c10471547d4a98eb12cf36bb04c}\label{classsofa_1_1pointcloud_1_1_p_c_l_iterative_closest_point_a22b39c10471547d4a98eb12cf36bb04c}} 
+Data$<$ \mbox{\hyperlink{classsofa_1_1pointcloud_1_1_point_cloud_data}{Point\+Cloud\+Data}} $>$ \mbox{\hyperlink{classsofa_1_1pointcloud_1_1_p_c_l_iterative_closest_point_a22b39c10471547d4a98eb12cf36bb04c}{d\+\_\+target}}
+\begin{DoxyCompactList}\small\item\em target pointcloud \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{classsofa_1_1pointcloud_1_1_p_c_l_iterative_closest_point_a2765ad1530584151a0e79a382fcf5090}\label{classsofa_1_1pointcloud_1_1_p_c_l_iterative_closest_point_a2765ad1530584151a0e79a382fcf5090}} 
+Data$<$ bool $>$ \mbox{\hyperlink{classsofa_1_1pointcloud_1_1_p_c_l_iterative_closest_point_a2765ad1530584151a0e79a382fcf5090}{d\+\_\+verbose}}
+\begin{DoxyCompactList}\small\item\em set to true to display the resulting transform \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{classsofa_1_1pointcloud_1_1_p_c_l_iterative_closest_point_a881aec811b73bb8a560d4ae1d19fcb6a}\label{classsofa_1_1pointcloud_1_1_p_c_l_iterative_closest_point_a881aec811b73bb8a560d4ae1d19fcb6a}} 
+core\+::objectmodel\+::\+Multi\+Link$<$ \mbox{\hyperlink{classsofa_1_1pointcloud_1_1_p_c_l_iterative_closest_point}{PCLIterative\+Closest\+Point}}, component\+::container\+::\+Mechanical\+Object$<$ defaulttype\+::\+Vec3d\+Types $>$, Base\+Link\+::\+FLAG\+\_\+\+STOREPATH$\vert$Base\+Link\+::\+FLAG\+\_\+\+STRONGLINK $>$ \mbox{\hyperlink{classsofa_1_1pointcloud_1_1_p_c_l_iterative_closest_point_a881aec811b73bb8a560d4ae1d19fcb6a}{l\+\_\+meca}}
+\begin{DoxyCompactList}\small\item\em link to the mechanical object to transform \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{classsofa_1_1pointcloud_1_1_p_c_l_iterative_closest_point_aa1846d9b31b9571683b1656eb5887bd6}\label{classsofa_1_1pointcloud_1_1_p_c_l_iterative_closest_point_aa1846d9b31b9571683b1656eb5887bd6}} 
+Data$<$ defaulttype\+::\+Mat3x3 $>$ \mbox{\hyperlink{classsofa_1_1pointcloud_1_1_p_c_l_iterative_closest_point_aa1846d9b31b9571683b1656eb5887bd6}{d\+\_\+rotation}}
+\begin{DoxyCompactList}\small\item\em output rotation \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{classsofa_1_1pointcloud_1_1_p_c_l_iterative_closest_point_a8dd5da7b4471a4e9ee3752752c52961e}\label{classsofa_1_1pointcloud_1_1_p_c_l_iterative_closest_point_a8dd5da7b4471a4e9ee3752752c52961e}} 
+Data$<$ defaulttype\+::\+Vector3 $>$ \mbox{\hyperlink{classsofa_1_1pointcloud_1_1_p_c_l_iterative_closest_point_a8dd5da7b4471a4e9ee3752752c52961e}{d\+\_\+translation}}
+\begin{DoxyCompactList}\small\item\em output translation \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsection*{Protected Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{classsofa_1_1pointcloud_1_1_p_c_l_iterative_closest_point_aceeae4e737d3e06b294991e44a73eefc}\label{classsofa_1_1pointcloud_1_1_p_c_l_iterative_closest_point_aceeae4e737d3e06b294991e44a73eefc}} 
+void \mbox{\hyperlink{classsofa_1_1pointcloud_1_1_p_c_l_iterative_closest_point_aceeae4e737d3e06b294991e44a73eefc}{register\+\_\+pcl}} ()
+\begin{DoxyCompactList}\small\item\em \mbox{\hyperlink{classsofa_1_1pointcloud_1_1_p_c_l_iterative_closest_point_aceeae4e737d3e06b294991e44a73eefc}{PCLIterative\+Closest\+Point\+::register\+\_\+pcl}} registers source and target pointclouds and stores estimation in appropriate data. \end{DoxyCompactList}\item 
+bool \mbox{\hyperlink{classsofa_1_1pointcloud_1_1_p_c_l_iterative_closest_point_a01b6817195ed14317637f3e8867074d6}{check\+Input\+Data}} ()
+\begin{DoxyCompactList}\small\item\em \mbox{\hyperlink{classsofa_1_1pointcloud_1_1_p_c_l_iterative_closest_point_a01b6817195ed14317637f3e8867074d6}{PCLIterative\+Closest\+Point\+::check\+Input\+Data}}. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classsofa_1_1pointcloud_1_1_p_c_l_iterative_closest_point_a4c988839645193a0f42c4a648b1ed6f8}{compute\+Transform}} (Eigen\+::\+Matrix$<$ float, 3, 1 $>$ \&translation\+Vec, helper\+::\+Quater$<$ double $>$ \&q)
+\begin{DoxyCompactList}\small\item\em \mbox{\hyperlink{classsofa_1_1pointcloud_1_1_p_c_l_iterative_closest_point_a4c988839645193a0f42c4a648b1ed6f8}{PCLIterative\+Closest\+Point\+::compute\+Transform}} computes transform and store results in translation\+Vec (vec3) and q (quaternion) \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classsofa_1_1pointcloud_1_1_p_c_l_iterative_closest_point_aea8135107cc2719785f3261941ec4e46}{update\+Transform}} (const Eigen\+::\+Matrix$<$ float, 3, 1 $>$ translation\+Vec, const helper\+::\+Quater$<$ double $>$ q)
+\begin{DoxyCompactList}\small\item\em \mbox{\hyperlink{classsofa_1_1pointcloud_1_1_p_c_l_iterative_closest_point_aea8135107cc2719785f3261941ec4e46}{PCLIterative\+Closest\+Point\+::update\+Transform}} apply transform (translatio\+Vec, q) to mecanichal object. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+The \mbox{\hyperlink{classsofa_1_1pointcloud_1_1_p_c_l_iterative_closest_point}{PCLIterative\+Closest\+Point}} class wrapper for pcl iterative closest point method. 
+
+\doxysubsection{Member Function Documentation}
+\mbox{\Hypertarget{classsofa_1_1pointcloud_1_1_p_c_l_iterative_closest_point_a01b6817195ed14317637f3e8867074d6}\label{classsofa_1_1pointcloud_1_1_p_c_l_iterative_closest_point_a01b6817195ed14317637f3e8867074d6}} 
+\index{sofa::pointcloud::PCLIterativeClosestPoint@{sofa::pointcloud::PCLIterativeClosestPoint}!checkInputData@{checkInputData}}
+\index{checkInputData@{checkInputData}!sofa::pointcloud::PCLIterativeClosestPoint@{sofa::pointcloud::PCLIterativeClosestPoint}}
+\doxysubsubsection{\texorpdfstring{checkInputData()}{checkInputData()}}
+{\footnotesize\ttfamily bool sofa\+::pointcloud\+::\+PCLIterative\+Closest\+Point\+::check\+Input\+Data (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+\mbox{\hyperlink{classsofa_1_1pointcloud_1_1_p_c_l_iterative_closest_point_a01b6817195ed14317637f3e8867074d6}{PCLIterative\+Closest\+Point\+::check\+Input\+Data}}. 
+
+\begin{DoxyReturn}{Returns}
+true if input data checks out, false otherwise 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classsofa_1_1pointcloud_1_1_p_c_l_iterative_closest_point_a4c988839645193a0f42c4a648b1ed6f8}\label{classsofa_1_1pointcloud_1_1_p_c_l_iterative_closest_point_a4c988839645193a0f42c4a648b1ed6f8}} 
+\index{sofa::pointcloud::PCLIterativeClosestPoint@{sofa::pointcloud::PCLIterativeClosestPoint}!computeTransform@{computeTransform}}
+\index{computeTransform@{computeTransform}!sofa::pointcloud::PCLIterativeClosestPoint@{sofa::pointcloud::PCLIterativeClosestPoint}}
+\doxysubsubsection{\texorpdfstring{computeTransform()}{computeTransform()}}
+{\footnotesize\ttfamily void sofa\+::pointcloud\+::\+PCLIterative\+Closest\+Point\+::compute\+Transform (\begin{DoxyParamCaption}\item[{Eigen\+::\+Matrix$<$ float, 3, 1 $>$ \&}]{translation\+Vec,  }\item[{helper\+::\+Quater$<$ double $>$ \&}]{q }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+\mbox{\hyperlink{classsofa_1_1pointcloud_1_1_p_c_l_iterative_closest_point_a4c988839645193a0f42c4a648b1ed6f8}{PCLIterative\+Closest\+Point\+::compute\+Transform}} computes transform and store results in translation\+Vec (vec3) and q (quaternion) 
+
+
+\begin{DoxyParams}{Parameters}
+{\em translation\+Vec} & \\
+\hline
+{\em q} & \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classsofa_1_1pointcloud_1_1_p_c_l_iterative_closest_point_a05d1375ce162ccecebb76300d8be664a}\label{classsofa_1_1pointcloud_1_1_p_c_l_iterative_closest_point_a05d1375ce162ccecebb76300d8be664a}} 
+\index{sofa::pointcloud::PCLIterativeClosestPoint@{sofa::pointcloud::PCLIterativeClosestPoint}!handleEvent@{handleEvent}}
+\index{handleEvent@{handleEvent}!sofa::pointcloud::PCLIterativeClosestPoint@{sofa::pointcloud::PCLIterativeClosestPoint}}
+\doxysubsubsection{\texorpdfstring{handleEvent()}{handleEvent()}}
+{\footnotesize\ttfamily void sofa\+::pointcloud\+::\+PCLIterative\+Closest\+Point\+::handle\+Event (\begin{DoxyParamCaption}\item[{sofa\+::core\+::objectmodel\+::\+Event $\ast$}]{event }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}}
+
+
+
+\mbox{\hyperlink{classsofa_1_1pointcloud_1_1_p_c_l_iterative_closest_point_a05d1375ce162ccecebb76300d8be664a}{PCLIterative\+Closest\+Point\+::handle\+Event}} Press \char`\"{}1\char`\"{} to register pointcloud. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em event} & \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classsofa_1_1pointcloud_1_1_p_c_l_iterative_closest_point_aea8135107cc2719785f3261941ec4e46}\label{classsofa_1_1pointcloud_1_1_p_c_l_iterative_closest_point_aea8135107cc2719785f3261941ec4e46}} 
+\index{sofa::pointcloud::PCLIterativeClosestPoint@{sofa::pointcloud::PCLIterativeClosestPoint}!updateTransform@{updateTransform}}
+\index{updateTransform@{updateTransform}!sofa::pointcloud::PCLIterativeClosestPoint@{sofa::pointcloud::PCLIterativeClosestPoint}}
+\doxysubsubsection{\texorpdfstring{updateTransform()}{updateTransform()}}
+{\footnotesize\ttfamily void sofa\+::pointcloud\+::\+PCLIterative\+Closest\+Point\+::update\+Transform (\begin{DoxyParamCaption}\item[{const Eigen\+::\+Matrix$<$ float, 3, 1 $>$}]{translation\+Vec,  }\item[{const helper\+::\+Quater$<$ double $>$}]{q }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+\mbox{\hyperlink{classsofa_1_1pointcloud_1_1_p_c_l_iterative_closest_point_aea8135107cc2719785f3261941ec4e46}{PCLIterative\+Closest\+Point\+::update\+Transform}} apply transform (translatio\+Vec, q) to mecanichal object. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em translation\+Vec} & \\
+\hline
+{\em q} & \\
+\hline
+\end{DoxyParams}
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+src/sofa/\+PCLPlugin/registration/icp/PCLIterative\+Closest\+Point.\+h\item 
+src/sofa/\+PCLPlugin/registration/icp/PCLIterative\+Closest\+Point.\+inl\end{DoxyCompactItemize}

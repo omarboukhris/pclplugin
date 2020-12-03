@@ -48,7 +48,7 @@ public :
     PCLNormalEstimator()
         : Inherited ()
         , d_in (initData(&d_in, "inpcl", "input point cloud"))
-        , d_out(initData(&d_out, "output", "output point cloud"))
+        , d_out(initData(&d_out, "outpcl", "output point cloud"))
         , d_draw_pcl(initData(&d_draw_pcl, "draw_pcl", "True to draw point cloud in viewer"))
     {
         c_in.addInputs({&d_in}) ;
